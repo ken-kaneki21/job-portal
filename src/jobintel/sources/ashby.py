@@ -2,12 +2,12 @@ import hashlib
 import re
 
 import httpx
+from pydantic import HttpUrl
 
 from jobintel.models.company import Company
 from jobintel.models.fetched_job import FetchedJob
 from jobintel.models.job import Job
 from jobintel.sources.base import JobSource
-
 
 BASE_URL = "https://api.ashbyhq.com/posting-api/job-board"
 
@@ -37,13 +37,10 @@ def make_fingerprint(
         ]
     )
 
-    return hashlib.sha256(
-        content.encode("utf-8")
-    ).hexdigest()
+    return hashlib.sha256(content.encode("utf-8")).hexdigest()
 
 
 class AshbySource(JobSource):
-
     def __init__(
         self,
         client: httpx.AsyncClient,
@@ -54,16 +51,11 @@ class AshbySource(JobSource):
         self,
         company: Company,
     ) -> list[FetchedJob]:
-        url = (
-            f"{BASE_URL}/"
-            f"{company.identifier}"
-        )
+        url = f"{BASE_URL}/{company.identifier}"
 
         response = await self.client.get(
             url,
-            params={
-                "includeCompensation": "true"
-            },
+            params={"includeCompensation": "true"},
         )
 
         response.raise_for_status()
@@ -91,24 +83,14 @@ class AshbySource(JobSource):
         location = raw.get("location")
 
         description = clean_text(
-            raw.get("descriptionPlain")
-            or raw.get("descriptionHtml")
+            raw.get("descriptionPlain") or raw.get("descriptionHtml")
         )
 
-        department = (
-            raw.get("department")
-            or raw.get("team")
-        )
+        department = raw.get("department") or raw.get("team")
 
-        external_id = str(
-            raw.get("id")
-            or raw.get("jobUrl")
-        )
+        external_id = str(raw.get("id") or raw.get("jobUrl"))
 
-        apply_url = (
-            raw.get("applyUrl")
-            or raw.get("jobUrl")
-        )
+        apply_url = HttpUrl(str(raw.get("applyUrl") or raw.get("jobUrl")))
 
         fingerprint = make_fingerprint(
             company=company.name,

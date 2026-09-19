@@ -3,10 +3,8 @@ from datetime import timedelta
 from temporalio import workflow
 from temporalio.common import RetryPolicy
 
-
 with workflow.unsafe.imports_passed_through():
     from jobintel.pipeline import STEPS
-
     from jobintel.temporal_pipeline.activities import (
         FinalizePipelineInput,
         PipelineStepInput,
@@ -72,17 +70,11 @@ class JobIntelligencePipelineWorkflow:
 
         run_id = await workflow.execute_activity(
             create_pipeline_run_activity,
-            start_to_close_timeout=timedelta(
-                minutes=1
-            ),
+            start_to_close_timeout=timedelta(minutes=1),
             retry_policy=RetryPolicy(
                 maximum_attempts=3,
-                initial_interval=timedelta(
-                    seconds=2
-                ),
-                maximum_interval=timedelta(
-                    seconds=15
-                ),
+                initial_interval=timedelta(seconds=2),
+                maximum_interval=timedelta(seconds=15),
                 backoff_coefficient=2.0,
             ),
         )
@@ -94,8 +86,7 @@ class JobIntelligencePipelineWorkflow:
         warnings: list[dict] = []
 
         workflow.logger.info(
-            "Starting Job Intelligence "
-            "pipeline run %s",
+            "Starting Job Intelligence pipeline run %s",
             run_id,
         )
 
@@ -118,30 +109,16 @@ class JobIntelligencePipelineWorkflow:
                             label=label,
                             module=module,
                         ),
-                        start_to_close_timeout=(
-                            timedelta(
-                                hours=2
-                            )
-                        ),
+                        start_to_close_timeout=(timedelta(hours=2)),
                         retry_policy=RetryPolicy(
                             maximum_attempts=3,
-                            initial_interval=(
-                                timedelta(
-                                    seconds=10
-                                )
-                            ),
-                            maximum_interval=(
-                                timedelta(
-                                    minutes=5
-                                )
-                            ),
+                            initial_interval=(timedelta(seconds=10)),
+                            maximum_interval=(timedelta(minutes=5)),
                             backoff_coefficient=2.0,
                         ),
                     )
 
-                    completed_steps.append(
-                        label
-                    )
+                    completed_steps.append(label)
 
                     workflow.logger.info(
                         "Completed step: %s",
@@ -149,34 +126,25 @@ class JobIntelligencePipelineWorkflow:
                     )
 
                 except Exception as exc:
-                    error_message = str(
-                        exc
-                    )
+                    error_message = str(exc)
 
                     # -------------------------------------
                     # Best-effort step
                     # -------------------------------------
 
-                    if is_best_effort_step(
-                        label
-                    ):
+                    if is_best_effort_step(label):
                         workflow.logger.warning(
-                            "Best-effort step failed "
-                            "after retries: %s",
+                            "Best-effort step failed after retries: %s",
                             label,
                         )
 
-                        skipped_steps.append(
-                            label
-                        )
+                        skipped_steps.append(label)
 
                         warnings.append(
                             {
                                 "step": label,
                                 "module": module,
-                                "error": (
-                                    error_message
-                                ),
+                                "error": (error_message),
                             }
                         )
 
@@ -192,9 +160,7 @@ class JobIntelligencePipelineWorkflow:
                     )
 
                     raise RuntimeError(
-                        f"Critical pipeline step "
-                        f"failed: {label}. "
-                        f"{error_message}"
+                        f"Critical pipeline step failed: {label}. {error_message}"
                     ) from exc
 
             # ---------------------------------------------
@@ -208,23 +174,11 @@ class JobIntelligencePipelineWorkflow:
                     success=True,
                     error_message=None,
                 ),
-                start_to_close_timeout=(
-                    timedelta(
-                        minutes=2
-                    )
-                ),
+                start_to_close_timeout=(timedelta(minutes=2)),
                 retry_policy=RetryPolicy(
                     maximum_attempts=5,
-                    initial_interval=(
-                        timedelta(
-                            seconds=2
-                        )
-                    ),
-                    maximum_interval=(
-                        timedelta(
-                            seconds=30
-                        )
-                    ),
+                    initial_interval=(timedelta(seconds=2)),
+                    maximum_interval=(timedelta(seconds=30)),
                     backoff_coefficient=2.0,
                 ),
             )
@@ -237,16 +191,10 @@ class JobIntelligencePipelineWorkflow:
             return {
                 "pipeline_run_id": run_id,
                 "success": True,
-                "completed_steps": (
-                    completed_steps
-                ),
-                "skipped_steps": (
-                    skipped_steps
-                ),
+                "completed_steps": (completed_steps),
+                "skipped_steps": (skipped_steps),
                 "warnings": warnings,
-                "warning_count": len(
-                    warnings
-                ),
+                "warning_count": len(warnings),
             }
 
         except Exception as exc:
@@ -254,9 +202,7 @@ class JobIntelligencePipelineWorkflow:
             # Failed pipeline
             # ---------------------------------------------
 
-            error_message = str(
-                exc
-            )
+            error_message = str(exc)
 
             workflow.logger.error(
                 "Pipeline run %s failed: %s",
@@ -270,35 +216,20 @@ class JobIntelligencePipelineWorkflow:
                     FinalizePipelineInput(
                         run_id=run_id,
                         success=False,
-                        error_message=(
-                            error_message
-                        ),
+                        error_message=(error_message),
                     ),
-                    start_to_close_timeout=(
-                        timedelta(
-                            minutes=2
-                        )
-                    ),
+                    start_to_close_timeout=(timedelta(minutes=2)),
                     retry_policy=RetryPolicy(
                         maximum_attempts=5,
-                        initial_interval=(
-                            timedelta(
-                                seconds=2
-                            )
-                        ),
-                        maximum_interval=(
-                            timedelta(
-                                seconds=30
-                            )
-                        ),
+                        initial_interval=(timedelta(seconds=2)),
+                        maximum_interval=(timedelta(seconds=30)),
                         backoff_coefficient=2.0,
                     ),
                 )
 
             except Exception as finalize_exc:
                 workflow.logger.error(
-                    "Unable to finalize failed "
-                    "pipeline run %s: %s",
+                    "Unable to finalize failed pipeline run %s: %s",
                     run_id,
                     finalize_exc,
                 )

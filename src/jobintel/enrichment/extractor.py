@@ -1,7 +1,5 @@
 import re
-
 from dataclasses import asdict, dataclass
-
 
 EXTRACTOR_VERSION = "deterministic_v2"
 
@@ -10,12 +8,8 @@ SKILL_PATTERNS: dict[
     str,
     tuple[str, ...],
 ] = {
-    "python": (
-        "python",
-    ),
-    "sql": (
-        "sql",
-    ),
+    "python": ("python",),
+    "sql": ("sql",),
     "pyspark": (
         "pyspark",
         "py spark",
@@ -24,12 +18,8 @@ SKILL_PATTERNS: dict[
         "apache spark",
         "spark",
     ),
-    "snowflake": (
-        "snowflake",
-    ),
-    "databricks": (
-        "databricks",
-    ),
+    "snowflake": ("snowflake",),
+    "databricks": ("databricks",),
     "dbt": (
         "dbt",
         "data build tool",
@@ -46,9 +36,7 @@ SKILL_PATTERNS: dict[
         "kafka",
         "apache kafka",
     ),
-    "docker": (
-        "docker",
-    ),
+    "docker": ("docker",),
     "kubernetes": (
         "kubernetes",
         "k8s",
@@ -62,43 +50,21 @@ SKILL_PATTERNS: dict[
         "postgresql",
         "postgres",
     ),
-    "mysql": (
-        "mysql",
-    ),
-    "oracle": (
-        "oracle",
-    ),
+    "mysql": ("mysql",),
+    "oracle": ("oracle",),
     "power bi": (
         "power bi",
         "powerbi",
     ),
-    "tableau": (
-        "tableau",
-    ),
-    "terraform": (
-        "terraform",
-    ),
-    "fastapi": (
-        "fastapi",
-    ),
-    "redis": (
-        "redis",
-    ),
-    "temporal": (
-        "temporal",
-    ),
-    "mlflow": (
-        "mlflow",
-    ),
-    "pandas": (
-        "pandas",
-    ),
-    "etl": (
-        "etl",
-    ),
-    "elt": (
-        "elt",
-    ),
+    "tableau": ("tableau",),
+    "terraform": ("terraform",),
+    "fastapi": ("fastapi",),
+    "redis": ("redis",),
+    "temporal": ("temporal",),
+    "mlflow": ("mlflow",),
+    "pandas": ("pandas",),
+    "etl": ("etl",),
+    "elt": ("elt",),
     "data modeling": (
         "data modeling",
         "data modelling",
@@ -130,26 +96,18 @@ DATA_PLATFORM_PATTERNS: dict[
     str,
     tuple[str, ...],
 ] = {
-    "snowflake": (
-        "snowflake",
-    ),
-    "databricks": (
-        "databricks",
-    ),
+    "snowflake": ("snowflake",),
+    "databricks": ("databricks",),
     "bigquery": (
         "bigquery",
         "big query",
     ),
-    "redshift": (
-        "redshift",
-    ),
+    "redshift": ("redshift",),
     "synapse": (
         "azure synapse",
         "synapse analytics",
     ),
-    "fabric": (
-        "microsoft fabric",
-    ),
+    "fabric": ("microsoft fabric",),
 }
 
 
@@ -209,9 +167,7 @@ class JobEnrichment:
     def to_dict(
         self,
     ) -> dict:
-        return asdict(
-            self
-        )
+        return asdict(self)
 
 
 def normalize_text(
@@ -230,21 +186,13 @@ def normalize_text(
 def lowercase(
     value: str | None,
 ) -> str:
-    return normalize_text(
-        value
-    ).lower()
+    return normalize_text(value).lower()
 
 
 def phrase_pattern(
     phrase: str,
 ) -> str:
-    return (
-        r"(?<![a-z0-9])"
-        + re.escape(
-            phrase.lower()
-        )
-        + r"(?![a-z0-9])"
-    )
+    return r"(?<![a-z0-9])" + re.escape(phrase.lower()) + r"(?![a-z0-9])"
 
 
 def phrase_exists(
@@ -253,9 +201,7 @@ def phrase_exists(
 ) -> bool:
     return bool(
         re.search(
-            phrase_pattern(
-                phrase
-            ),
+            phrase_pattern(phrase),
             text.lower(),
         )
     )
@@ -298,9 +244,7 @@ def extract_skill_names(
         aliases,
     ) in patterns.items():
         for alias in aliases:
-            pattern = phrase_pattern(
-                alias
-            )
+            pattern = phrase_pattern(alias)
 
             for match in re.finditer(
                 pattern,
@@ -320,21 +264,18 @@ def extract_skill_names(
 
     candidates.sort()
 
-    occupied: list[
-        tuple[int, int]
-    ] = []
+    occupied: list[tuple[int, int]] = []
 
     found: set[str] = set()
 
     for (
-        negative_length,
+        _negative_length,
         start,
         end,
         canonical,
     ) in candidates:
         overlaps = any(
-            start < occupied_end
-            and end > occupied_start
+            start < occupied_end and end > occupied_start
             for (
                 occupied_start,
                 occupied_end,
@@ -351,13 +292,9 @@ def extract_skill_names(
             )
         )
 
-        found.add(
-            canonical
-        )
+        found.add(canonical)
 
-    return sorted(
-        found
-    )
+    return sorted(found)
 
 
 def extract_experience_range(
@@ -366,15 +303,10 @@ def extract_experience_range(
     int | None,
     int | None,
 ]:
-    normalized = lowercase(
-        text
-    )
+    normalized = lowercase(text)
 
     range_patterns = [
-        (
-            r"(\d+)\s*(?:-|–|to)\s*"
-            r"(\d+)\s*(?:years|yrs)"
-        ),
+        (r"(\d+)\s*(?:-|–|to)\s*" r"(\d+)\s*(?:years|yrs)"),
     ]
 
     for pattern in range_patterns:
@@ -385,42 +317,23 @@ def extract_experience_range(
 
         if match:
             return (
-                int(
-                    match.group(1)
-                ),
-                int(
-                    match.group(2)
-                ),
+                int(match.group(1)),
+                int(match.group(2)),
             )
 
     minimum_patterns = [
-        (
-            r"minimum\s+(?:of\s+)?"
-            r"(\d+)\s*(?:years|yrs)"
-        ),
-        (
-            r"at\s+least\s+"
-            r"(\d+)\s*(?:years|yrs)"
-        ),
-        (
-            r"(\d+)\+\s*"
-            r"(?:years|yrs)"
-        ),
-        (
-            r"(\d+)\s*(?:years|yrs)"
-            r"\s+of\s+experience"
-        ),
+        (r"minimum\s+(?:of\s+)?" r"(\d+)\s*(?:years|yrs)"),
+        (r"at\s+least\s+" r"(\d+)\s*(?:years|yrs)"),
+        (r"(\d+)\+\s*" r"(?:years|yrs)"),
+        (r"(\d+)\s*(?:years|yrs)" r"\s+of\s+experience"),
     ]
 
     values: list[int] = []
 
     for pattern in minimum_patterns:
         values.extend(
-            int(
-                value
-            )
-            for value
-            in re.findall(
+            int(value)
+            for value in re.findall(
                 pattern,
                 normalized,
             )
@@ -433,9 +346,7 @@ def extract_experience_range(
         )
 
     return (
-        min(
-            values
-        ),
+        min(values),
         None,
     )
 
@@ -444,13 +355,9 @@ def extract_seniority(
     title: str,
     description: str,
 ) -> str | None:
-    title_text = lowercase(
-        title
-    )
+    title_text = lowercase(title)
 
-    combined = lowercase(
-        f"{title} {description}"
-    )
+    combined = lowercase(f"{title} {description}")
 
     if any(
         value in title_text
@@ -500,9 +407,7 @@ def extract_seniority(
 def extract_employment_type(
     text: str,
 ) -> str | None:
-    normalized = lowercase(
-        text
-    )
+    normalized = lowercase(text)
 
     patterns = [
         (
@@ -540,10 +445,7 @@ def extract_employment_type(
         employment_type,
         aliases,
     ) in patterns:
-        if any(
-            alias in normalized
-            for alias in aliases
-        ):
+        if any(alias in normalized for alias in aliases):
             return employment_type
 
     return None
@@ -552,9 +454,7 @@ def extract_employment_type(
 def extract_education(
     text: str,
 ) -> str | None:
-    normalized = lowercase(
-        text
-    )
+    normalized = lowercase(text)
 
     if any(
         value in normalized
@@ -612,16 +512,12 @@ def split_candidate_lines(
             r"\s+",
             " ",
             line,
-        ).strip(
-            " -\t"
-        )
+        ).strip(" -\t")
 
         if not value:
             continue
 
-        cleaned.append(
-            value
-        )
+        cleaned.append(value)
 
     return cleaned
 
@@ -629,28 +525,18 @@ def split_candidate_lines(
 def detect_section(
     line: str,
 ) -> str | None:
-    normalized = lowercase(
-        line
-    ).strip(
-        " :.-"
-    )
+    normalized = lowercase(line).strip(" :.-")
 
     for marker in PREFERRED_MARKERS:
-        if normalized.startswith(
-            marker
-        ):
+        if normalized.startswith(marker):
             return "preferred"
 
     for marker in RESPONSIBILITY_MARKERS:
-        if normalized.startswith(
-            marker
-        ):
+        if normalized.startswith(marker):
             return "responsibilities"
 
     for marker in REQUIRED_MARKERS:
-        if normalized.startswith(
-            marker
-        ):
+        if normalized.startswith(marker):
             return "required"
 
     return None
@@ -671,19 +557,11 @@ def is_section_heading(
         Python is required.
     """
 
-    normalized = lowercase(
-        line
-    ).strip()
+    normalized = lowercase(line).strip()
 
-    stripped = normalized.strip(
-        " :.-"
-    )
+    stripped = normalized.strip(" :.-")
 
-    known_headings = (
-        REQUIRED_MARKERS
-        + PREFERRED_MARKERS
-        + RESPONSIBILITY_MARKERS
-    )
+    known_headings = REQUIRED_MARKERS + PREFERRED_MARKERS + RESPONSIBILITY_MARKERS
 
     if stripped in known_headings:
         return True
@@ -697,9 +575,7 @@ def classify_skill_context(
     list[str],
     list[str],
 ]:
-    lines = split_candidate_lines(
-        description
-    )
+    lines = split_candidate_lines(description)
 
     required: set[str] = set()
 
@@ -710,28 +586,18 @@ def classify_skill_context(
     current_section: str | None = None
 
     for line in lines:
-        normalized = lowercase(
-            line
-        )
+        normalized = lowercase(line)
 
-        detected_section = detect_section(
-            line
-        )
+        detected_section = detect_section(line)
 
-        if is_section_heading(
-            line
-        ):
-            current_section = (
-                detected_section
-            )
+        if is_section_heading(line):
+            current_section = detected_section
 
             continue
 
-        line_skills = (
-            extract_skill_names(
-                line,
-                SKILL_PATTERNS,
-            )
+        line_skills = extract_skill_names(
+            line,
+            SKILL_PATTERNS,
         )
 
         if not line_skills:
@@ -741,19 +607,11 @@ def classify_skill_context(
         # Explicit inline preferred context wins.
         # -------------------------------------------------
 
-        if any(
-            marker in normalized
-            for marker
-            in PREFERRED_MARKERS
-        ):
-            preferred.update(
-                line_skills
-            )
+        if any(marker in normalized for marker in PREFERRED_MARKERS):
+            preferred.update(line_skills)
 
             if detected_section:
-                current_section = (
-                    detected_section
-                )
+                current_section = detected_section
 
             continue
 
@@ -761,19 +619,11 @@ def classify_skill_context(
         # Explicit inline required context.
         # -------------------------------------------------
 
-        if any(
-            marker in normalized
-            for marker
-            in REQUIRED_MARKERS
-        ):
-            required.update(
-                line_skills
-            )
+        if any(marker in normalized for marker in REQUIRED_MARKERS):
+            required.update(line_skills)
 
             if detected_section:
-                current_section = (
-                    detected_section
-                )
+                current_section = detected_section
 
             continue
 
@@ -782,16 +632,12 @@ def classify_skill_context(
         # -------------------------------------------------
 
         if current_section == "preferred":
-            preferred.update(
-                line_skills
-            )
+            preferred.update(line_skills)
 
             continue
 
         if current_section == "required":
-            required.update(
-                line_skills
-            )
+            required.update(line_skills)
 
             continue
 
@@ -800,10 +646,7 @@ def classify_skill_context(
         # but should NOT automatically become requirements.
         # -------------------------------------------------
 
-        if (
-            current_section
-            == "responsibilities"
-        ):
+        if current_section == "responsibilities":
             continue
 
         # -------------------------------------------------
@@ -813,34 +656,24 @@ def classify_skill_context(
         # that do not contain clear headings.
         # -------------------------------------------------
 
-        unclassified.update(
-            line_skills
-        )
+        unclassified.update(line_skills)
 
-    required.update(
-        unclassified
-    )
+    required.update(unclassified)
 
     # If a skill appears in both places,
     # explicit required context wins.
     preferred -= required
 
     return (
-        sorted(
-            required
-        ),
-        sorted(
-            preferred
-        ),
+        sorted(required),
+        sorted(preferred),
     )
 
 
 def extract_responsibilities(
     description: str,
 ) -> list[str]:
-    lines = split_candidate_lines(
-        description
-    )
+    lines = split_candidate_lines(description)
 
     verbs = (
         "build",
@@ -865,9 +698,7 @@ def extract_responsibilities(
     responsibilities: list[str] = []
 
     for line in lines:
-        normalized = lowercase(
-            line
-        )
+        normalized = lowercase(line)
 
         if any(
             re.search(
@@ -876,16 +707,9 @@ def extract_responsibilities(
             )
             for verb in verbs
         ):
-            responsibilities.append(
-                line[:500]
-            )
+            responsibilities.append(line[:500])
 
-        if (
-            len(
-                responsibilities
-            )
-            >= 10
-        ):
+        if len(responsibilities) >= 10:
             break
 
     return responsibilities
@@ -894,9 +718,7 @@ def extract_responsibilities(
 def extract_deal_breakers(
     description: str,
 ) -> list[str]:
-    normalized = lowercase(
-        description
-    )
+    normalized = lowercase(description)
 
     breakers: list[str] = []
 
@@ -945,13 +767,8 @@ def extract_deal_breakers(
         name,
         aliases,
     ) in patterns:
-        if any(
-            alias in normalized
-            for alias in aliases
-        ):
-            breakers.append(
-                name
-            )
+        if any(alias in normalized for alias in aliases):
+            breakers.append(name)
 
     return breakers
 
@@ -961,96 +778,45 @@ def extract_job_enrichment(
     title: str,
     description: str | None,
 ) -> JobEnrichment:
-    description_text = (
-        description or ""
-    )
+    description_text = description or ""
 
-    combined = (
-        f"{title}\n"
-        f"{description_text}"
-    )
+    combined = f"{title}\n{description_text}"
 
     (
         minimum_experience,
         maximum_experience,
-    ) = extract_experience_range(
-        combined
-    )
+    ) = extract_experience_range(combined)
 
     (
         required_skills,
         preferred_skills,
-    ) = classify_skill_context(
-        description_text
+    ) = classify_skill_context(description_text)
+
+    cloud_platforms = extract_skill_names(
+        combined,
+        CLOUD_PATTERNS,
     )
 
-    cloud_platforms = (
-        extract_skill_names(
-            combined,
-            CLOUD_PATTERNS,
-        )
-    )
-
-    data_platforms = (
-        extract_skill_names(
-            combined,
-            DATA_PLATFORM_PATTERNS,
-        )
+    data_platforms = extract_skill_names(
+        combined,
+        DATA_PLATFORM_PATTERNS,
     )
 
     return JobEnrichment(
-        minimum_experience_years=(
-            minimum_experience
-        ),
-
-        maximum_experience_years=(
-            maximum_experience
-        ),
-
+        minimum_experience_years=(minimum_experience),
+        maximum_experience_years=(maximum_experience),
         seniority=(
             extract_seniority(
                 title,
                 description_text,
             )
         ),
-
-        employment_type=(
-            extract_employment_type(
-                combined
-            )
-        ),
-
-        education=(
-            extract_education(
-                combined
-            )
-        ),
-
-        required_skills=(
-            required_skills
-        ),
-
-        preferred_skills=(
-            preferred_skills
-        ),
-
-        cloud_platforms=(
-            cloud_platforms
-        ),
-
-        data_platforms=(
-            data_platforms
-        ),
-
-        responsibilities=(
-            extract_responsibilities(
-                description_text
-            )
-        ),
-
-        deal_breakers=(
-            extract_deal_breakers(
-                description_text
-            )
-        ),
+        employment_type=(extract_employment_type(combined)),
+        education=(extract_education(combined)),
+        required_skills=(required_skills),
+        preferred_skills=(preferred_skills),
+        cloud_platforms=(cloud_platforms),
+        data_platforms=(data_platforms),
+        responsibilities=(extract_responsibilities(description_text)),
+        deal_breakers=(extract_deal_breakers(description_text)),
     )

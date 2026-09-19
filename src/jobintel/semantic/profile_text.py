@@ -34,44 +34,19 @@ def build_profile_text(
     )
 
     if target_titles:
-        sections.append(
-            "Target roles: "
-            + ", ".join(
-                target_titles
-            )
-        )
+        sections.append("Target roles: " + ", ".join(target_titles))
 
     if adjacent_titles:
-        sections.append(
-            "Related roles: "
-            + ", ".join(
-                adjacent_titles
-            )
-        )
+        sections.append("Related roles: " + ", ".join(adjacent_titles))
 
     if core_skills:
-        sections.append(
-            "Core technical skills: "
-            + ", ".join(
-                core_skills
-            )
-        )
+        sections.append("Core technical skills: " + ", ".join(core_skills))
 
     if secondary_skills:
-        sections.append(
-            "Additional skills: "
-            + ", ".join(
-                secondary_skills
-            )
-        )
+        sections.append("Additional skills: " + ", ".join(secondary_skills))
 
     if preferred_locations:
-        sections.append(
-            "Preferred locations: "
-            + ", ".join(
-                preferred_locations
-            )
-        )
+        sections.append("Preferred locations: " + ", ".join(preferred_locations))
 
     sections.append(
         "Data engineering work involving "
@@ -82,6 +57,4 @@ def build_profile_text(
         "data quality and production systems."
     )
 
-    return "\n".join(
-        sections
-    )
+    return "\n".join(sections)

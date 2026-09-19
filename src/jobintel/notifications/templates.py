@@ -9,27 +9,18 @@ def build_job_email(
     score: float,
     apply_url: str,
 ) -> tuple[str, str]:
-    safe_title = escape(
-        title
-    )
+    safe_title = escape(title)
 
-    safe_company = escape(
-        company
-    )
+    safe_company = escape(company)
 
-    safe_location = escape(
-        location or "Unknown"
-    )
+    safe_location = escape(location or "Unknown")
 
     safe_url = escape(
         apply_url,
         quote=True,
     )
 
-    subject = (
-        f"New high-confidence job: "
-        f"{title} at {company}"
-    )
+    subject = f"New high-confidence job: {title} at {company}"
 
     html = f"""
     <html>

@@ -8,7 +8,6 @@ from jobintel.db.models import JobRecord
 from jobintel.dedup import canonical_key
 from jobintel.models.job import Job
 
-
 MIN_DESCRIPTION_SIMILARITY = 0.85
 MIN_MULTI_CANDIDATE_SIMILARITY = 0.92
 MIN_WINNER_MARGIN = 0.05
@@ -35,11 +34,7 @@ def tokenize(
         value,
     )
 
-    return {
-        token
-        for token in tokens
-        if len(token) > 1
-    }
+    return {token for token in tokens if len(token) > 1}
 
 
 def description_similarity(
@@ -52,13 +47,9 @@ def description_similarity(
     if not left_tokens or not right_tokens:
         return 0.0
 
-    intersection = len(
-        left_tokens & right_tokens
-    )
+    intersection = len(left_tokens & right_tokens)
 
-    union = len(
-        left_tokens | right_tokens
-    )
+    union = len(left_tokens | right_tokens)
 
     if union == 0:
         return 0.0
@@ -77,8 +68,7 @@ def find_cross_source_match(
     )
 
     candidates = session.scalars(
-        select(JobRecord)
-        .where(
+        select(JobRecord).where(
             JobRecord.canonical_key == key,
             JobRecord.is_active.is_(True),
         )
@@ -116,9 +106,7 @@ def find_cross_source_match(
                 matched=True,
                 job_id=best_job.id,
                 confidence=best_score,
-                reason=(
-                    "canonical_key_and_description"
-                ),
+                reason=("canonical_key_and_description"),
             )
 
         return MatchResult(
@@ -130,23 +118,17 @@ def find_cross_source_match(
 
     second_score = scored[1][1]
 
-    winner_margin = (
-        best_score - second_score
-    )
+    winner_margin = best_score - second_score
 
     if (
-        best_score
-        >= MIN_MULTI_CANDIDATE_SIMILARITY
-        and winner_margin
-        >= MIN_WINNER_MARGIN
+        best_score >= MIN_MULTI_CANDIDATE_SIMILARITY
+        and winner_margin >= MIN_WINNER_MARGIN
     ):
         return MatchResult(
             matched=True,
             job_id=best_job.id,
             confidence=best_score,
-            reason=(
-                "high_confidence_multi_candidate"
-            ),
+            reason=("high_confidence_multi_candidate"),
         )
 
     return MatchResult(

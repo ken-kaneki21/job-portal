@@ -11,14 +11,8 @@ def test_temporal_address_configured():
 
 
 def test_temporal_namespace_configured():
-    assert (
-        TEMPORAL_NAMESPACE
-        == "default"
-    )
+    assert TEMPORAL_NAMESPACE == "default"
 
 
 def test_temporal_task_queue_configured():
-    assert (
-        TASK_QUEUE
-        == "job-intelligence-pipeline"
-    )
+    assert TASK_QUEUE == "job-intelligence-pipeline"

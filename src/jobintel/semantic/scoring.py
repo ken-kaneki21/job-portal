@@ -14,17 +14,9 @@ def load_job_embedding(
     job_id: int,
 ):
     record = session.scalar(
-        select(
-            JobEmbeddingRecord
-        )
-        .where(
-            JobEmbeddingRecord.job_id
-            == job_id
-        )
-        .where(
-            JobEmbeddingRecord.model_name
-            == MODEL_NAME
-        )
+        select(JobEmbeddingRecord)
+        .where(JobEmbeddingRecord.job_id == job_id)
+        .where(JobEmbeddingRecord.model_name == MODEL_NAME)
     )
 
     if record is None:

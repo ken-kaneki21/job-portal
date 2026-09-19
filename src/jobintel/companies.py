@@ -1,6 +1,5 @@
 from jobintel.models.company import Company
 
-
 COMPANIES = [
     Company(
         name="Take-Two Interactive",

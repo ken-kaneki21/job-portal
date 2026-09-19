@@ -1,7 +1,7 @@
 import asyncio
 from datetime import (
+    UTC,
     datetime,
-    timezone,
 )
 
 from temporalio.client import Client
@@ -22,16 +22,9 @@ async def start_pipeline() -> str:
         namespace=TEMPORAL_NAMESPACE,
     )
 
-    timestamp = datetime.now(
-        timezone.utc
-    ).strftime(
-        "%Y%m%d-%H%M%S"
-    )
+    timestamp = datetime.now(UTC).strftime("%Y%m%d-%H%M%S")
 
-    workflow_id = (
-        "job-intelligence-pipeline-"
-        f"{timestamp}"
-    )
+    workflow_id = f"job-intelligence-pipeline-{timestamp}"
 
     handle = await client.start_workflow(
         JobIntelligencePipelineWorkflow.run,
@@ -50,18 +43,10 @@ async def main() -> None:
     print("TEMPORAL WORKFLOW STARTED")
     print("=" * 80)
 
-    print(
-        f"Workflow ID: "
-        f"{workflow_id}"
-    )
+    print(f"Workflow ID: {workflow_id}")
 
-    print(
-        "Temporal UI: "
-        "http://localhost:8080"
-    )
+    print("Temporal UI: http://localhost:8080")
 
 
 if __name__ == "__main__":
-    asyncio.run(
-        main()
-    )
+    asyncio.run(main())

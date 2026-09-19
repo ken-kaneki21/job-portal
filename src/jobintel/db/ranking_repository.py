@@ -24,24 +24,14 @@ def add_bucket_rankings(
             profile_name=profile_name,
             bucket=bucket,
             score=result.score,
-            deterministic_score=(
-                result.deterministic_score
-            ),
-            semantic_score=(
-                result.semantic_score
-            ),
-            gap_score=(
-                result.gap_score
-            ),
+            deterministic_score=(result.deterministic_score),
+            semantic_score=(result.semantic_score),
+            gap_score=(result.gap_score),
             rank_position=position,
-            pipeline_run_id=(
-                pipeline_run_id
-            ),
+            pipeline_run_id=(pipeline_run_id),
         )
 
-        session.add(
-            record
-        )
+        session.add(record)
 
         inserted += 1
 
@@ -66,28 +56,15 @@ def clear_existing_snapshot(
     Historical pipeline snapshots remain untouched.
     """
 
-    stmt = delete(
-        JobRankingRecord
-    ).where(
-        JobRankingRecord.profile_name
-        == profile_name
-    )
+    stmt = delete(JobRankingRecord).where(JobRankingRecord.profile_name == profile_name)
 
     if pipeline_run_id is None:
-        stmt = stmt.where(
-            JobRankingRecord.pipeline_run_id
-            .is_(None)
-        )
+        stmt = stmt.where(JobRankingRecord.pipeline_run_id.is_(None))
 
     else:
-        stmt = stmt.where(
-            JobRankingRecord.pipeline_run_id
-            == pipeline_run_id
-        )
+        stmt = stmt.where(JobRankingRecord.pipeline_run_id == pipeline_run_id)
 
-    session.execute(
-        stmt
-    )
+    session.execute(stmt)
 
 
 def save_rankings(
@@ -109,9 +86,7 @@ def save_rankings(
     clear_existing_snapshot(
         session=session,
         profile_name=profile_name,
-        pipeline_run_id=(
-            pipeline_run_id
-        ),
+        pipeline_run_id=(pipeline_run_id),
     )
 
     inserted = 0
@@ -121,9 +96,7 @@ def save_rankings(
         profile_name=profile_name,
         bucket="high_confidence",
         results=high_confidence,
-        pipeline_run_id=(
-            pipeline_run_id
-        ),
+        pipeline_run_id=(pipeline_run_id),
     )
 
     inserted += add_bucket_rankings(
@@ -131,9 +104,7 @@ def save_rankings(
         profile_name=profile_name,
         bucket="discovery",
         results=discovery,
-        pipeline_run_id=(
-            pipeline_run_id
-        ),
+        pipeline_run_id=(pipeline_run_id),
     )
 
     inserted += add_bucket_rankings(
@@ -141,9 +112,7 @@ def save_rankings(
         profile_name=profile_name,
         bucket="stretch",
         results=stretch,
-        pipeline_run_id=(
-            pipeline_run_id
-        ),
+        pipeline_run_id=(pipeline_run_id),
     )
 
     return inserted

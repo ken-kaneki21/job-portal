@@ -27,10 +27,7 @@ def test_five_year_role_is_stretch():
         sources=["greenhouse"],
     )
 
-    assert (
-        classify_result(result)
-        == "stretch"
-    )
+    assert classify_result(result) == "stretch"
 
 
 def test_direct_good_role_is_high_confidence():
@@ -41,10 +38,7 @@ def test_direct_good_role_is_high_confidence():
         sources=["greenhouse"],
     )
 
-    assert (
-        classify_result(result)
-        == "high_confidence"
-    )
+    assert classify_result(result) == "high_confidence"
 
 
 def test_aggregator_role_is_discovery():
@@ -55,10 +49,7 @@ def test_aggregator_role_is_discovery():
         sources=["adzuna"],
     )
 
-    assert (
-        classify_result(result)
-        == "discovery"
-    )
+    assert classify_result(result) == "discovery"
 
 
 def test_unclear_experience_not_stretch():
@@ -69,7 +60,4 @@ def test_unclear_experience_not_stretch():
         sources=["adzuna"],
     )
 
-    assert (
-        classify_result(result)
-        == "discovery"
-    )
+    assert classify_result(result) == "discovery"

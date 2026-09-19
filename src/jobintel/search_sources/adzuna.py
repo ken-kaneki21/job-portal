@@ -4,11 +4,11 @@ import re
 
 import httpx
 from dotenv import load_dotenv
+from pydantic import HttpUrl
 
 from jobintel.models.fetched_job import FetchedJob
 from jobintel.models.job import Job
 from jobintel.search_sources.base import SearchSource
-
 
 load_dotenv()
 
@@ -54,13 +54,10 @@ def make_fingerprint(
         ]
     )
 
-    return hashlib.sha256(
-        content.encode("utf-8")
-    ).hexdigest()
+    return hashlib.sha256(content.encode("utf-8")).hexdigest()
 
 
 class AdzunaSource(SearchSource):
-
     def __init__(
         self,
         client: httpx.AsyncClient,
@@ -70,23 +67,15 @@ class AdzunaSource(SearchSource):
         self.client = client
         self.country = country
 
-        self.app_id = os.getenv(
-            "ADZUNA_APP_ID"
-        )
+        self.app_id = os.getenv("ADZUNA_APP_ID")
 
-        self.app_key = os.getenv(
-            "ADZUNA_APP_KEY"
-        )
+        self.app_key = os.getenv("ADZUNA_APP_KEY")
 
         if not self.app_id:
-            raise RuntimeError(
-                "ADZUNA_APP_ID is missing."
-            )
+            raise RuntimeError("ADZUNA_APP_ID is missing.")
 
         if not self.app_key:
-            raise RuntimeError(
-                "ADZUNA_APP_KEY is missing."
-            )
+            raise RuntimeError("ADZUNA_APP_KEY is missing.")
 
     async def search_jobs(
         self,
@@ -101,19 +90,14 @@ class AdzunaSource(SearchSource):
             1,
             max_pages + 1,
         ):
-            url = (
-                f"{BASE_URL}/"
-                f"{self.country}/search/{page}"
-            )
+            url = f"{BASE_URL}/{self.country}/search/{page}"
 
             params = {
                 "app_id": self.app_id,
                 "app_key": self.app_key,
-                "results_per_page":
-                    RESULTS_PER_PAGE,
+                "results_per_page": RESULTS_PER_PAGE,
                 "what": query,
-                "content-type":
-                    "application/json",
+                "content-type": "application/json",
             }
 
             if location:
@@ -122,10 +106,7 @@ class AdzunaSource(SearchSource):
             response = await self.client.get(
                 url,
                 params=params,
-                headers={
-                    "Accept":
-                        "application/json"
-                },
+                headers={"Accept": "application/json"},
             )
 
             response.raise_for_status()
@@ -140,16 +121,9 @@ class AdzunaSource(SearchSource):
             if not batch:
                 break
 
-            results.extend(
-                self._normalize_batch(
-                    batch
-                )
-            )
+            results.extend(self._normalize_batch(batch))
 
-            if (
-                len(batch)
-                < RESULTS_PER_PAGE
-            ):
+            if len(batch) < RESULTS_PER_PAGE:
                 break
 
         return results
@@ -170,46 +144,21 @@ class AdzunaSource(SearchSource):
         self,
         raw: dict,
     ) -> Job:
-        company_data = (
-            raw.get("company")
-            or {}
-        )
+        company_data = raw.get("company") or {}
 
-        company = (
-            company_data.get(
-                "display_name"
-            )
-            or "Unknown"
-        )
+        company = company_data.get("display_name") or "Unknown"
 
-        location_data = (
-            raw.get("location")
-            or {}
-        )
+        location_data = raw.get("location") or {}
 
-        location = (
-            location_data.get(
-                "display_name"
-            )
-        )
+        location = location_data.get("display_name")
 
-        title = (
-            raw.get("title")
-            or "Unknown"
-        )
+        title = raw.get("title") or "Unknown"
 
-        description = clean_text(
-            raw.get("description")
-        )
+        description = clean_text(raw.get("description"))
 
-        external_id = str(
-            raw.get("id")
-        )
+        external_id = str(raw.get("id"))
 
-        apply_url = (
-            raw.get("redirect_url")
-            or ""
-        )
+        apply_url = HttpUrl(str(raw.get("redirect_url")))
 
         fingerprint = make_fingerprint(
             company=company,
@@ -220,9 +169,7 @@ class AdzunaSource(SearchSource):
 
         return Job(
             source="adzuna",
-            source_identifier=(
-                f"{self.country}"
-            ),
+            source_identifier=(f"{self.country}"),
             external_id=external_id,
             company=company,
             title=title,
@@ -230,9 +177,7 @@ class AdzunaSource(SearchSource):
             department=None,
             description=description,
             apply_url=apply_url,
-            posted_at=raw.get(
-                "created"
-            ),
+            posted_at=raw.get("created"),
             updated_at=None,
             fingerprint=fingerprint,
         )

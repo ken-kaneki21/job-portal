@@ -49,9 +49,7 @@ class JobApplicationEventRecord(Base):
         index=True,
     )
 
-    previous_status: Mapped[
-        str | None
-    ] = mapped_column(
+    previous_status: Mapped[str | None] = mapped_column(
         String(50),
         nullable=True,
         index=True,
@@ -63,9 +61,7 @@ class JobApplicationEventRecord(Base):
         index=True,
     )
 
-    notes: Mapped[
-        str | None
-    ] = mapped_column(
+    notes: Mapped[str | None] = mapped_column(
         Text,
         nullable=True,
     )

@@ -1,6 +1,6 @@
 import re
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from jobintel.db.models import (
     JobRecord,
@@ -10,20 +10,13 @@ from jobintel.profile.models import (
     CandidateProfile,
 )
 
-
 SKILL_ALIASES: dict[
     str,
     tuple[str, ...],
 ] = {
-    "python": (
-        "python",
-    ),
-    "sql": (
-        "sql",
-    ),
-    "snowflake": (
-        "snowflake",
-    ),
+    "python": ("python",),
+    "sql": ("sql",),
+    "snowflake": ("snowflake",),
     "dbt": (
         "dbt",
         "data build tool",
@@ -44,9 +37,7 @@ SKILL_ALIASES: dict[
         "apache spark",
         "spark",
     ),
-    "databricks": (
-        "databricks",
-    ),
+    "databricks": ("databricks",),
     "aws": (
         "aws",
         "amazon web services",
@@ -63,9 +54,7 @@ SKILL_ALIASES: dict[
         "etl",
         "extract transform load",
     ),
-    "elt": (
-        "elt",
-    ),
+    "elt": ("elt",),
     "data modeling": (
         "data modeling",
         "data modelling",
@@ -74,9 +63,7 @@ SKILL_ALIASES: dict[
         "power bi",
         "powerbi",
     ),
-    "docker": (
-        "docker",
-    ),
+    "docker": ("docker",),
     "git": (
         "git",
         "github",
@@ -149,13 +136,7 @@ def phrase_in_text(
     phrase: str,
     text: str,
 ) -> bool:
-    pattern = (
-        r"(?<![a-z0-9])"
-        + re.escape(
-            phrase.lower()
-        )
-        + r"(?![a-z0-9])"
-    )
+    pattern = r"(?<![a-z0-9])" + re.escape(phrase.lower()) + r"(?![a-z0-9])"
 
     return bool(
         re.search(
@@ -188,26 +169,11 @@ def detect_min_experience(
     text: str,
 ) -> int | None:
     patterns = [
-        (
-            r"(\d+)\s*(?:-|–|to)\s*"
-            r"\d+\s*(?:years|yrs)"
-        ),
-        (
-            r"minimum\s+(?:of\s+)?"
-            r"(\d+)\s*(?:years|yrs)"
-        ),
-        (
-            r"at\s+least\s+"
-            r"(\d+)\s*(?:years|yrs)"
-        ),
-        (
-            r"(\d+)\+\s*"
-            r"(?:years|yrs)"
-        ),
-        (
-            r"(\d+)\s*(?:years|yrs)"
-            r"\s+of\s+experience"
-        ),
+        (r"(\d+)\s*(?:-|–|to)\s*" r"\d+\s*(?:years|yrs)"),
+        (r"minimum\s+(?:of\s+)?" r"(\d+)\s*(?:years|yrs)"),
+        (r"at\s+least\s+" r"(\d+)\s*(?:years|yrs)"),
+        (r"(\d+)\+\s*" r"(?:years|yrs)"),
+        (r"(\d+)\s*(?:years|yrs)" r"\s+of\s+experience"),
     ]
 
     values: list[int] = []
@@ -222,11 +188,7 @@ def detect_min_experience(
             )
         )
 
-    return (
-        min(values)
-        if values
-        else None
-    )
+    return min(values) if values else None
 
 
 def check_title_eligibility(
@@ -236,23 +198,16 @@ def check_title_eligibility(
     bool,
     list[str],
 ]:
-    normalized = normalize_text(
-        title
-    )
+    normalized = normalize_text(title)
 
     rejection_reasons: list[str] = []
 
-    for excluded in (
-        profile.exclude_titles
-    ):
+    for excluded in profile.exclude_titles:
         if phrase_in_text(
             excluded,
             normalized,
         ):
-            rejection_reasons.append(
-                f"Excluded title: "
-                f"{excluded}"
-            )
+            rejection_reasons.append(f"Excluded title: {excluded}")
 
     if rejection_reasons:
         return (
@@ -265,8 +220,7 @@ def check_title_eligibility(
             target,
             normalized,
         )
-        for target
-        in profile.target_titles
+        for target in profile.target_titles
     )
 
     adjacent_match = any(
@@ -274,19 +228,13 @@ def check_title_eligibility(
             adjacent,
             normalized,
         )
-        for adjacent
-        in profile.adjacent_titles
+        for adjacent in profile.adjacent_titles
     )
 
-    if (
-        not target_match
-        and not adjacent_match
-    ):
+    if not target_match and not adjacent_match:
         return (
             False,
-            [
-                "Outside target role family"
-            ],
+            ["Outside target role family"],
         )
 
     return (
@@ -302,9 +250,7 @@ def check_location_eligibility(
     bool,
     list[str],
 ]:
-    normalized = normalize_text(
-        location
-    )
+    normalized = normalize_text(location)
 
     if not normalized:
         return (
@@ -312,33 +258,20 @@ def check_location_eligibility(
             [],
         )
 
-    for blocked in (
-        profile.blocked_location_terms
-    ):
+    for blocked in profile.blocked_location_terms:
         if blocked in normalized:
             return (
                 False,
-                [
-                    "Location restriction: "
-                    f"{location}"
-                ],
+                [f"Location restriction: {location}"],
             )
 
-    if any(
-        preferred in normalized
-        for preferred
-        in profile.preferred_locations
-    ):
+    if any(preferred in normalized for preferred in profile.preferred_locations):
         return (
             True,
             [],
         )
 
-    if any(
-        country in normalized
-        for country
-        in profile.allowed_countries
-    ):
+    if any(country in normalized for country in profile.allowed_countries):
         return (
             True,
             [],
@@ -352,10 +285,7 @@ def check_location_eligibility(
 
     return (
         False,
-        [
-            "Outside preferred geography: "
-            f"{location}"
-        ],
+        [f"Outside preferred geography: {location}"],
     )
 
 
@@ -366,38 +296,26 @@ def score_title(
     float,
     list[str],
 ]:
-    normalized = normalize_text(
-        title
-    )
+    normalized = normalize_text(title)
 
-    for target in (
-        profile.target_titles
-    ):
+    for target in profile.target_titles:
         if phrase_in_text(
             target,
             normalized,
         ):
             return (
                 35.0,
-                [
-                    "Strong target-role "
-                    "title match"
-                ],
+                ["Strong target-role title match"],
             )
 
-    for adjacent in (
-        profile.adjacent_titles
-    ):
+    for adjacent in profile.adjacent_titles:
         if phrase_in_text(
             adjacent,
             normalized,
         ):
             return (
                 22.0,
-                [
-                    "Adjacent-role "
-                    "title match"
-                ],
+                ["Adjacent-role title match"],
             )
 
     return (
@@ -413,49 +331,31 @@ def score_location(
     float,
     list[str],
 ]:
-    normalized = normalize_text(
-        location
-    )
+    normalized = normalize_text(location)
 
     if not normalized:
         return (
             8.0,
-            [
-                "Location unspecified"
-            ],
+            ["Location unspecified"],
         )
 
-    for preferred in (
-        profile.preferred_locations
-    ):
+    for preferred in profile.preferred_locations:
         if preferred in normalized:
             return (
                 20.0,
-                [
-                    "Preferred location: "
-                    f"{location}"
-                ],
+                [f"Preferred location: {location}"],
             )
 
     if normalized == "remote":
         return (
             18.0,
-            [
-                "Remote role"
-            ],
+            ["Remote role"],
         )
 
-    if any(
-        country in normalized
-        for country
-        in profile.allowed_countries
-    ):
+    if any(country in normalized for country in profile.allowed_countries):
         return (
             15.0,
-            [
-                "Allowed country: "
-                f"{location}"
-            ],
+            [f"Allowed country: {location}"],
         )
 
     return (
@@ -474,8 +374,7 @@ def score_skills(
 ]:
     matched_core = tuple(
         skill
-        for skill
-        in profile.core_skills
+        for skill in profile.core_skills
         if contains_skill(
             text,
             skill,
@@ -484,8 +383,7 @@ def score_skills(
 
     matched_secondary = tuple(
         skill
-        for skill
-        in profile.secondary_skills
+        for skill in profile.secondary_skills
         if contains_skill(
             text,
             skill,
@@ -493,31 +391,16 @@ def score_skills(
     )
 
     core_ratio = (
-        len(
-            matched_core
-        )
-        / len(
-            profile.core_skills
-        )
-        if profile.core_skills
-        else 0.0
+        len(matched_core) / len(profile.core_skills) if profile.core_skills else 0.0
     )
 
     secondary_ratio = (
-        len(
-            matched_secondary
-        )
-        / len(
-            profile.secondary_skills
-        )
+        len(matched_secondary) / len(profile.secondary_skills)
         if profile.secondary_skills
         else 0.0
     )
 
-    score = (
-        core_ratio * 15.0
-        + secondary_ratio * 5.0
-    )
+    score = core_ratio * 15.0 + secondary_ratio * 5.0
 
     return (
         min(
@@ -537,70 +420,42 @@ def score_experience(
     int | None,
     list[str],
 ]:
-    required = detect_min_experience(
-        description
-    )
+    required = detect_min_experience(description)
 
     if required is None:
         return (
             1.0,
             None,
-            [
-                "Experience requirement unclear"
-            ],
+            ["Experience requirement unclear"],
         )
 
-    if (
-        required
-        <= profile
-        .max_preferred_experience_years
-    ):
+    if required <= profile.max_preferred_experience_years:
         return (
             10.0,
             required,
-            [
-                "Experience requirement: "
-                f"{required}+ years"
-            ],
+            [f"Experience requirement: {required}+ years"],
         )
 
-    if (
-        required
-        <= profile
-        .hard_max_experience_years
-    ):
+    if required <= profile.hard_max_experience_years:
         return (
             4.0,
             required,
-            [
-                "Stretch experience "
-                "requirement: "
-                f"{required}+ years"
-            ],
+            [f"Stretch experience requirement: {required}+ years"],
         )
 
     return (
         0.0,
         required,
-        [
-            "Experience requirement "
-            "too high: "
-            f"{required}+ years"
-        ],
+        [f"Experience requirement too high: {required}+ years"],
     )
 
 
 def score_freshness(
     first_seen_at: datetime,
 ) -> float:
-    now = datetime.now(
-        timezone.utc
-    )
+    now = datetime.now(UTC)
 
-    age_days = (
-        now
-        - first_seen_at
-    ).total_seconds() / 86400
+    age_days = (now - first_seen_at).total_seconds() / 86400
 
     if age_days <= 1:
         return 5.0
@@ -618,74 +473,38 @@ def score_freshness(
 
 
 def score_source_quality(
-    sources: list[
-        JobSourceRecord
-    ],
+    sources: list[JobSourceRecord],
 ) -> tuple[
     float,
     tuple[str, ...],
     str,
     list[str],
 ]:
-    source_names = tuple(
-        sorted(
-            {
-                source.source
-                for source
-                in sources
-            }
-        )
-    )
+    source_names = tuple(sorted({source.source for source in sources}))
 
-    direct_sources = [
-        source
-        for source
-        in sources
-        if (
-            source.source
-            in DIRECT_SOURCES
-        )
-    ]
+    direct_sources = [source for source in sources if (source.source in DIRECT_SOURCES)]
 
-    aggregator_sources = [
-        source
-        for source
-        in sources
-        if (
-            source.source
-            == "adzuna"
-        )
-    ]
+    aggregator_sources = [source for source in sources if (source.source == "adzuna")]
 
     if direct_sources:
         preferred_source = next(
             (
                 source
-                for source
-                in direct_sources
-                if (
-                    source.is_primary
-                    and source.source_url
-                )
+                for source in direct_sources
+                if (source.is_primary and source.source_url)
             ),
             None,
         )
 
         if preferred_source is None:
             preferred_source = next(
-                (
-                    source
-                    for source
-                    in direct_sources
-                    if source.source_url
-                ),
+                (source for source in direct_sources if source.source_url),
                 None,
             )
 
         preferred_url = (
-            preferred_source.source_url
-            if preferred_source
-            is not None
+            str(preferred_source.source_url)
+            if preferred_source is not None and preferred_source.source_url
             else ""
         )
 
@@ -694,37 +513,25 @@ def score_source_quality(
                 10.0,
                 source_names,
                 preferred_url,
-                [
-                    "Direct ATS posting "
-                    "confirmed by "
-                    "additional source"
-                ],
+                ["Direct ATS posting confirmed by additional source"],
             )
 
         return (
             8.0,
             source_names,
             preferred_url,
-            [
-                "Direct employer ATS source"
-            ],
+            ["Direct employer ATS source"],
         )
 
     if aggregator_sources:
         preferred_source = next(
-            (
-                source
-                for source
-                in aggregator_sources
-                if source.source_url
-            ),
+            (source for source in aggregator_sources if source.source_url),
             None,
         )
 
         preferred_url = (
-            preferred_source.source_url
-            if preferred_source
-            is not None
+            str(preferred_source.source_url)
+            if preferred_source is not None and preferred_source.source_url
             else ""
         )
 
@@ -732,25 +539,17 @@ def score_source_quality(
             2.0,
             source_names,
             preferred_url,
-            [
-                "Aggregator discovery source"
-            ],
+            ["Aggregator discovery source"],
         )
 
     preferred_source = next(
-        (
-            source
-            for source
-            in sources
-            if source.source_url
-        ),
+        (source for source in sources if source.source_url),
         None,
     )
 
     preferred_url = (
-        preferred_source.source_url
-        if preferred_source
-        is not None
+        str(preferred_source.source_url)
+        if preferred_source is not None and preferred_source.source_url
         else ""
     )
 
@@ -758,18 +557,14 @@ def score_source_quality(
         0.0,
         source_names,
         preferred_url,
-        [
-            "Unclassified source"
-        ],
+        ["Unclassified source"],
     )
 
 
 def rank_job(
     job: JobRecord,
     profile: CandidateProfile,
-    sources: list[
-        JobSourceRecord
-    ] | None = None,
+    sources: list[JobSourceRecord] | None = None,
 ) -> RankedJob:
     sources = sources or []
 
@@ -783,9 +578,7 @@ def rank_job(
         profile,
     )
 
-    rejection_reasons.extend(
-        title_rejections
-    )
+    rejection_reasons.extend(title_rejections)
 
     (
         location_eligible,
@@ -795,9 +588,7 @@ def rank_job(
         profile,
     )
 
-    rejection_reasons.extend(
-        location_rejections
-    )
+    rejection_reasons.extend(location_rejections)
 
     combined_text = normalize_text(
         " ".join(
@@ -809,52 +600,33 @@ def rank_job(
         )
     )
 
-    detected_experience = (
-        detect_min_experience(
-            combined_text
-        )
-    )
+    detected_experience = detect_min_experience(combined_text)
 
     if (
-        detected_experience
-        is not None
-        and detected_experience
-        > profile
-        .hard_max_experience_years
+        detected_experience is not None
+        and detected_experience > profile.hard_max_experience_years
     ):
         rejection_reasons.append(
-            "Experience above hard "
-            "maximum: "
-            f"{detected_experience}+ years"
+            f"Experience above hard maximum: {detected_experience}+ years"
         )
 
-    eligible = (
-        title_eligible
-        and location_eligible
-        and not rejection_reasons
-    )
+    eligible = title_eligible and location_eligible and not rejection_reasons
 
     (
         source_score,
         source_names,
         preferred_apply_url,
         source_reasons,
-    ) = score_source_quality(
-        sources
-    )
+    ) = score_source_quality(sources)
 
     if not preferred_apply_url:
-        preferred_apply_url = (
-            job.apply_url
-        )
+        preferred_apply_url = str(job.apply_url)
 
     if not eligible:
         return RankedJob(
             job=job,
             eligible=False,
-            rejection_reasons=tuple(
-                rejection_reasons
-            ),
+            rejection_reasons=tuple(rejection_reasons),
             score=0.0,
             deterministic_score=0.0,
             title_score=0.0,
@@ -867,13 +639,9 @@ def rank_job(
             gap_score=50.0,
             matched_core_skills=(),
             matched_secondary_skills=(),
-            detected_experience=(
-                detected_experience
-            ),
+            detected_experience=(detected_experience),
             sources=source_names,
-            preferred_apply_url=(
-                preferred_apply_url
-            ),
+            preferred_apply_url=(preferred_apply_url),
             reasons=(),
         )
 
@@ -911,11 +679,7 @@ def rank_job(
         profile,
     )
 
-    freshness_score = (
-        score_freshness(
-            job.first_seen_at
-        )
-    )
+    freshness_score = score_freshness(job.first_seen_at)
 
     deterministic_score = round(
         min(
@@ -932,72 +696,35 @@ def rank_job(
         2,
     )
 
-    reasons = (
-        title_reasons
-        + location_reasons
-        + experience_reasons
-        + source_reasons
-    )
+    reasons = title_reasons + location_reasons + experience_reasons + source_reasons
 
     if matched_core:
-        reasons.append(
-            "Core skills: "
-            + ", ".join(
-                matched_core
-            )
-        )
+        reasons.append("Core skills: " + ", ".join(matched_core))
 
     if matched_secondary:
-        reasons.append(
-            "Secondary skills: "
-            + ", ".join(
-                matched_secondary
-            )
-        )
+        reasons.append("Secondary skills: " + ", ".join(matched_secondary))
 
     return RankedJob(
         job=job,
         eligible=True,
         rejection_reasons=(),
         score=deterministic_score,
-        deterministic_score=(
-            deterministic_score
-        ),
-        title_score=(
-            title_score
-        ),
-        location_score=(
-            location_score
-        ),
+        deterministic_score=(deterministic_score),
+        title_score=(title_score),
+        location_score=(location_score),
         skill_score=round(
             skill_score,
             2,
         ),
-        experience_score=(
-            experience_score
-        ),
-        freshness_score=(
-            freshness_score
-        ),
-        source_score=(
-            source_score
-        ),
+        experience_score=(experience_score),
+        freshness_score=(freshness_score),
+        source_score=(source_score),
         semantic_score=0.0,
         gap_score=50.0,
-        matched_core_skills=(
-            matched_core
-        ),
-        matched_secondary_skills=(
-            matched_secondary
-        ),
-        detected_experience=(
-            detected_experience
-        ),
+        matched_core_skills=(matched_core),
+        matched_secondary_skills=(matched_secondary),
+        detected_experience=(detected_experience),
         sources=source_names,
-        preferred_apply_url=(
-            preferred_apply_url
-        ),
-        reasons=tuple(
-            reasons
-        ),
+        preferred_apply_url=(preferred_apply_url),
+        reasons=tuple(reasons),
     )

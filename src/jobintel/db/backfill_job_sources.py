@@ -10,9 +10,7 @@ from jobintel.db.session import SessionLocal
 
 def main() -> None:
     with SessionLocal() as session:
-        jobs = session.scalars(
-            select(JobRecord)
-        ).all()
+        jobs = session.scalars(select(JobRecord)).all()
 
         if not jobs:
             print("No jobs found.")
@@ -30,9 +28,7 @@ def main() -> None:
             for job in jobs
         ]
 
-        statement = insert(
-            JobSourceRecord
-        ).values(values)
+        statement = insert(JobSourceRecord).values(values)
 
         statement = statement.on_conflict_do_nothing(
             constraint="uq_job_source_identity"
@@ -41,10 +37,7 @@ def main() -> None:
         session.execute(statement)
         session.commit()
 
-    print(
-        f"Source references backfilled: "
-        f"{len(values)}"
-    )
+    print(f"Source references backfilled: {len(values)}")
 
 
 if __name__ == "__main__":

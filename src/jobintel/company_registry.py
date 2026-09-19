@@ -9,9 +9,7 @@ def load_companies() -> list[Company]:
     with SessionLocal() as session:
         records = session.scalars(
             select(CompanyRecord)
-            .where(
-                CompanyRecord.enabled.is_(True)
-            )
+            .where(CompanyRecord.enabled.is_(True))
             .order_by(
                 CompanyRecord.priority,
                 CompanyRecord.name,

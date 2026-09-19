@@ -9,7 +9,6 @@ from jobintel.models.fetched_job import FetchedJob
 from jobintel.models.job import Job
 from jobintel.sources.base import JobSource
 
-
 BASE_URL = "https://boards-api.greenhouse.io/v1/boards"
 
 
@@ -39,13 +38,10 @@ def make_fingerprint(
         ]
     )
 
-    return hashlib.sha256(
-        content.encode("utf-8")
-    ).hexdigest()
+    return hashlib.sha256(content.encode("utf-8")).hexdigest()
 
 
 class GreenhouseSource(JobSource):
-
     def __init__(
         self,
         client: httpx.AsyncClient,
@@ -56,10 +52,7 @@ class GreenhouseSource(JobSource):
         self,
         company: Company,
     ) -> list[FetchedJob]:
-        url = (
-            f"{BASE_URL}/"
-            f"{company.identifier}/jobs"
-        )
+        url = f"{BASE_URL}/{company.identifier}/jobs"
 
         response = await self.client.get(
             url,
@@ -88,19 +81,11 @@ class GreenhouseSource(JobSource):
     ) -> Job:
         departments = raw.get("departments") or []
 
-        department = (
-            departments[0].get("name")
-            if departments
-            else None
-        )
+        department = departments[0].get("name") if departments else None
 
-        description = clean_html(
-            raw.get("content")
-        )
+        description = clean_html(raw.get("content"))
 
-        location = (
-            raw.get("location") or {}
-        ).get("name")
+        location = (raw.get("location") or {}).get("name")
 
         fingerprint = make_fingerprint(
             company=company.name,

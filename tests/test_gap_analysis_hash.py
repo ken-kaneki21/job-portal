@@ -22,9 +22,7 @@ def make_profile(
         secondary_skills=[
             "AWS",
         ],
-        experience_years=(
-            experience
-        ),
+        experience_years=(experience),
         years_of_experience=None,
     )
 
@@ -61,16 +59,12 @@ def test_enrichment_change_invalidates_gap_hash():
 
     first = build_content_hash(
         profile=profile,
-        enrichment=make_enrichment(
-            content_hash="enrichment-v1"
-        ),
+        enrichment=make_enrichment(content_hash="enrichment-v1"),
     )
 
     second = build_content_hash(
         profile=profile,
-        enrichment=make_enrichment(
-            content_hash="enrichment-v2"
-        ),
+        enrichment=make_enrichment(content_hash="enrichment-v2"),
     )
 
     assert first != second
@@ -81,20 +75,12 @@ def test_extractor_version_change_invalidates_gap_hash():
 
     first = build_content_hash(
         profile=profile,
-        enrichment=make_enrichment(
-            extractor_version=(
-                "deterministic_v1"
-            )
-        ),
+        enrichment=make_enrichment(extractor_version=("deterministic_v1")),
     )
 
     second = build_content_hash(
         profile=profile,
-        enrichment=make_enrichment(
-            extractor_version=(
-                "deterministic_v2"
-            )
-        ),
+        enrichment=make_enrichment(extractor_version=("deterministic_v2")),
     )
 
     assert first != second
@@ -131,16 +117,12 @@ def test_experience_change_invalidates_gap_hash():
     enrichment = make_enrichment()
 
     first = build_content_hash(
-        profile=make_profile(
-            experience=3.0
-        ),
+        profile=make_profile(experience=3.0),
         enrichment=enrichment,
     )
 
     second = build_content_hash(
-        profile=make_profile(
-            experience=5.0
-        ),
+        profile=make_profile(experience=5.0),
         enrichment=enrichment,
     )
 

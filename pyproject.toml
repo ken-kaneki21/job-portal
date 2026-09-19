@@ -5,13 +5,11 @@ requires = [
 ]
 build-backend = "setuptools.build_meta"
 
-
 [project]
 name = "job-intelligence"
 version = "0.1.0"
 description = "Private AI-powered job intelligence and application orchestration platform"
 requires-python = ">=3.13"
-
 dependencies = [
     "httpx>=0.27",
     "pydantic>=2.8",
@@ -27,7 +25,6 @@ dependencies = [
     "sentence-transformers>=3.0",
 ]
 
-
 [project.optional-dependencies]
 dev = [
     "pytest>=9.0",
@@ -38,50 +35,27 @@ dev = [
     "pre-commit>=4.0",
 ]
 
-
 [tool.setuptools.packages.find]
-where = [
-    "src",
-]
-
+where = ["src"]
 
 [tool.pytest.ini_options]
-testpaths = [
-    "tests",
-]
-
-pythonpath = [
-    "src",
-]
-
-addopts = [
-    "-ra",
-]
-
+testpaths = ["tests"]
+pythonpath = ["src"]
+addopts = ["-ra"]
 
 [tool.coverage.run]
 branch = true
-source = [
-    "jobintel",
-]
-
-omit = [
-    "*/migrations/*",
-]
-
+source = ["jobintel"]
+omit = ["*/migrations/*"]
 
 [tool.coverage.report]
 show_missing = true
 skip_covered = false
 precision = 1
 
-
 [tool.black]
 line-length = 88
-target-version = [
-    "py313",
-]
-
+target-version = ["py313"]
 exclude = '''
 /(
     \.git
@@ -93,11 +67,9 @@ exclude = '''
 )/
 '''
 
-
 [tool.ruff]
 line-length = 88
 target-version = "py313"
-
 exclude = [
     ".git",
     ".venv",
@@ -106,7 +78,6 @@ exclude = [
     ".ruff_cache",
     "migrations",
 ]
-
 
 [tool.ruff.lint]
 select = [
@@ -117,24 +88,23 @@ select = [
     "B",
     "UP",
 ]
-
 ignore = [
     "E501",
+    "UP047",
 ]
-
 
 [tool.ruff.lint.isort]
-known-first-party = [
-    "jobintel",
-]
+known-first-party = ["jobintel"]
 
+[tool.ruff.lint.flake8-bugbear]
+extend-immutable-calls = [
+    "fastapi.Depends",
+    "fastapi.Query",
+]
 
 [tool.mypy]
 python_version = "3.13"
-packages = [
-    "jobintel",
-]
-
+packages = ["jobintel"]
 ignore_missing_imports = true
 check_untyped_defs = true
 warn_unused_ignores = true
@@ -142,7 +112,4 @@ warn_redundant_casts = true
 warn_unused_configs = true
 show_error_codes = true
 pretty = true
-
-exclude = [
-    "migrations/",
-]
+exclude = ["migrations/"]

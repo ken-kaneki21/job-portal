@@ -9,7 +9,6 @@ from jobintel.db.models import (
 )
 from jobintel.db.session import SessionLocal
 
-
 SUPPORTED_ATS = {
     "greenhouse",
     "lever",
@@ -21,15 +20,9 @@ SUPPORTED_ATS = {
 def clean_path_parts(
     url: str,
 ) -> list[str]:
-    parsed = urlparse(
-        url.strip()
-    )
+    parsed = urlparse(url.strip())
 
-    return [
-        part
-        for part in parsed.path.split("/")
-        if part
-    ]
+    return [part for part in parsed.path.split("/") if part]
 
 
 def detect_ats(
@@ -50,19 +43,11 @@ def detect_ats(
         return None
 
     try:
-        parsed = urlparse(
-            url.strip()
-        )
+        parsed = urlparse(url.strip())
 
-        host = (
-            parsed.netloc
-            .lower()
-            .split(":")[0]
-        )
+        host = parsed.netloc.lower().split(":")[0]
 
-        parts = clean_path_parts(
-            url
-        )
+        parts = clean_path_parts(url)
 
         # ---------------------------------------------
         # Greenhouse
@@ -180,17 +165,11 @@ def discover_from_jobs(
         select(
             JobRecord.company,
             JobRecord.apply_url,
-        )
-        .where(
-            JobRecord.apply_url
-            .is_not(None)
-        )
+        ).where(JobRecord.apply_url.is_not(None))
     ).all()
 
     for company, url in rows:
-        result = detect_ats(
-            url
-        )
+        result = detect_ats(url)
 
         if result is None:
             continue
@@ -228,19 +207,13 @@ def discover_from_job_sources(
         )
         .join(
             JobRecord,
-            JobRecord.id
-            == JobSourceRecord.job_id,
+            JobRecord.id == JobSourceRecord.job_id,
         )
-        .where(
-            JobSourceRecord.source_url
-            .is_not(None)
-        )
+        .where(JobSourceRecord.source_url.is_not(None))
     ).all()
 
     for company, url in rows:
-        result = detect_ats(
-            url
-        )
+        result = detect_ats(url)
 
         if result is None:
             continue
@@ -262,31 +235,16 @@ def discover_from_job_sources(
 
 def main() -> None:
     with SessionLocal() as session:
-        existing = (
-            load_existing_companies(
-                session
-            )
-        )
+        existing = load_existing_companies(session)
 
         discovered = {}
 
-        discovered.update(
-            discover_from_jobs(
-                session
-            )
-        )
+        discovered.update(discover_from_jobs(session))
 
-        discovered.update(
-            discover_from_job_sources(
-                session
-            )
-        )
+        discovered.update(discover_from_job_sources(session))
 
         candidates = {
-            key: company
-            for key, company
-            in discovered.items()
-            if key not in existing
+            key: company for key, company in discovered.items() if key not in existing
         }
 
         inserted = 0
@@ -294,9 +252,7 @@ def main() -> None:
         for (
             ats,
             identifier,
-        ), company_name in sorted(
-            candidates.items()
-        ):
+        ), company_name in sorted(candidates.items()):
             if ats not in SUPPORTED_ATS:
                 continue
 
@@ -308,42 +264,24 @@ def main() -> None:
                 priority=100,
             )
 
-            session.add(
-                record
-            )
+            session.add(record)
 
             inserted += 1
 
-            print(
-                f"Discovered: "
-                f"{company_name} | "
-                f"{ats} | "
-                f"{identifier}"
-            )
+            print(f"Discovered: {company_name} | {ats} | {identifier}")
 
         session.commit()
 
     print()
     print("=" * 100)
-    print(
-        "ATS COMPANY DISCOVERY"
-    )
+    print("ATS COMPANY DISCOVERY")
     print("=" * 100)
 
-    print(
-        f"Detected ATS identities: "
-        f"{len(discovered)}"
-    )
+    print(f"Detected ATS identities: {len(discovered)}")
 
-    print(
-        f"Already configured: "
-        f"{len(discovered) - inserted}"
-    )
+    print(f"Already configured: {len(discovered) - inserted}")
 
-    print(
-        f"New companies inserted: "
-        f"{inserted}"
-    )
+    print(f"New companies inserted: {inserted}")
 
 
 if __name__ == "__main__":

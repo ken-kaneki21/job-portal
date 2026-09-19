@@ -9,18 +9,12 @@ from prometheus_client import (
     start_http_server,
 )
 
-
-LOGGER = logging.getLogger(
-    "jobintel.temporal.metrics"
-)
+LOGGER = logging.getLogger("jobintel.temporal.metrics")
 
 
 TEMPORAL_ACTIVITY_EXECUTIONS_TOTAL = Counter(
     "jobintel_temporal_activity_executions_total",
-    (
-        "Total number of Job Intelligence "
-        "Temporal activity executions"
-    ),
+    ("Total number of Job Intelligence Temporal activity executions"),
     [
         "activity_name",
         "step_name",
@@ -31,10 +25,7 @@ TEMPORAL_ACTIVITY_EXECUTIONS_TOTAL = Counter(
 
 TEMPORAL_ACTIVITY_DURATION_SECONDS = Histogram(
     "jobintel_temporal_activity_duration_seconds",
-    (
-        "Duration of Job Intelligence "
-        "Temporal activities in seconds"
-    ),
+    ("Duration of Job Intelligence Temporal activities in seconds"),
     [
         "activity_name",
         "step_name",
@@ -44,10 +35,7 @@ TEMPORAL_ACTIVITY_DURATION_SECONDS = Histogram(
 
 PIPELINE_FINALIZATIONS_TOTAL = Counter(
     "jobintel_pipeline_finalizations_total",
-    (
-        "Total number of Job Intelligence "
-        "pipeline finalizations"
-    ),
+    ("Total number of Job Intelligence pipeline finalizations"),
     [
         "success",
     ],
@@ -56,10 +44,7 @@ PIPELINE_FINALIZATIONS_TOTAL = Counter(
 
 TEMPORAL_WORKER_UP = Gauge(
     "jobintel_temporal_worker_up",
-    (
-        "Whether the Job Intelligence "
-        "Temporal worker process is running"
-    ),
+    ("Whether the Job Intelligence Temporal worker process is running"),
 )
 
 
@@ -79,11 +64,7 @@ def record_activity_execution(
     outcome: str,
     duration_seconds: float,
 ) -> None:
-    normalized_step = (
-        normalize_step_name(
-            step_name
-        )
-    )
+    normalized_step = normalize_step_name(step_name)
 
     TEMPORAL_ACTIVITY_EXECUTIONS_TOTAL.labels(
         activity_name=activity_name,
@@ -94,22 +75,14 @@ def record_activity_execution(
     TEMPORAL_ACTIVITY_DURATION_SECONDS.labels(
         activity_name=activity_name,
         step_name=normalized_step,
-    ).observe(
-        duration_seconds
-    )
+    ).observe(duration_seconds)
 
 
 def record_pipeline_finalization(
     *,
     success: bool,
 ) -> None:
-    PIPELINE_FINALIZATIONS_TOTAL.labels(
-        success=(
-            "true"
-            if success
-            else "false"
-        )
-    ).inc()
+    PIPELINE_FINALIZATIONS_TOTAL.labels(success=("true" if success else "false")).inc()
 
 
 def start_worker_metrics_server(
@@ -134,15 +107,11 @@ def start_worker_metrics_server(
         addr="0.0.0.0",
     )
 
-    TEMPORAL_WORKER_UP.set(
-        1
-    )
+    TEMPORAL_WORKER_UP.set(1)
 
     LOGGER.info(
         "temporal_worker_metrics_server_started",
         extra={
-            "service": (
-                "jobintel-temporal-worker"
-            ),
+            "service": ("jobintel-temporal-worker"),
         },
     )

@@ -60,34 +60,12 @@ def make_enrichment(
     deal_breakers=None,
 ):
     return SimpleNamespace(
-        required_skills=(
-            required_skills
-            if required_skills is not None
-            else []
-        ),
-        preferred_skills=(
-            preferred_skills
-            if preferred_skills is not None
-            else []
-        ),
-        cloud_platforms=(
-            cloud_platforms
-            if cloud_platforms is not None
-            else []
-        ),
-        data_platforms=(
-            data_platforms
-            if data_platforms is not None
-            else []
-        ),
-        minimum_experience_years=(
-            minimum_experience_years
-        ),
-        deal_breakers=(
-            deal_breakers
-            if deal_breakers is not None
-            else []
-        ),
+        required_skills=(required_skills if required_skills is not None else []),
+        preferred_skills=(preferred_skills if preferred_skills is not None else []),
+        cloud_platforms=(cloud_platforms if cloud_platforms is not None else []),
+        data_platforms=(data_platforms if data_platforms is not None else []),
+        minimum_experience_years=(minimum_experience_years),
+        deal_breakers=(deal_breakers if deal_breakers is not None else []),
     )
 
 
@@ -168,14 +146,9 @@ def test_ratio_is_calculated_correctly():
 
 
 def test_profile_experience_uses_explicit_experience():
-    profile = make_profile(
-        experience_years=4.5
-    )
+    profile = make_profile(experience_years=4.5)
 
-    assert (
-        get_profile_experience(profile)
-        == 4.5
-    )
+    assert get_profile_experience(profile) == 4.5
 
 
 def test_missing_profile_experience_is_unknown():
@@ -184,10 +157,7 @@ def test_missing_profile_experience_is_unknown():
         secondary_skills=[],
     )
 
-    assert (
-        get_profile_experience(profile)
-        is None
-    )
+    assert get_profile_experience(profile) is None
 
 
 def test_experience_not_specified():
@@ -316,9 +286,7 @@ def test_deal_breakers_reduce_score():
         platform_ratio=0.0,
         required_experience=None,
         experience_fit="not_specified",
-        deal_breakers=[
-            "security clearance required"
-        ],
+        deal_breakers=["security clearance required"],
     )
 
     assert no_breaker > with_breaker
@@ -347,33 +315,19 @@ def test_matching_job_detects_required_skills():
         ),
     )
 
-    assert (
-        analysis.missing_required_skills
-        == []
-    )
+    assert analysis.missing_required_skills == []
 
-    assert set(
-        analysis.matched_required_skills
-    ) == {
+    assert set(analysis.matched_required_skills) == {
         "python",
         "sql",
         "pyspark",
     }
 
-    assert (
-        analysis.required_skill_match_ratio
-        == 1.0
-    )
+    assert analysis.required_skill_match_ratio == 1.0
 
-    assert (
-        analysis.experience_fit
-        == "meets"
-    )
+    assert analysis.experience_fit == "meets"
 
-    assert (
-        analysis.experience_gap_years
-        == 0.0
-    )
+    assert analysis.experience_gap_years == 0.0
 
 
 def test_missing_required_skills_are_reported():
@@ -389,24 +343,17 @@ def test_missing_required_skills_are_reported():
         ),
     )
 
-    assert set(
-        analysis.matched_required_skills
-    ) == {
+    assert set(analysis.matched_required_skills) == {
         "python",
         "sql",
     }
 
-    assert set(
-        analysis.missing_required_skills
-    ) == {
+    assert set(analysis.missing_required_skills) == {
         "kafka",
         "terraform",
     }
 
-    assert (
-        analysis.required_skill_match_ratio
-        == 0.5
-    )
+    assert analysis.required_skill_match_ratio == 0.5
 
 
 def test_aliases_match_profile_skills():
@@ -430,14 +377,9 @@ def test_aliases_match_profile_skills():
         enrichment=enrichment,
     )
 
-    assert (
-        analysis.missing_required_skills
-        == []
-    )
+    assert analysis.missing_required_skills == []
 
-    assert set(
-        analysis.matched_required_skills
-    ) == {
+    assert set(analysis.matched_required_skills) == {
         "azure data factory",
         "pyspark",
     }
@@ -445,9 +387,7 @@ def test_aliases_match_profile_skills():
 
 def test_experience_gap_is_exposed_in_analysis():
     analysis = analyze_job_gap(
-        profile=make_profile(
-            experience_years=4
-        ),
+        profile=make_profile(experience_years=4),
         enrichment=make_enrichment(
             required_skills=[
                 "Python",
@@ -457,20 +397,11 @@ def test_experience_gap_is_exposed_in_analysis():
         ),
     )
 
-    assert (
-        analysis.experience_fit
-        == "below_requirement"
-    )
+    assert analysis.experience_fit == "below_requirement"
 
-    assert (
-        analysis.experience_gap_years
-        == 2.0
-    )
+    assert analysis.experience_gap_years == 2.0
 
-    assert (
-        "Experience gap: 2.0 years"
-        in analysis.fit_summary
-    )
+    assert "Experience gap: 2.0 years" in analysis.fit_summary
 
 
 def test_sparse_jd_does_not_score_100():
@@ -515,7 +446,4 @@ def test_analysis_is_deterministic():
         enrichment=enrichment,
     )
 
-    assert (
-        first.to_dict()
-        == second.to_dict()
-    )
+    assert first.to_dict() == second.to_dict()

@@ -29,9 +29,7 @@ class JobRecord(Base):
         ),
     )
 
-    id: Mapped[int] = mapped_column(
-        primary_key=True
-    )
+    id: Mapped[int] = mapped_column(primary_key=True)
 
     source: Mapped[str] = mapped_column(
         String(50),
@@ -58,30 +56,20 @@ class JobRecord(Base):
         nullable=False,
     )
 
-    location: Mapped[str | None] = mapped_column(
-        String(500)
-    )
+    location: Mapped[str | None] = mapped_column(String(500))
 
-    department: Mapped[str | None] = mapped_column(
-        String(255)
-    )
+    department: Mapped[str | None] = mapped_column(String(255))
 
-    description: Mapped[str | None] = mapped_column(
-        Text
-    )
+    description: Mapped[str | None] = mapped_column(Text)
 
     apply_url: Mapped[str] = mapped_column(
         Text,
         nullable=False,
     )
 
-    posted_at: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True)
-    )
+    posted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
-    source_updated_at: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True)
-    )
+    source_updated_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
     fingerprint: Mapped[str] = mapped_column(
         String(64),
@@ -100,9 +88,7 @@ class JobRecord(Base):
         server_default=text("true"),
     )
 
-    closed_at: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True)
-    )
+    closed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
     first_seen_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
@@ -129,9 +115,7 @@ class JobSourceRecord(Base):
         ),
     )
 
-    id: Mapped[int] = mapped_column(
-        primary_key=True
-    )
+    id: Mapped[int] = mapped_column(primary_key=True)
 
     job_id: Mapped[int] = mapped_column(
         ForeignKey(
@@ -157,9 +141,7 @@ class JobSourceRecord(Base):
         nullable=False,
     )
 
-    source_url: Mapped[str | None] = mapped_column(
-        Text
-    )
+    source_url: Mapped[str | None] = mapped_column(Text)
 
     is_primary: Mapped[bool] = mapped_column(
         Boolean,
@@ -184,9 +166,7 @@ class JobSourceRecord(Base):
 class ScanRecord(Base):
     __tablename__ = "scans"
 
-    id: Mapped[int] = mapped_column(
-        primary_key=True
-    )
+    id: Mapped[int] = mapped_column(primary_key=True)
 
     source: Mapped[str] = mapped_column(
         String(50),
@@ -213,9 +193,7 @@ class ScanRecord(Base):
         default=0,
     )
 
-    error_type: Mapped[str | None] = mapped_column(
-        String(255)
-    )
+    error_type: Mapped[str | None] = mapped_column(String(255))
 
     started_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
@@ -231,9 +209,7 @@ class ScanRecord(Base):
 class RawJobRecord(Base):
     __tablename__ = "raw_jobs"
 
-    id: Mapped[int] = mapped_column(
-        primary_key=True
-    )
+    id: Mapped[int] = mapped_column(primary_key=True)
 
     source: Mapped[str] = mapped_column(
         String(50),
@@ -273,9 +249,7 @@ class CompanyRecord(Base):
         ),
     )
 
-    id: Mapped[int] = mapped_column(
-        primary_key=True
-    )
+    id: Mapped[int] = mapped_column(primary_key=True)
 
     name: Mapped[str] = mapped_column(
         String(255),
@@ -315,13 +289,9 @@ class CompanyRecord(Base):
 class JobRankingRecord(Base):
     __tablename__ = "job_rankings"
 
-    id: Mapped[int] = mapped_column(
-        primary_key=True
-    )
-    gap_score: Mapped[
-        float | None
-        ] = mapped_column(
-            nullable=True,
+    id: Mapped[int] = mapped_column(primary_key=True)
+    gap_score: Mapped[float | None] = mapped_column(
+        nullable=True,
     )
 
     job_id: Mapped[int] = mapped_column(
@@ -349,15 +319,11 @@ class JobRankingRecord(Base):
         nullable=False,
     )
 
-    deterministic_score: Mapped[
-        float | None
-    ] = mapped_column(
+    deterministic_score: Mapped[float | None] = mapped_column(
         nullable=True,
     )
 
-    semantic_score: Mapped[
-        float | None
-    ] = mapped_column(
+    semantic_score: Mapped[float | None] = mapped_column(
         nullable=True,
     )
 
@@ -372,9 +338,7 @@ class JobRankingRecord(Base):
         index=True,
     )
 
-    pipeline_run_id: Mapped[
-        int | None
-    ] = mapped_column(
+    pipeline_run_id: Mapped[int | None] = mapped_column(
         ForeignKey(
             "pipeline_runs.id",
             ondelete="SET NULL",
@@ -395,9 +359,7 @@ class JobApplicationStateRecord(Base):
         ),
     )
 
-    id: Mapped[int] = mapped_column(
-        primary_key=True
-    )
+    id: Mapped[int] = mapped_column(primary_key=True)
 
     job_id: Mapped[int] = mapped_column(
         ForeignKey(
@@ -422,9 +384,7 @@ class JobApplicationStateRecord(Base):
         index=True,
     )
 
-    notes: Mapped[str | None] = mapped_column(
-        Text
-    )
+    notes: Mapped[str | None] = mapped_column(Text)
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
@@ -443,20 +403,14 @@ class JobApplicationStateRecord(Base):
 class PipelineRunRecord(Base):
     __tablename__ = "pipeline_runs"
 
-    id: Mapped[int] = mapped_column(
-        primary_key=True
-    )
+    id: Mapped[int] = mapped_column(primary_key=True)
 
     started_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,
     )
 
-    finished_at: Mapped[
-        datetime | None
-    ] = mapped_column(
-        DateTime(timezone=True)
-    )
+    finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
     success: Mapped[bool] = mapped_column(
         Boolean,
@@ -489,11 +443,7 @@ class PipelineRunRecord(Base):
         server_default=text("0"),
     )
 
-    error_message: Mapped[
-        str | None
-    ] = mapped_column(
-        Text
-    )
+    error_message: Mapped[str | None] = mapped_column(Text)
 
 
 class NotificationRecord(Base):
@@ -508,9 +458,7 @@ class NotificationRecord(Base):
         ),
     )
 
-    id: Mapped[int] = mapped_column(
-        primary_key=True
-    )
+    id: Mapped[int] = mapped_column(primary_key=True)
 
     job_id: Mapped[int] = mapped_column(
         ForeignKey(
@@ -521,9 +469,7 @@ class NotificationRecord(Base):
         index=True,
     )
 
-    pipeline_run_id: Mapped[
-        int | None
-    ] = mapped_column(
+    pipeline_run_id: Mapped[int | None] = mapped_column(
         ForeignKey(
             "pipeline_runs.id",
             ondelete="SET NULL",
@@ -558,37 +504,22 @@ class NotificationRecord(Base):
         nullable=False,
     )
 
-    sent_at: Mapped[
-        datetime | None
-    ] = mapped_column(
-        DateTime(timezone=True)
-    )
+    sent_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
-    error_message: Mapped[
-        str | None
-    ] = mapped_column(
-        Text
-    )
+    error_message: Mapped[str | None] = mapped_column(Text)
 
 
 class CompanyDiscoveryCandidateRecord(Base):
-    __tablename__ = (
-        "company_discovery_candidates"
-    )
+    __tablename__ = "company_discovery_candidates"
 
     __table_args__ = (
         UniqueConstraint(
             "normalized_name",
-            name=(
-                "uq_company_discovery_"
-                "normalized_name"
-            ),
+            name=("uq_company_discovery_normalized_name"),
         ),
     )
 
-    id: Mapped[int] = mapped_column(
-        primary_key=True
-    )
+    id: Mapped[int] = mapped_column(primary_key=True)
 
     company_name: Mapped[str] = mapped_column(
         String(255),
@@ -609,23 +540,11 @@ class CompanyDiscoveryCandidateRecord(Base):
         index=True,
     )
 
-    discovered_ats: Mapped[
-        str | None
-    ] = mapped_column(
-        String(50)
-    )
+    discovered_ats: Mapped[str | None] = mapped_column(String(50))
 
-    discovered_identifier: Mapped[
-        str | None
-    ] = mapped_column(
-        String(255)
-    )
+    discovered_identifier: Mapped[str | None] = mapped_column(String(255))
 
-    career_url: Mapped[
-        str | None
-    ] = mapped_column(
-        Text
-    )
+    career_url: Mapped[str | None] = mapped_column(Text)
 
     attempt_count: Mapped[int] = mapped_column(
         nullable=False,
@@ -633,17 +552,9 @@ class CompanyDiscoveryCandidateRecord(Base):
         server_default=text("0"),
     )
 
-    last_attempt_at: Mapped[
-        datetime | None
-    ] = mapped_column(
-        DateTime(timezone=True)
-    )
+    last_attempt_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
-    error_message: Mapped[
-        str | None
-    ] = mapped_column(
-        Text
-    )
+    error_message: Mapped[str | None] = mapped_column(Text)
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
@@ -666,16 +577,11 @@ class JobEmbeddingRecord(Base):
         UniqueConstraint(
             "job_id",
             "model_name",
-            name=(
-                "uq_job_embedding_"
-                "job_model"
-            ),
+            name=("uq_job_embedding_job_model"),
         ),
     )
 
-    id: Mapped[int] = mapped_column(
-        primary_key=True
-    )
+    id: Mapped[int] = mapped_column(primary_key=True)
 
     job_id: Mapped[int] = mapped_column(
         ForeignKey(
@@ -692,9 +598,7 @@ class JobEmbeddingRecord(Base):
         index=True,
     )
 
-    embedding: Mapped[
-        list[float]
-    ] = mapped_column(
+    embedding: Mapped[list[float]] = mapped_column(
         Vector(384),
         nullable=False,
     )
@@ -729,9 +633,7 @@ class JobEnrichmentRecord(Base):
         ),
     )
 
-    id: Mapped[int] = mapped_column(
-        primary_key=True
-    )
+    id: Mapped[int] = mapped_column(primary_key=True)
 
     job_id: Mapped[int] = mapped_column(
         ForeignKey(
@@ -754,115 +656,77 @@ class JobEnrichmentRecord(Base):
         index=True,
     )
 
-    minimum_experience_years: Mapped[
-        int | None
-    ] = mapped_column(
+    minimum_experience_years: Mapped[int | None] = mapped_column(
         nullable=True,
     )
 
-    maximum_experience_years: Mapped[
-        int | None
-    ] = mapped_column(
+    maximum_experience_years: Mapped[int | None] = mapped_column(
         nullable=True,
     )
 
-    seniority: Mapped[
-        str | None
-    ] = mapped_column(
+    seniority: Mapped[str | None] = mapped_column(
         String(100),
         nullable=True,
         index=True,
     )
 
-    employment_type: Mapped[
-        str | None
-    ] = mapped_column(
+    employment_type: Mapped[str | None] = mapped_column(
         String(100),
         nullable=True,
     )
 
-    education: Mapped[
-        str | None
-    ] = mapped_column(
+    education: Mapped[str | None] = mapped_column(
         Text,
         nullable=True,
     )
 
-    required_skills: Mapped[
-        list
-    ] = mapped_column(
+    required_skills: Mapped[list] = mapped_column(
         JSONB,
         nullable=False,
         default=list,
-        server_default=text(
-            "'[]'::jsonb"
-        ),
+        server_default=text("'[]'::jsonb"),
     )
 
-    preferred_skills: Mapped[
-        list
-    ] = mapped_column(
+    preferred_skills: Mapped[list] = mapped_column(
         JSONB,
         nullable=False,
         default=list,
-        server_default=text(
-            "'[]'::jsonb"
-        ),
+        server_default=text("'[]'::jsonb"),
     )
 
-    cloud_platforms: Mapped[
-        list
-    ] = mapped_column(
+    cloud_platforms: Mapped[list] = mapped_column(
         JSONB,
         nullable=False,
         default=list,
-        server_default=text(
-            "'[]'::jsonb"
-        ),
+        server_default=text("'[]'::jsonb"),
     )
 
-    data_platforms: Mapped[
-        list
-    ] = mapped_column(
+    data_platforms: Mapped[list] = mapped_column(
         JSONB,
         nullable=False,
         default=list,
-        server_default=text(
-            "'[]'::jsonb"
-        ),
+        server_default=text("'[]'::jsonb"),
     )
 
-    responsibilities: Mapped[
-        list
-    ] = mapped_column(
+    responsibilities: Mapped[list] = mapped_column(
         JSONB,
         nullable=False,
         default=list,
-        server_default=text(
-            "'[]'::jsonb"
-        ),
+        server_default=text("'[]'::jsonb"),
     )
 
-    deal_breakers: Mapped[
-        list
-    ] = mapped_column(
+    deal_breakers: Mapped[list] = mapped_column(
         JSONB,
         nullable=False,
         default=list,
-        server_default=text(
-            "'[]'::jsonb"
-        ),
+        server_default=text("'[]'::jsonb"),
     )
 
-    extracted_payload: Mapped[
-        dict
-    ] = mapped_column(
+    extracted_payload: Mapped[dict] = mapped_column(
         JSONB,
         nullable=False,
         default=dict,
-        server_default=text(
-            "'{}'::jsonb"
-        ),
+        server_default=text("'{}'::jsonb"),
     )
 
     created_at: Mapped[datetime] = mapped_column(
@@ -878,6 +742,7 @@ class JobEnrichmentRecord(Base):
         nullable=False,
     )
 
+
 class JobGapAnalysisRecord(Base):
     __tablename__ = "job_gap_analyses"
 
@@ -889,9 +754,7 @@ class JobGapAnalysisRecord(Base):
         ),
     )
 
-    id: Mapped[int] = mapped_column(
-        primary_key=True
-    )
+    id: Mapped[int] = mapped_column(primary_key=True)
 
     job_id: Mapped[int] = mapped_column(
         ForeignKey(
@@ -1028,10 +891,12 @@ class JobGapAnalysisRecord(Base):
         onupdate=func.now(),
         nullable=False,
     )
-class JobApplicationAssetRecord(Base):
-        __tablename__ = "job_application_assets"
 
-        __table_args__ = (
+
+class JobApplicationAssetRecord(Base):
+    __tablename__ = "job_application_assets"
+
+    __table_args__ = (
         UniqueConstraint(
             "job_id",
             "profile_name",
@@ -1039,11 +904,9 @@ class JobApplicationAssetRecord(Base):
         ),
     )
 
-        id: Mapped[int] = mapped_column(
-        primary_key=True
-    )
+    id: Mapped[int] = mapped_column(primary_key=True)
 
-        job_id: Mapped[int] = mapped_column(
+    job_id: Mapped[int] = mapped_column(
         ForeignKey(
             "jobs.id",
             ondelete="CASCADE",
@@ -1052,91 +915,91 @@ class JobApplicationAssetRecord(Base):
         index=True,
     )
 
-        profile_name: Mapped[str] = mapped_column(
+    profile_name: Mapped[str] = mapped_column(
         String(100),
         nullable=False,
         index=True,
     )
 
-        generator_version: Mapped[str] = mapped_column(
+    generator_version: Mapped[str] = mapped_column(
         String(100),
         nullable=False,
         index=True,
     )
 
-        content_hash: Mapped[str] = mapped_column(
+    content_hash: Mapped[str] = mapped_column(
         String(64),
         nullable=False,
         index=True,
     )
 
-        recruiter_dm: Mapped[str] = mapped_column(
+    recruiter_dm: Mapped[str] = mapped_column(
         Text,
         nullable=False,
     )
 
-        email_subject: Mapped[str] = mapped_column(
+    email_subject: Mapped[str] = mapped_column(
         Text,
         nullable=False,
     )
 
-        email_body: Mapped[str] = mapped_column(
+    email_body: Mapped[str] = mapped_column(
         Text,
         nullable=False,
     )
 
-        cover_note: Mapped[str] = mapped_column(
+    cover_note: Mapped[str] = mapped_column(
         Text,
         nullable=False,
     )
 
-        resume_summary: Mapped[str] = mapped_column(
+    resume_summary: Mapped[str] = mapped_column(
         Text,
         nullable=False,
     )
 
-        skills_to_emphasize: Mapped[list] = mapped_column(
+    skills_to_emphasize: Mapped[list] = mapped_column(
         JSONB,
         nullable=False,
         default=list,
         server_default=text("'[]'::jsonb"),
     )
 
-        missing_skills_warning: Mapped[list] = mapped_column(
+    missing_skills_warning: Mapped[list] = mapped_column(
         JSONB,
         nullable=False,
         default=list,
         server_default=text("'[]'::jsonb"),
     )
 
-        resume_bullets_to_emphasize: Mapped[list] = mapped_column(
+    resume_bullets_to_emphasize: Mapped[list] = mapped_column(
         JSONB,
         nullable=False,
         default=list,
         server_default=text("'[]'::jsonb"),
     )
 
-        interview_talking_points: Mapped[list] = mapped_column(
+    interview_talking_points: Mapped[list] = mapped_column(
         JSONB,
         nullable=False,
         default=list,
         server_default=text("'[]'::jsonb"),
     )
 
-        generated_payload: Mapped[dict] = mapped_column(
+    generated_payload: Mapped[dict] = mapped_column(
         JSONB,
         nullable=False,
         default=dict,
         server_default=text("'{}'::jsonb"),
     )
 
-        created_at: Mapped[datetime] = mapped_column(
+    created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),
         nullable=False,
     )
 
-        updated_at: Mapped[datetime] = mapped_column(
+    updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),
         onupdate=func.now(),

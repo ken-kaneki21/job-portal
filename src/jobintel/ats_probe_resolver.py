@@ -33,11 +33,7 @@ def build_slug_candidates(
     a broad-search company name.
     """
 
-    original = (
-        company_name
-        .lower()
-        .strip()
-    )
+    original = company_name.lower().strip()
 
     words = re.findall(
         r"[a-z0-9]+",
@@ -62,31 +58,19 @@ def build_slug_candidates(
         "india",
     }
 
-    cleaned_words = [
-        word
-        for word in words
-        if word not in stop_words
-    ]
+    cleaned_words = [word for word in words if word not in stop_words]
 
     candidates = []
 
-    raw_slug = normalize_slug(
-        company_name
-    )
+    raw_slug = normalize_slug(company_name)
 
     if raw_slug:
-        candidates.append(
-            raw_slug
-        )
+        candidates.append(raw_slug)
 
     if cleaned_words:
-        joined = "".join(
-            cleaned_words
-        )
+        joined = "".join(cleaned_words)
 
-        hyphenated = "-".join(
-            cleaned_words
-        )
+        hyphenated = "-".join(cleaned_words)
 
         candidates.extend(
             [
@@ -96,13 +80,9 @@ def build_slug_candidates(
         )
 
     if words:
-        candidates.append(
-            "".join(words)
-        )
+        candidates.append("".join(words))
 
-        candidates.append(
-            "-".join(words)
-        )
+        candidates.append("-".join(words))
 
     # preserve order while removing duplicates
     result = []
@@ -118,13 +98,9 @@ def build_slug_candidates(
         if candidate in seen:
             continue
 
-        seen.add(
-            candidate
-        )
+        seen.add(candidate)
 
-        result.append(
-            candidate
-        )
+        result.append(candidate)
 
     return result[:6]
 
@@ -156,25 +132,19 @@ def response_has_jobs(
         data.get("jobs"),
         list,
     ):
-        return len(
-            data["jobs"]
-        ) > 0
+        return len(data["jobs"]) > 0
 
     if isinstance(
         data.get("content"),
         list,
     ):
-        return len(
-            data["content"]
-        ) > 0
+        return len(data["content"]) > 0
 
     if isinstance(
         data.get("data"),
         list,
     ):
-        return len(
-            data["data"]
-        ) > 0
+        return len(data["data"]) > 0
 
     if (
         isinstance(
@@ -192,26 +162,17 @@ def probe_greenhouse(
     client: httpx.Client,
     slug: str,
 ) -> ATSResolution | None:
-    url = (
-        "https://boards-api.greenhouse.io/"
-        f"v1/boards/{slug}/jobs"
-    )
+    url = f"https://boards-api.greenhouse.io/v1/boards/{slug}/jobs"
 
-    response = client.get(
-        url
-    )
+    response = client.get(url)
 
-    if not response_has_jobs(
-        response
-    ):
+    if not response_has_jobs(response):
         return None
 
     return ATSResolution(
         ats="greenhouse",
         identifier=slug,
-        career_url=(
-            f"https://job-boards.greenhouse.io/{slug}"
-        ),
+        career_url=(f"https://job-boards.greenhouse.io/{slug}"),
     )
 
 
@@ -219,10 +180,7 @@ def probe_lever(
     client: httpx.Client,
     slug: str,
 ) -> ATSResolution | None:
-    url = (
-        "https://api.lever.co/v0/"
-        f"postings/{slug}"
-    )
+    url = f"https://api.lever.co/v0/postings/{slug}"
 
     response = client.get(
         url,
@@ -231,17 +189,13 @@ def probe_lever(
         },
     )
 
-    if not response_has_jobs(
-        response
-    ):
+    if not response_has_jobs(response):
         return None
 
     return ATSResolution(
         ats="lever",
         identifier=slug,
-        career_url=(
-            f"https://jobs.lever.co/{slug}"
-        ),
+        career_url=(f"https://jobs.lever.co/{slug}"),
     )
 
 
@@ -249,26 +203,17 @@ def probe_ashby(
     client: httpx.Client,
     slug: str,
 ) -> ATSResolution | None:
-    url = (
-        "https://api.ashbyhq.com/"
-        f"posting-api/job-board/{slug}"
-    )
+    url = f"https://api.ashbyhq.com/posting-api/job-board/{slug}"
 
-    response = client.get(
-        url
-    )
+    response = client.get(url)
 
-    if not response_has_jobs(
-        response
-    ):
+    if not response_has_jobs(response):
         return None
 
     return ATSResolution(
         ats="ashby",
         identifier=slug,
-        career_url=(
-            f"https://jobs.ashbyhq.com/{slug}"
-        ),
+        career_url=(f"https://jobs.ashbyhq.com/{slug}"),
     )
 
 
@@ -276,10 +221,7 @@ def probe_smartrecruiters(
     client: httpx.Client,
     slug: str,
 ) -> ATSResolution | None:
-    url = (
-        "https://api.smartrecruiters.com/"
-        f"v1/companies/{slug}/postings"
-    )
+    url = f"https://api.smartrecruiters.com/v1/companies/{slug}/postings"
 
     response = client.get(
         url,
@@ -288,36 +230,25 @@ def probe_smartrecruiters(
         },
     )
 
-    if not response_has_jobs(
-        response
-    ):
+    if not response_has_jobs(response):
         return None
 
     return ATSResolution(
         ats="smartrecruiters",
         identifier=slug,
-        career_url=(
-            "https://careers."
-            f"smartrecruiters.com/{slug}"
-        ),
+        career_url=(f"https://careers.smartrecruiters.com/{slug}"),
     )
 
 
 def resolve_company_ats(
     company_name: str,
 ) -> ATSResolution | None:
-    slugs = build_slug_candidates(
-        company_name
-    )
+    slugs = build_slug_candidates(company_name)
 
     with httpx.Client(
         timeout=8.0,
         follow_redirects=True,
-        headers={
-            "User-Agent": (
-                "JobIntel/1.0 ATS discovery"
-            )
-        },
+        headers={"User-Agent": ("JobIntel/1.0 ATS discovery")},
     ) as client:
         for slug in slugs:
             probes = [

@@ -1,6 +1,6 @@
 from datetime import (
+    UTC,
     datetime,
-    timezone,
 )
 
 from fastapi import (
@@ -18,10 +18,14 @@ from jobintel.temporal_pipeline.workflow import (
     JobIntelligencePipelineWorkflow,
 )
 
+router = APIRouter(tags=["Temporal"])
 
-router = APIRouter(
-    tags=["Temporal"]
-)
+
+def workflow_status_name(status) -> str:
+    if status is None:
+        return "UNKNOWN"
+
+    return status.name
 
 
 async def get_temporal_client() -> Client:
@@ -34,16 +38,9 @@ async def get_temporal_client() -> Client:
 async def start_temporal_pipeline() -> dict:
     client = await get_temporal_client()
 
-    timestamp = datetime.now(
-        timezone.utc
-    ).strftime(
-        "%Y%m%d-%H%M%S-%f"
-    )
+    timestamp = datetime.now(UTC).strftime("%Y%m%d-%H%M%S-%f")
 
-    workflow_id = (
-        "job-intelligence-pipeline-"
-        f"{timestamp}"
-    )
+    workflow_id = f"job-intelligence-pipeline-{timestamp}"
 
     handle = await client.start_workflow(
         JobIntelligencePipelineWorkflow.run,
@@ -52,18 +49,14 @@ async def start_temporal_pipeline() -> dict:
     )
 
     return {
-        "message": (
-            "Temporal pipeline workflow started"
-        ),
+        "message": ("Temporal pipeline workflow started"),
         "workflow_id": handle.id,
         "temporal_managed": True,
         "task_queue": TASK_QUEUE,
     }
 
 
-@router.post(
-    "/pipeline/run-temporal"
-)
+@router.post("/pipeline/run-temporal")
 async def run_pipeline_temporal():
     try:
         return await start_temporal_pipeline()
@@ -71,51 +64,32 @@ async def run_pipeline_temporal():
     except Exception as exc:
         raise HTTPException(
             status_code=500,
-            detail=(
-                "Unable to start Temporal workflow: "
-                f"{exc}"
-            ),
-        )
+            detail=(f"Unable to start Temporal workflow: {exc}"),
+        ) from exc
 
 
-@router.get(
-    "/temporal/workflows/{workflow_id}"
-)
+@router.get("/temporal/workflows/{workflow_id}")
 async def get_temporal_workflow_status(
     workflow_id: str,
 ):
     try:
         client = await get_temporal_client()
 
-        handle = client.get_workflow_handle(
-            workflow_id
-        )
+        handle = client.get_workflow_handle(workflow_id)
 
         description = await handle.describe()
 
         return {
             "workflow_id": workflow_id,
-            "status": (
-                description.status.name
-            ),
-            "workflow_type": (
-                description.workflow_type
-            ),
-            "run_id": (
-                description.run_id
-            ),
-            "task_queue": (
-                description.task_queue
-            ),
+            "status": (workflow_status_name(description.status)),
+            "workflow_type": (description.workflow_type),
+            "run_id": (description.run_id),
+            "task_queue": (description.task_queue),
             "start_time": (
-                description.start_time.isoformat()
-                if description.start_time
-                else None
+                description.start_time.isoformat() if description.start_time else None
             ),
             "close_time": (
-                description.close_time.isoformat()
-                if description.close_time
-                else None
+                description.close_time.isoformat() if description.close_time else None
             ),
             "temporal_managed": True,
         }
@@ -123,29 +97,22 @@ async def get_temporal_workflow_status(
     except Exception as exc:
         raise HTTPException(
             status_code=404,
-            detail=(
-                "Unable to get workflow status: "
-                f"{exc}"
-            ),
-        )
+            detail=(f"Unable to get workflow status: {exc}"),
+        ) from exc
 
 
-@router.get(
-    "/temporal/workflows/{workflow_id}/result"
-)
+@router.get("/temporal/workflows/{workflow_id}/result")
 async def get_temporal_workflow_result(
     workflow_id: str,
 ):
     try:
         client = await get_temporal_client()
 
-        handle = client.get_workflow_handle(
-            workflow_id
-        )
+        handle = client.get_workflow_handle(workflow_id)
 
         description = await handle.describe()
 
-        status = description.status.name
+        status = workflow_status_name(description.status)
 
         if status != "COMPLETED":
             return {
@@ -166,8 +133,5 @@ async def get_temporal_workflow_result(
     except Exception as exc:
         raise HTTPException(
             status_code=404,
-            detail=(
-                "Unable to get workflow result: "
-                f"{exc}"
-            ),
-        )
+            detail=(f"Unable to get workflow result: {exc}"),
+        ) from exc

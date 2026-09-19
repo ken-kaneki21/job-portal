@@ -1,6 +1,5 @@
 import os
 
-
 TEMPORAL_ADDRESS = os.getenv(
     "JOBINTEL_TEMPORAL_ADDRESS",
     "localhost:7233",

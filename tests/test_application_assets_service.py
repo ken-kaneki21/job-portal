@@ -41,68 +41,38 @@ def make_inputs(
 def test_content_hash_is_deterministic():
     inputs = make_inputs()
 
-    first = build_content_hash(
-        **inputs
-    )
+    first = build_content_hash(**inputs)
 
-    second = build_content_hash(
-        **inputs
-    )
+    second = build_content_hash(**inputs)
 
     assert first == second
 
 
 def test_content_hash_has_sha256_length():
-    result = build_content_hash(
-        **make_inputs()
-    )
+    result = build_content_hash(**make_inputs())
 
     assert len(result) == 64
 
 
 def test_ranking_change_changes_hash():
-    first = build_content_hash(
-        **make_inputs(
-            ranking_score=80.0
-        )
-    )
+    first = build_content_hash(**make_inputs(ranking_score=80.0))
 
-    second = build_content_hash(
-        **make_inputs(
-            ranking_score=90.0
-        )
-    )
+    second = build_content_hash(**make_inputs(ranking_score=90.0))
 
     assert first != second
 
 
 def test_enrichment_change_changes_hash():
-    first = build_content_hash(
-        **make_inputs(
-            enrichment_hash="one"
-        )
-    )
+    first = build_content_hash(**make_inputs(enrichment_hash="one"))
 
-    second = build_content_hash(
-        **make_inputs(
-            enrichment_hash="two"
-        )
-    )
+    second = build_content_hash(**make_inputs(enrichment_hash="two"))
 
     assert first != second
 
 
 def test_gap_change_changes_hash():
-    first = build_content_hash(
-        **make_inputs(
-            gap_hash="one"
-        )
-    )
+    first = build_content_hash(**make_inputs(gap_hash="one"))
 
-    second = build_content_hash(
-        **make_inputs(
-            gap_hash="two"
-        )
-    )
+    second = build_content_hash(**make_inputs(gap_hash="two"))
 
     assert first != second

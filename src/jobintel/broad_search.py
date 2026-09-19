@@ -10,7 +10,6 @@ from jobintel.search_sources.adzuna import (
     AdzunaSource,
 )
 
-
 SEARCHES = [
     {
         "query": "data engineer",
@@ -47,9 +46,7 @@ MAX_PAGES = 2
 
 
 async def fetch_jobs() -> list:
-    timeout = httpx.Timeout(
-        20.0
-    )
+    timeout = httpx.Timeout(20.0)
 
     limits = httpx.Limits(
         max_connections=10,
@@ -75,15 +72,9 @@ async def fetch_jobs() -> list:
                 max_pages=MAX_PAGES,
             )
 
-            print(
-                f"{search['query']:<30}"
-                f"{search['location']:<15}"
-                f"{len(jobs):>5} jobs"
-            )
+            print(f"{search['query']:<30}{search['location']:<15}{len(jobs):>5} jobs")
 
-            all_jobs.extend(
-                jobs
-            )
+            all_jobs.extend(jobs)
 
     return all_jobs
 
@@ -104,28 +95,18 @@ def deduplicate_source_jobs(
 
         unique[key] = item
 
-    return list(
-        unique.values()
-    )
+    return list(unique.values())
 
 
 async def main() -> None:
     fetched_jobs = await fetch_jobs()
 
-    unique_jobs = deduplicate_source_jobs(
-        fetched_jobs
-    )
+    unique_jobs = deduplicate_source_jobs(fetched_jobs)
 
     print()
-    print(
-        f"Fetched:       "
-        f"{len(fetched_jobs)}"
-    )
+    print(f"Fetched:       {len(fetched_jobs)}")
 
-    print(
-        f"Source unique: "
-        f"{len(unique_jobs)}"
-    )
+    print(f"Source unique: {len(unique_jobs)}")
 
     with SessionLocal() as session:
         result = persist_broad_jobs(
@@ -138,25 +119,13 @@ async def main() -> None:
     print()
     print("Database:")
 
-    print(
-        f"New canonical jobs: "
-        f"{result.new}"
-    )
+    print(f"New canonical jobs: {result.new}")
 
-    print(
-        f"Matched existing:   "
-        f"{result.matched_existing}"
-    )
+    print(f"Matched existing:   {result.matched_existing}")
 
-    print(
-        f"Already known:      "
-        f"{result.existing_source}"
-    )
+    print(f"Already known:      {result.existing_source}")
 
-    print(
-        f"Raw payloads saved: "
-        f"{result.raw_saved}"
-    )
+    print(f"Raw payloads saved: {result.raw_saved}")
 
 
 if __name__ == "__main__":

@@ -13,13 +13,10 @@ def find_source_reference(
     external_id: str,
 ) -> JobSourceRecord | None:
     return session.scalar(
-        select(JobSourceRecord)
-        .where(
+        select(JobSourceRecord).where(
             JobSourceRecord.source == source,
-            JobSourceRecord.source_identifier
-            == source_identifier,
-            JobSourceRecord.external_id
-            == external_id,
+            JobSourceRecord.source_identifier == source_identifier,
+            JobSourceRecord.external_id == external_id,
         )
     )
 
@@ -34,9 +31,7 @@ def attach_source(
     source_url: str | None,
     is_primary: bool = False,
 ) -> None:
-    statement = insert(
-        JobSourceRecord
-    ).values(
+    statement = insert(JobSourceRecord).values(
         job_id=job_id,
         source=source,
         source_identifier=source_identifier,

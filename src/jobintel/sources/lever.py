@@ -8,7 +8,6 @@ from jobintel.models.fetched_job import FetchedJob
 from jobintel.models.job import Job
 from jobintel.sources.base import JobSource
 
-
 BASE_URL = "https://api.lever.co/v0/postings"
 
 
@@ -37,13 +36,10 @@ def make_fingerprint(
         ]
     )
 
-    return hashlib.sha256(
-        content.encode("utf-8")
-    ).hexdigest()
+    return hashlib.sha256(content.encode("utf-8")).hexdigest()
 
 
 class LeverSource(JobSource):
-
     def __init__(
         self,
         client: httpx.AsyncClient,
@@ -86,10 +82,7 @@ class LeverSource(JobSource):
         location = categories.get("location")
         department = categories.get("department")
 
-        description = clean_text(
-            raw.get("descriptionPlain")
-            or raw.get("description")
-        )
+        description = clean_text(raw.get("descriptionPlain") or raw.get("description"))
 
         title = raw["text"]
 

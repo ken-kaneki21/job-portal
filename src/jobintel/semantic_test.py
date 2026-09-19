@@ -18,66 +18,37 @@ from jobintel.semantic.profile_text import (
     build_profile_text,
 )
 
-
-PROFILE_PATH = (
-    "profiles/data_engineer.json"
-)
+PROFILE_PATH = "profiles/data_engineer.json"
 
 
 def main() -> None:
-    profile = load_profile(
-        PROFILE_PATH
-    )
+    profile = load_profile(PROFILE_PATH)
 
-    profile_text = (
-        build_profile_text(
-            profile
-        )
-    )
+    profile_text = build_profile_text(profile)
 
     print()
-    print(
-        "Loading embedding model..."
-    )
+    print("Loading embedding model...")
 
-    profile_embedding = (
-        embed_text(
-            profile_text
-        )
-    )
+    profile_embedding = embed_text(profile_text)
 
     with SessionLocal() as session:
         jobs = session.scalars(
-            select(
-                JobRecord
-            )
-            .where(
-                JobRecord.is_active.is_(
-                    True
-                )
-            )
-            .order_by(
-                JobRecord.id.desc()
-            )
+            select(JobRecord)
+            .where(JobRecord.is_active.is_(True))
+            .order_by(JobRecord.id.desc())
             .limit(20)
         ).all()
 
     scored = []
 
     for job in jobs:
-        job_text = build_job_text(
-            job
-        )
+        job_text = build_job_text(job)
 
-        job_embedding = embed_text(
-            job_text
-        )
+        job_embedding = embed_text(job_text)
 
-        similarity = (
-            cosine_similarity(
-                profile_embedding,
-                job_embedding,
-            )
+        similarity = cosine_similarity(
+            profile_embedding,
+            job_embedding,
         )
 
         scored.append(
@@ -94,22 +65,14 @@ def main() -> None:
 
     print()
     print("=" * 100)
-    print(
-        "SEMANTIC MATCH TEST"
-    )
+    print("SEMANTIC MATCH TEST")
     print("=" * 100)
 
     for similarity, job in scored:
         print()
-        print(
-            f"{similarity:.3f} | "
-            f"{job.title}"
-        )
+        print(f"{similarity:.3f} | {job.title}")
 
-        print(
-            f"{job.company} | "
-            f"{job.location or 'Unknown'}"
-        )
+        print(f"{job.company} | {job.location or 'Unknown'}")
 
 
 if __name__ == "__main__":

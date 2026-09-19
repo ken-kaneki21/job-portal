@@ -5,32 +5,21 @@ from jobintel.db.models import (
 )
 from jobintel.db.session import SessionLocal
 
-
 MAX_RETRIES = 3
 
 
 def main() -> None:
     with SessionLocal() as session:
         failed = session.scalars(
-            select(
-                NotificationRecord
-            )
-            .where(
-                NotificationRecord.status
-                == "failed"
-            )
+            select(NotificationRecord).where(NotificationRecord.status == "failed")
         ).all()
 
         retry_count = 0
 
         for notification in failed:
-            notification.status = (
-                "pending"
-            )
+            notification.status = "pending"
 
-            notification.error_message = (
-                None
-            )
+            notification.error_message = None
 
             retry_count += 1
 
@@ -39,10 +28,7 @@ def main() -> None:
 
         session.commit()
 
-    print(
-        f"Notifications reset "
-        f"for retry: {retry_count}"
-    )
+    print(f"Notifications reset for retry: {retry_count}")
 
 
 if __name__ == "__main__":

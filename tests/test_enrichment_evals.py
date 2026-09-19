@@ -56,25 +56,13 @@ Design production data workflows.
         enrichment=enrichment,
     )
 
-    assert (
-        enrichment.minimum_experience_years
-        == 3
-    )
+    assert enrichment.minimum_experience_years == 3
 
-    assert (
-        analysis.experience_fit
-        == "meets"
-    )
+    assert analysis.experience_fit == "meets"
 
-    assert (
-        analysis.required_skill_match_ratio
-        == 1.0
-    )
+    assert analysis.required_skill_match_ratio == 1.0
 
-    assert (
-        analysis.gap_score
-        > 70
-    )
+    assert analysis.gap_score > 70
 
 
 def test_weak_jd_produces_lower_fit():
@@ -101,17 +89,9 @@ Build distributed streaming systems.
         enrichment=enrichment,
     )
 
-    assert (
-        analysis.required_skill_match_ratio
-        < 0.5
-    )
+    assert analysis.required_skill_match_ratio < 0.5
 
-    assert (
-        len(
-            analysis.missing_required_skills
-        )
-        > 0
-    )
+    assert len(analysis.missing_required_skills) > 0
 
 
 def test_good_jd_scores_above_weak_jd():
@@ -135,18 +115,14 @@ Nice to have:
 GCP.
 """
 
-    good_enrichment = (
-        extract_job_enrichment(
-            title="Data Engineer",
-            description=good_description,
-        )
+    good_enrichment = extract_job_enrichment(
+        title="Data Engineer",
+        description=good_description,
     )
 
-    weak_enrichment = (
-        extract_job_enrichment(
-            title="Data Engineer",
-            description=weak_description,
-        )
+    weak_enrichment = extract_job_enrichment(
+        title="Data Engineer",
+        description=weak_description,
     )
 
     good_analysis = analyze_job_gap(
@@ -159,10 +135,7 @@ GCP.
         enrichment=weak_enrichment,
     )
 
-    assert (
-        good_analysis.gap_score
-        > weak_analysis.gap_score
-    )
+    assert good_analysis.gap_score > weak_analysis.gap_score
 
 
 def test_extracted_experience_changes_gap_fit():
@@ -194,20 +167,11 @@ Python and SQL required.
         enrichment=stretch,
     )
 
-    assert (
-        matching_result.experience_fit
-        == "meets"
-    )
+    assert matching_result.experience_fit == "meets"
 
-    assert (
-        stretch_result.experience_fit
-        == "below_requirement"
-    )
+    assert stretch_result.experience_fit == "below_requirement"
 
-    assert (
-        matching_result.gap_score
-        > stretch_result.gap_score
-    )
+    assert matching_result.gap_score > stretch_result.gap_score
 
 
 def test_extracted_aliases_flow_into_gap_matching():
@@ -226,28 +190,19 @@ ADF, Py Spark and Postgres required.
         enrichment=enrichment,
     )
 
-    assert (
-        analysis.missing_required_skills
-        == []
-    )
+    assert analysis.missing_required_skills == []
 
     assert {
         "azure data factory",
         "pyspark",
         "postgresql",
-    }.issubset(
-        set(
-            analysis.matched_required_skills
-        )
-    )
+    }.issubset(set(analysis.matched_required_skills))
 
 
 def test_sparse_jd_remains_neutralish_end_to_end():
     enrichment = extract_job_enrichment(
         title="Data Engineer",
-        description=(
-            "Join our growing data team."
-        ),
+        description=("Join our growing data team."),
     )
 
     analysis = analyze_job_gap(
@@ -255,15 +210,9 @@ def test_sparse_jd_remains_neutralish_end_to_end():
         enrichment=enrichment,
     )
 
-    assert (
-        enrichment.required_skills
-        == []
-    )
+    assert enrichment.required_skills == []
 
-    assert (
-        enrichment.minimum_experience_years
-        is None
-    )
+    assert enrichment.minimum_experience_years is None
 
     assert analysis.gap_score == 50.0
 
@@ -287,17 +236,8 @@ Candidates must have an active security clearance.
         enrichment=enrichment,
     )
 
-    assert (
-        "security_clearance"
-        in enrichment.deal_breakers
-    )
+    assert "security_clearance" in enrichment.deal_breakers
 
-    assert (
-        "security_clearance"
-        in analysis.deal_breakers
-    )
+    assert "security_clearance" in analysis.deal_breakers
 
-    assert (
-        "Potential deal-breakers"
-        in analysis.fit_summary
-    )
+    assert "Potential deal-breakers" in analysis.fit_summary

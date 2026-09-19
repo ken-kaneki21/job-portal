@@ -2,12 +2,12 @@ import hashlib
 import re
 
 import httpx
+from pydantic import HttpUrl
 
 from jobintel.models.company import Company
 from jobintel.models.fetched_job import FetchedJob
 from jobintel.models.job import Job
 from jobintel.sources.base import JobSource
-
 
 BASE_URL = "https://api.smartrecruiters.com/v1/companies"
 
@@ -39,13 +39,10 @@ def make_fingerprint(
         ]
     )
 
-    return hashlib.sha256(
-        content.encode("utf-8")
-    ).hexdigest()
+    return hashlib.sha256(content.encode("utf-8")).hexdigest()
 
 
 class SmartRecruitersSource(JobSource):
-
     def __init__(
         self,
         client: httpx.AsyncClient,
@@ -60,10 +57,7 @@ class SmartRecruitersSource(JobSource):
         offset = 0
 
         while True:
-            url = (
-                f"{BASE_URL}/"
-                f"{company.identifier}/postings"
-            )
+            url = f"{BASE_URL}/{company.identifier}/postings"
 
             response = await self.client.get(
                 url,
@@ -86,10 +80,7 @@ class SmartRecruitersSource(JobSource):
                 len(postings),
             )
 
-            if (
-                not batch
-                or len(postings) >= total_found
-            ):
+            if not batch or len(postings) >= total_found:
                 break
 
             offset += PAGE_SIZE
@@ -119,11 +110,7 @@ class SmartRecruitersSource(JobSource):
         company: Company,
         posting_id: str,
     ) -> dict:
-        url = (
-            f"{BASE_URL}/"
-            f"{company.identifier}/postings/"
-            f"{posting_id}"
-        )
+        url = f"{BASE_URL}/{company.identifier}/postings/{posting_id}"
 
         response = await self.client.get(url)
 
@@ -146,11 +133,7 @@ class SmartRecruitersSource(JobSource):
             location_data.get("country"),
         ]
 
-        location = ", ".join(
-            part
-            for part in location_parts
-            if part
-        ) or None
+        location = ", ".join(part for part in location_parts if part) or None
 
         job_ad = raw.get("jobAd") or {}
 
@@ -163,25 +146,15 @@ class SmartRecruitersSource(JobSource):
                 text_value = value.get("text")
 
                 if text_value:
-                    description_parts.append(
-                        text_value
-                    )
+                    description_parts.append(text_value)
 
-        description = clean_text(
-            " ".join(description_parts)
-        )
+        description = clean_text(" ".join(description_parts))
 
-        department = (
-            raw.get("department") or {}
-        ).get("label")
+        department = (raw.get("department") or {}).get("label")
 
         external_id = str(raw["id"])
 
-        apply_url = (
-            raw.get("applyUrl")
-            or raw.get("ref")
-            or ""
-        )
+        apply_url = HttpUrl(str(raw.get("applyUrl") or raw.get("ref")))
 
         fingerprint = make_fingerprint(
             company=company.name,
@@ -200,9 +173,7 @@ class SmartRecruitersSource(JobSource):
             description=description,
             department=department,
             apply_url=apply_url,
-            posted_at=raw.get(
-                "releasedDate"
-            ),
+            posted_at=raw.get("releasedDate"),
             updated_at=None,
             fingerprint=fingerprint,
         )

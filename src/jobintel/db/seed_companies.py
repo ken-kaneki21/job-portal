@@ -3,7 +3,6 @@ from sqlalchemy.dialects.postgresql import insert
 from jobintel.db.models import CompanyRecord
 from jobintel.db.session import SessionLocal
 
-
 COMPANIES = [
     {
         "name": "Take-Two Interactive",
@@ -46,9 +45,7 @@ COMPANIES = [
 
 def main() -> None:
     with SessionLocal() as session:
-        statement = insert(
-            CompanyRecord
-        ).values(COMPANIES)
+        statement = insert(CompanyRecord).values(COMPANIES)
 
         statement = statement.on_conflict_do_nothing(
             constraint="uq_company_ats_identifier"

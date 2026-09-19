@@ -4,7 +4,6 @@ from jobintel.models.fetched_job import FetchedJob
 
 
 class SearchSource(ABC):
-
     @abstractmethod
     async def search_jobs(
         self,

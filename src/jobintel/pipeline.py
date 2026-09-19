@@ -1,7 +1,7 @@
 import os
 import subprocess
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from sqlalchemy import func, select
 
@@ -12,7 +12,6 @@ from jobintel.db.models import (
     ScanRecord,
 )
 from jobintel.db.session import SessionLocal
-
 
 STEPS = [
     (
@@ -90,11 +89,7 @@ def run_step(
 
     env = os.environ.copy()
 
-    env[
-        "JOBINTEL_PIPELINE_RUN_ID"
-    ] = str(
-        run_id
-    )
+    env["JOBINTEL_PIPELINE_RUN_ID"] = str(run_id)
 
     result = subprocess.run(
         [
@@ -107,31 +102,21 @@ def run_step(
     )
 
     if result.returncode != 0:
-        raise RuntimeError(
-            f"{label} failed "
-            f"with exit code "
-            f"{result.returncode}"
-        )
+        raise RuntimeError(f"{label} failed with exit code {result.returncode}")
 
 
 def create_pipeline_run() -> int:
     with SessionLocal() as session:
         record = PipelineRunRecord(
-            started_at=datetime.now(
-                timezone.utc
-            ),
+            started_at=datetime.now(UTC),
             success=False,
         )
 
-        session.add(
-            record
-        )
+        session.add(record)
 
         session.commit()
 
-        session.refresh(
-            record
-        )
+        session.refresh(record)
 
         return record.id
 
@@ -157,16 +142,10 @@ def finalize_pipeline_run(
         jobs_fetched = session.scalar(
             select(
                 func.coalesce(
-                    func.sum(
-                        ScanRecord.jobs_fetched
-                    ),
+                    func.sum(ScanRecord.jobs_fetched),
                     0,
                 )
-            )
-            .where(
-                ScanRecord.started_at
-                >= record.started_at
-            )
+            ).where(ScanRecord.started_at >= record.started_at)
         )
 
         # ---------------------------------------------
@@ -174,17 +153,9 @@ def finalize_pipeline_run(
         # ---------------------------------------------
 
         active_jobs = session.scalar(
-            select(
-                func.count()
-            )
-            .select_from(
-                JobRecord
-            )
-            .where(
-                JobRecord.is_active.is_(
-                    True
-                )
-            )
+            select(func.count())
+            .select_from(JobRecord)
+            .where(JobRecord.is_active.is_(True))
         )
 
         # ---------------------------------------------
@@ -192,51 +163,25 @@ def finalize_pipeline_run(
         # ---------------------------------------------
 
         rankings_persisted = session.scalar(
-            select(
-                func.count()
-            )
-            .select_from(
-                JobRankingRecord
-            )
-            .where(
-                JobRankingRecord.profile_name
-                == "data_engineer"
-            )
-            .where(
-                JobRankingRecord.pipeline_run_id
-                == run_id
-            )
+            select(func.count())
+            .select_from(JobRankingRecord)
+            .where(JobRankingRecord.profile_name == "data_engineer")
+            .where(JobRankingRecord.pipeline_run_id == run_id)
         )
 
-        record.finished_at = (
-            datetime.now(
-                timezone.utc
-            )
-        )
+        record.finished_at = datetime.now(UTC)
 
-        record.success = (
-            success
-        )
+        record.success = success
 
-        record.jobs_fetched = int(
-            jobs_fetched or 0
-        )
+        record.jobs_fetched = int(jobs_fetched or 0)
 
-        record.active_jobs = int(
-            active_jobs or 0
-        )
+        record.active_jobs = int(active_jobs or 0)
 
-        record.eligible_jobs = int(
-            rankings_persisted or 0
-        )
+        record.eligible_jobs = int(rankings_persisted or 0)
 
-        record.rankings_persisted = int(
-            rankings_persisted or 0
-        )
+        record.rankings_persisted = int(rankings_persisted or 0)
 
-        record.error_message = (
-            error_message
-        )
+        record.error_message = error_message
 
         session.commit()
 
@@ -244,14 +189,10 @@ def finalize_pipeline_run(
 def main() -> None:
     print()
     print("=" * 100)
-    print(
-        "JOB INTELLIGENCE PIPELINE"
-    )
+    print("JOB INTELLIGENCE PIPELINE")
     print("=" * 100)
 
-    run_id = (
-        create_pipeline_run()
-    )
+    run_id = create_pipeline_run()
 
     try:
         for (
@@ -273,35 +214,24 @@ def main() -> None:
         finalize_pipeline_run(
             run_id=run_id,
             success=False,
-            error_message=str(
-                exc
-            ),
+            error_message=str(exc),
         )
 
         print()
         print("=" * 100)
-        print(
-            "PIPELINE FAILED"
-        )
+        print("PIPELINE FAILED")
         print("=" * 100)
 
-        print(
-            f"Error: {exc}"
-        )
+        print(f"Error: {exc}")
 
         raise
 
     print()
     print("=" * 100)
-    print(
-        "PIPELINE COMPLETE"
-    )
+    print("PIPELINE COMPLETE")
     print("=" * 100)
 
-    print(
-        f"Pipeline run ID: "
-        f"{run_id}"
-    )
+    print(f"Pipeline run ID: {run_id}")
 
 
 if __name__ == "__main__":

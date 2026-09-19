@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import logging
 import time
-
 from dataclasses import dataclass
 
 from temporalio import activity
@@ -17,10 +16,7 @@ from jobintel.temporal_pipeline.observability import (
     record_pipeline_finalization,
 )
 
-
-LOGGER = logging.getLogger(
-    "jobintel.temporal.activities"
-)
+LOGGER = logging.getLogger("jobintel.temporal.activities")
 
 
 @dataclass
@@ -49,42 +45,25 @@ def get_workflow_id() -> str | None:
 
 @activity.defn
 def create_pipeline_run_activity() -> int:
-    activity_name = (
-        "create_pipeline_run"
-    )
+    activity_name = "create_pipeline_run"
 
-    started = (
-        time.perf_counter()
-    )
+    started = time.perf_counter()
 
-    workflow_id = (
-        get_workflow_id()
-    )
+    workflow_id = get_workflow_id()
 
     LOGGER.info(
         "temporal_activity_started",
         extra={
-            "service": (
-                "jobintel-temporal-worker"
-            ),
-            "workflow_id": (
-                workflow_id
-            ),
-            "activity_name": (
-                activity_name
-            ),
+            "service": ("jobintel-temporal-worker"),
+            "workflow_id": (workflow_id),
+            "activity_name": (activity_name),
         },
     )
 
     try:
-        run_id = (
-            create_pipeline_run()
-        )
+        run_id = create_pipeline_run()
 
-        duration = (
-            time.perf_counter()
-            - started
-        )
+        duration = time.perf_counter() - started
 
         record_activity_execution(
             activity_name=activity_name,
@@ -96,18 +75,10 @@ def create_pipeline_run_activity() -> int:
         LOGGER.info(
             "temporal_activity_completed",
             extra={
-                "service": (
-                    "jobintel-temporal-worker"
-                ),
-                "workflow_id": (
-                    workflow_id
-                ),
-                "pipeline_run_id": (
-                    run_id
-                ),
-                "activity_name": (
-                    activity_name
-                ),
+                "service": ("jobintel-temporal-worker"),
+                "workflow_id": (workflow_id),
+                "pipeline_run_id": (run_id),
+                "activity_name": (activity_name),
                 "duration_seconds": (
                     round(
                         duration,
@@ -120,10 +91,7 @@ def create_pipeline_run_activity() -> int:
         return run_id
 
     except Exception:
-        duration = (
-            time.perf_counter()
-            - started
-        )
+        duration = time.perf_counter() - started
 
         record_activity_execution(
             activity_name=activity_name,
@@ -135,15 +103,9 @@ def create_pipeline_run_activity() -> int:
         LOGGER.exception(
             "temporal_activity_failed",
             extra={
-                "service": (
-                    "jobintel-temporal-worker"
-                ),
-                "workflow_id": (
-                    workflow_id
-                ),
-                "activity_name": (
-                    activity_name
-                ),
+                "service": ("jobintel-temporal-worker"),
+                "workflow_id": (workflow_id),
+                "activity_name": (activity_name),
                 "duration_seconds": (
                     round(
                         duration,
@@ -160,56 +122,31 @@ def create_pipeline_run_activity() -> int:
 def run_pipeline_step_activity(
     input_data: PipelineStepInput,
 ) -> None:
-    activity_name = (
-        "run_pipeline_step"
-    )
+    activity_name = "run_pipeline_step"
 
-    started = (
-        time.perf_counter()
-    )
+    started = time.perf_counter()
 
-    workflow_id = (
-        get_workflow_id()
-    )
+    workflow_id = get_workflow_id()
 
     LOGGER.info(
         "temporal_activity_started",
         extra={
-            "service": (
-                "jobintel-temporal-worker"
-            ),
-            "workflow_id": (
-                workflow_id
-            ),
-            "pipeline_run_id": (
-                input_data.run_id
-            ),
-            "activity_name": (
-                activity_name
-            ),
-            "step_name": (
-                input_data.label
-            ),
+            "service": ("jobintel-temporal-worker"),
+            "workflow_id": (workflow_id),
+            "pipeline_run_id": (input_data.run_id),
+            "activity_name": (activity_name),
+            "step_name": (input_data.label),
         },
     )
 
     try:
         run_step(
-            label=(
-                input_data.label
-            ),
-            module=(
-                input_data.module
-            ),
-            run_id=(
-                input_data.run_id
-            ),
+            label=(input_data.label),
+            module=(input_data.module),
+            run_id=(input_data.run_id),
         )
 
-        duration = (
-            time.perf_counter()
-            - started
-        )
+        duration = time.perf_counter() - started
 
         record_activity_execution(
             activity_name=activity_name,
@@ -221,21 +158,11 @@ def run_pipeline_step_activity(
         LOGGER.info(
             "temporal_activity_completed",
             extra={
-                "service": (
-                    "jobintel-temporal-worker"
-                ),
-                "workflow_id": (
-                    workflow_id
-                ),
-                "pipeline_run_id": (
-                    input_data.run_id
-                ),
-                "activity_name": (
-                    activity_name
-                ),
-                "step_name": (
-                    input_data.label
-                ),
+                "service": ("jobintel-temporal-worker"),
+                "workflow_id": (workflow_id),
+                "pipeline_run_id": (input_data.run_id),
+                "activity_name": (activity_name),
+                "step_name": (input_data.label),
                 "duration_seconds": (
                     round(
                         duration,
@@ -246,10 +173,7 @@ def run_pipeline_step_activity(
         )
 
     except Exception:
-        duration = (
-            time.perf_counter()
-            - started
-        )
+        duration = time.perf_counter() - started
 
         record_activity_execution(
             activity_name=activity_name,
@@ -261,21 +185,11 @@ def run_pipeline_step_activity(
         LOGGER.exception(
             "temporal_activity_failed",
             extra={
-                "service": (
-                    "jobintel-temporal-worker"
-                ),
-                "workflow_id": (
-                    workflow_id
-                ),
-                "pipeline_run_id": (
-                    input_data.run_id
-                ),
-                "activity_name": (
-                    activity_name
-                ),
-                "step_name": (
-                    input_data.label
-                ),
+                "service": ("jobintel-temporal-worker"),
+                "workflow_id": (workflow_id),
+                "pipeline_run_id": (input_data.run_id),
+                "activity_name": (activity_name),
+                "step_name": (input_data.label),
                 "duration_seconds": (
                     round(
                         duration,
@@ -292,53 +206,30 @@ def run_pipeline_step_activity(
 def finalize_pipeline_run_activity(
     input_data: FinalizePipelineInput,
 ) -> None:
-    activity_name = (
-        "finalize_pipeline_run"
-    )
+    activity_name = "finalize_pipeline_run"
 
-    started = (
-        time.perf_counter()
-    )
+    started = time.perf_counter()
 
-    workflow_id = (
-        get_workflow_id()
-    )
+    workflow_id = get_workflow_id()
 
     LOGGER.info(
         "temporal_activity_started",
         extra={
-            "service": (
-                "jobintel-temporal-worker"
-            ),
-            "workflow_id": (
-                workflow_id
-            ),
-            "pipeline_run_id": (
-                input_data.run_id
-            ),
-            "activity_name": (
-                activity_name
-            ),
+            "service": ("jobintel-temporal-worker"),
+            "workflow_id": (workflow_id),
+            "pipeline_run_id": (input_data.run_id),
+            "activity_name": (activity_name),
         },
     )
 
     try:
         finalize_pipeline_run(
-            run_id=(
-                input_data.run_id
-            ),
-            success=(
-                input_data.success
-            ),
-            error_message=(
-                input_data.error_message
-            ),
+            run_id=(input_data.run_id),
+            success=(input_data.success),
+            error_message=(input_data.error_message),
         )
 
-        duration = (
-            time.perf_counter()
-            - started
-        )
+        duration = time.perf_counter() - started
 
         record_activity_execution(
             activity_name=activity_name,
@@ -347,27 +238,15 @@ def finalize_pipeline_run_activity(
             duration_seconds=duration,
         )
 
-        record_pipeline_finalization(
-            success=(
-                input_data.success
-            )
-        )
+        record_pipeline_finalization(success=(input_data.success))
 
         LOGGER.info(
             "temporal_activity_completed",
             extra={
-                "service": (
-                    "jobintel-temporal-worker"
-                ),
-                "workflow_id": (
-                    workflow_id
-                ),
-                "pipeline_run_id": (
-                    input_data.run_id
-                ),
-                "activity_name": (
-                    activity_name
-                ),
+                "service": ("jobintel-temporal-worker"),
+                "workflow_id": (workflow_id),
+                "pipeline_run_id": (input_data.run_id),
+                "activity_name": (activity_name),
                 "duration_seconds": (
                     round(
                         duration,
@@ -378,10 +257,7 @@ def finalize_pipeline_run_activity(
         )
 
     except Exception:
-        duration = (
-            time.perf_counter()
-            - started
-        )
+        duration = time.perf_counter() - started
 
         record_activity_execution(
             activity_name=activity_name,
@@ -393,18 +269,10 @@ def finalize_pipeline_run_activity(
         LOGGER.exception(
             "temporal_activity_failed",
             extra={
-                "service": (
-                    "jobintel-temporal-worker"
-                ),
-                "workflow_id": (
-                    workflow_id
-                ),
-                "pipeline_run_id": (
-                    input_data.run_id
-                ),
-                "activity_name": (
-                    activity_name
-                ),
+                "service": ("jobintel-temporal-worker"),
+                "workflow_id": (workflow_id),
+                "pipeline_run_id": (input_data.run_id),
+                "activity_name": (activity_name),
                 "duration_seconds": (
                     round(
                         duration,

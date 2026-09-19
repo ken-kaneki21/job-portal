@@ -4,7 +4,6 @@ from jobintel.db.models import (
     JobApplicationStateRecord,
 )
 
-
 VALID_STATUSES = {
     "new",
     "reviewed",
@@ -22,8 +21,7 @@ def get_application_state(
     profile_name: str,
 ):
     return session.scalar(
-        select(JobApplicationStateRecord)
-        .where(
+        select(JobApplicationStateRecord).where(
             JobApplicationStateRecord.job_id == job_id,
             JobApplicationStateRecord.profile_name == profile_name,
         )
@@ -41,8 +39,7 @@ def set_application_state(
 
     if status not in VALID_STATUSES:
         raise ValueError(
-            f"Invalid status: {status}. "
-            f"Allowed: {', '.join(sorted(VALID_STATUSES))}"
+            f"Invalid status: {status}. Allowed: {', '.join(sorted(VALID_STATUSES))}"
         )
 
     record = get_application_state(

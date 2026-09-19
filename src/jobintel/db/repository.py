@@ -1,6 +1,7 @@
+from collections.abc import Iterator
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Iterator, TypeVar
+from typing import TypeVar
 
 from sqlalchemy import (
     func,
@@ -23,7 +24,6 @@ from jobintel.dedup import (
 from jobintel.models.job import (
     Job,
 )
-
 
 # Keep multi-row PostgreSQL statements comfortably
 # below driver / PostgreSQL bind-parameter limits.
@@ -53,9 +53,7 @@ class SyncResult:
     reopened: int = 0
     closed: int = 0
 
-    changed_external_ids: (
-        frozenset[str]
-    ) = frozenset()
+    changed_external_ids: frozenset[str] = frozenset()
 
 
 def chunked(
@@ -72,19 +70,14 @@ def chunked(
     """
 
     if batch_size <= 0:
-        raise ValueError(
-            "batch_size must be greater than 0"
-        )
+        raise ValueError("batch_size must be greater than 0")
 
     for start in range(
         0,
         len(values),
         batch_size,
     ):
-        yield values[
-            start:
-            start + batch_size
-        ]
+        yield values[start : start + batch_size]
 
 
 def get_active_job_count(
@@ -94,18 +87,10 @@ def get_active_job_count(
     source_identifier: str,
 ) -> int:
     count = session.scalar(
-        select(
-            func.count(
-                JobRecord.id
-            )
-        ).where(
-            JobRecord.source
-            == source,
-            JobRecord.source_identifier
-            == source_identifier,
-            JobRecord.is_active.is_(
-                True
-            ),
+        select(func.count(JobRecord.id)).where(
+            JobRecord.source == source,
+            JobRecord.source_identifier == source_identifier,
+            JobRecord.is_active.is_(True),
         )
     )
 
@@ -122,44 +107,18 @@ def build_job_upsert_values(
 
     return [
         {
-            "source": (
-                job.source
-            ),
-            "source_identifier": (
-                job.source_identifier
-            ),
-            "external_id": (
-                job.external_id
-            ),
-            "company": (
-                job.company
-            ),
-            "title": (
-                job.title
-            ),
-            "location": (
-                job.location
-            ),
-            "department": (
-                job.department
-            ),
-            "description": (
-                job.description
-            ),
-            "apply_url": (
-                str(
-                    job.apply_url
-                )
-            ),
-            "posted_at": (
-                job.posted_at
-            ),
-            "source_updated_at": (
-                job.updated_at
-            ),
-            "fingerprint": (
-                job.fingerprint
-            ),
+            "source": (job.source),
+            "source_identifier": (job.source_identifier),
+            "external_id": (job.external_id),
+            "company": (job.company),
+            "title": (job.title),
+            "location": (job.location),
+            "department": (job.department),
+            "description": (job.description),
+            "apply_url": (str(job.apply_url)),
+            "posted_at": (job.posted_at),
+            "source_updated_at": (job.updated_at),
+            "fingerprint": (job.fingerprint),
             "canonical_key": (
                 canonical_key(
                     company=job.company,
@@ -169,9 +128,7 @@ def build_job_upsert_values(
             ),
             "is_active": True,
             "closed_at": None,
-            "last_seen_at": (
-                func.now()
-            ),
+            "last_seen_at": (func.now()),
         }
         for job in jobs
     ]
@@ -191,68 +148,30 @@ def execute_job_upsert_batch(
     if not jobs:
         return
 
-    values = (
-        build_job_upsert_values(
-            jobs
-        )
+    values = build_job_upsert_values(jobs)
+
+    statement = insert(JobRecord).values(values)
+
+    statement = statement.on_conflict_do_update(
+        constraint=("uq_job_source_external_id"),
+        set_={
+            "company": (statement.excluded.company),
+            "title": (statement.excluded.title),
+            "location": (statement.excluded.location),
+            "department": (statement.excluded.department),
+            "description": (statement.excluded.description),
+            "apply_url": (statement.excluded.apply_url),
+            "posted_at": (statement.excluded.posted_at),
+            "source_updated_at": (statement.excluded.source_updated_at),
+            "fingerprint": (statement.excluded.fingerprint),
+            "canonical_key": (statement.excluded.canonical_key),
+            "is_active": True,
+            "closed_at": None,
+            "last_seen_at": (func.now()),
+        },
     )
 
-    statement = insert(
-        JobRecord
-    ).values(
-        values
-    )
-
-    statement = (
-        statement.on_conflict_do_update(
-            constraint=(
-                "uq_job_source_external_id"
-            ),
-            set_={
-                "company": (
-                    statement.excluded.company
-                ),
-                "title": (
-                    statement.excluded.title
-                ),
-                "location": (
-                    statement.excluded.location
-                ),
-                "department": (
-                    statement.excluded.department
-                ),
-                "description": (
-                    statement.excluded.description
-                ),
-                "apply_url": (
-                    statement.excluded.apply_url
-                ),
-                "posted_at": (
-                    statement.excluded.posted_at
-                ),
-                "source_updated_at": (
-                    statement.excluded
-                    .source_updated_at
-                ),
-                "fingerprint": (
-                    statement.excluded.fingerprint
-                ),
-                "canonical_key": (
-                    statement.excluded
-                    .canonical_key
-                ),
-                "is_active": True,
-                "closed_at": None,
-                "last_seen_at": (
-                    func.now()
-                ),
-            },
-        )
-    )
-
-    session.execute(
-        statement
-    )
+    session.execute(statement)
 
 
 def refresh_unchanged_last_seen(
@@ -274,23 +193,13 @@ def refresh_unchanged_last_seen(
         ID_BATCH_SIZE,
     ):
         session.execute(
-            update(
-                JobRecord
-            )
+            update(JobRecord)
             .where(
-                JobRecord.source
-                == source,
-                JobRecord.source_identifier
-                == source_identifier,
-                JobRecord.external_id.in_(
-                    batch
-                ),
+                JobRecord.source == source,
+                JobRecord.source_identifier == source_identifier,
+                JobRecord.external_id.in_(batch),
             )
-            .values(
-                last_seen_at=(
-                    func.now()
-                )
-            )
+            .values(last_seen_at=(func.now()))
         )
 
 
@@ -301,34 +210,22 @@ def sync_company_jobs(
     source: str,
     source_identifier: str,
 ) -> SyncResult:
-    jobs_by_id = {
-        job.external_id: job
-        for job in jobs
-    }
+    jobs_by_id = {job.external_id: job for job in jobs}
 
-    current_ids = set(
-        jobs_by_id
-    )
+    current_ids = set(jobs_by_id)
 
-    existing_rows = (
-        session.execute(
-            select(
-                JobRecord.external_id,
-                JobRecord.fingerprint,
-                JobRecord.is_active,
-            ).where(
-                JobRecord.source
-                == source,
-                JobRecord.source_identifier
-                == source_identifier,
-            )
-        ).all()
-    )
+    existing_rows = session.execute(
+        select(
+            JobRecord.external_id,
+            JobRecord.fingerprint,
+            JobRecord.is_active,
+        ).where(
+            JobRecord.source == source,
+            JobRecord.source_identifier == source_identifier,
+        )
+    ).all()
 
-    existing = {
-        row.external_id: row
-        for row in existing_rows
-    }
+    existing = {row.external_id: row for row in existing_rows}
 
     new_jobs: list[Job] = []
     changed_jobs: list[Job] = []
@@ -339,42 +236,23 @@ def sync_company_jobs(
         external_id,
         job,
     ) in jobs_by_id.items():
-        previous = (
-            existing.get(
-                external_id
-            )
-        )
+        previous = existing.get(external_id)
 
         if previous is None:
-            new_jobs.append(
-                job
-            )
+            new_jobs.append(job)
             continue
 
         if not previous.is_active:
-            reopened_jobs.append(
-                job
-            )
+            reopened_jobs.append(job)
             continue
 
-        if (
-            previous.fingerprint
-            != job.fingerprint
-        ):
-            changed_jobs.append(
-                job
-            )
+        if previous.fingerprint != job.fingerprint:
+            changed_jobs.append(job)
             continue
 
-        unchanged_ids.append(
-            external_id
-        )
+        unchanged_ids.append(external_id)
 
-    jobs_to_write = (
-        new_jobs
-        + changed_jobs
-        + reopened_jobs
-    )
+    jobs_to_write = new_jobs + changed_jobs + reopened_jobs
 
     # -------------------------------------------------
     # IMPORTANT:
@@ -407,12 +285,8 @@ def sync_company_jobs(
         refresh_unchanged_last_seen(
             session,
             source=source,
-            source_identifier=(
-                source_identifier
-            ),
-            external_ids=(
-                unchanged_ids
-            ),
+            source_identifier=(source_identifier),
+            external_ids=(unchanged_ids),
         )
 
     # -------------------------------------------------
@@ -430,77 +304,35 @@ def sync_company_jobs(
     # close jobs present in another batch.
     # -------------------------------------------------
 
-    close_query = (
-        update(
-            JobRecord
-        )
-        .where(
-            JobRecord.source
-            == source,
-            JobRecord.source_identifier
-            == source_identifier,
-            JobRecord.is_active.is_(
-                True
-            ),
-        )
+    close_query = update(JobRecord).where(
+        JobRecord.source == source,
+        JobRecord.source_identifier == source_identifier,
+        JobRecord.is_active.is_(True),
     )
 
     if current_ids:
-        close_query = (
-            close_query.where(
-                JobRecord.external_id.not_in(
-                    current_ids
-                )
-            )
-        )
+        close_query = close_query.where(JobRecord.external_id.not_in(current_ids))
 
     closed_ids = (
         session.execute(
-            close_query
-            .values(
+            close_query.values(
                 is_active=False,
-                closed_at=(
-                    func.now()
-                ),
-            )
-            .returning(
-                JobRecord.id
-            )
+                closed_at=(func.now()),
+            ).returning(JobRecord.id)
         )
         .scalars()
         .all()
     )
 
-    changed_ids = {
-        job.external_id
-        for job in (
-            new_jobs
-            + changed_jobs
-            + reopened_jobs
-        )
-    }
+    changed_ids = {job.external_id for job in (new_jobs + changed_jobs + reopened_jobs)}
 
     return SyncResult(
-        new=len(
-            new_jobs
-        ),
-        updated=len(
-            changed_jobs
-        ),
-        unchanged=len(
-            unchanged_ids
-        ),
-        reopened=len(
-            reopened_jobs
-        ),
-        closed=len(
-            closed_ids
-        ),
-        changed_external_ids=(
-            frozenset(
-                changed_ids
-            )
-        ),
+        new=len(new_jobs),
+        updated=len(changed_jobs),
+        unchanged=len(unchanged_ids),
+        reopened=len(reopened_jobs),
+        closed=len(closed_ids),
+        changed_external_ids=(frozenset(changed_ids)),
     )
 
 
@@ -518,28 +350,16 @@ def save_raw_jobs(
     records = [
         RawJobRecord(
             source=source,
-            source_identifier=(
-                source_identifier
-            ),
-            external_id=(
-                external_id
-            ),
-            payload=(
-                raw_jobs[
-                    external_id
-                ]
-            ),
+            source_identifier=(source_identifier),
+            external_id=(external_id),
+            payload=(raw_jobs[external_id]),
         )
-        for external_id
-        in external_ids
-        if external_id
-        in raw_jobs
+        for external_id in external_ids
+        if external_id in raw_jobs
     ]
 
     if records:
-        session.add_all(
-            records
-        )
+        session.add_all(records)
 
 
 def save_scan(
@@ -557,22 +377,12 @@ def save_scan(
     session.add(
         ScanRecord(
             source=source,
-            source_identifier=(
-                source_identifier
-            ),
+            source_identifier=(source_identifier),
             company=company,
             success=success,
-            jobs_fetched=(
-                jobs_fetched
-            ),
-            error_type=(
-                error_type
-            ),
-            started_at=(
-                started_at
-            ),
-            finished_at=(
-                finished_at
-            ),
+            jobs_fetched=(jobs_fetched),
+            error_type=(error_type),
+            started_at=(started_at),
+            finished_at=(finished_at),
         )
     )

@@ -6,16 +6,12 @@ from jobintel.backfill_enrichments import (
 def test_enrichment_hash_is_deterministic():
     first = build_content_hash(
         title="Data Engineer",
-        description=(
-            "Python SQL Snowflake"
-        ),
+        description=("Python SQL Snowflake"),
     )
 
     second = build_content_hash(
         title="Data Engineer",
-        description=(
-            "Python SQL Snowflake"
-        ),
+        description=("Python SQL Snowflake"),
     )
 
     assert first == second
@@ -29,9 +25,7 @@ def test_description_change_changes_hash():
 
     second = build_content_hash(
         title="Data Engineer",
-        description=(
-            "Python SQL Snowflake"
-        ),
+        description=("Python SQL Snowflake"),
     )
 
     assert first != second

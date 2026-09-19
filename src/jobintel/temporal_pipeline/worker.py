@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import asyncio
 import logging
-
 from concurrent.futures import (
     ThreadPoolExecutor,
 )
@@ -30,51 +29,34 @@ from jobintel.temporal_pipeline.workflow import (
     JobIntelligencePipelineWorkflow,
 )
 
-
-LOGGER = logging.getLogger(
-    "jobintel.temporal.worker"
-)
+LOGGER = logging.getLogger("jobintel.temporal.worker")
 
 
 async def main() -> None:
-    configure_logging(
-        "jobintel-temporal-worker"
-    )
+    configure_logging("jobintel-temporal-worker")
 
-    start_worker_metrics_server(
-        port=9101
-    )
+    start_worker_metrics_server(port=9101)
 
     LOGGER.info(
         "temporal_worker_connecting",
         extra={
-            "service": (
-                "jobintel-temporal-worker"
-            ),
+            "service": ("jobintel-temporal-worker"),
         },
     )
 
     client = await Client.connect(
         TEMPORAL_ADDRESS,
-        namespace=(
-            TEMPORAL_NAMESPACE
-        ),
+        namespace=(TEMPORAL_NAMESPACE),
     )
 
     LOGGER.info(
         "temporal_worker_connected",
         extra={
-            "service": (
-                "jobintel-temporal-worker"
-            ),
+            "service": ("jobintel-temporal-worker"),
         },
     )
 
-    activity_executor = (
-        ThreadPoolExecutor(
-            max_workers=8
-        )
-    )
+    activity_executor = ThreadPoolExecutor(max_workers=8)
 
     worker = Worker(
         client,
@@ -87,17 +69,13 @@ async def main() -> None:
             run_pipeline_step_activity,
             finalize_pipeline_run_activity,
         ],
-        activity_executor=(
-            activity_executor
-        ),
+        activity_executor=(activity_executor),
     )
 
     LOGGER.info(
         "temporal_worker_started",
         extra={
-            "service": (
-                "jobintel-temporal-worker"
-            ),
+            "service": ("jobintel-temporal-worker"),
         },
     )
 
@@ -105,12 +83,8 @@ async def main() -> None:
         await worker.run()
 
     finally:
-        activity_executor.shutdown(
-            wait=True
-        )
+        activity_executor.shutdown(wait=True)
 
 
 if __name__ == "__main__":
-    asyncio.run(
-        main()
-    )
+    asyncio.run(main())

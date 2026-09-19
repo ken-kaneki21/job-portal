@@ -25,6 +25,8 @@ from jobintel.api_application_assets import (
 )
 from jobintel.api_temporal import (
     router as temporal_router,
+)
+from jobintel.api_temporal import (
     start_temporal_pipeline,
 )
 from jobintel.db.application_event_repository import (
@@ -49,10 +51,7 @@ from jobintel.observability import (
     metrics_response,
 )
 
-
-DEFAULT_PROFILE = (
-    "data_engineer"
-)
+DEFAULT_PROFILE = "data_engineer"
 
 
 VALID_JOB_STATUSES = {
@@ -67,9 +66,7 @@ VALID_JOB_STATUSES = {
 }
 
 
-configure_logging(
-    "jobintel-api"
-)
+configure_logging("jobintel-api")
 
 
 app = FastAPI(
@@ -84,14 +81,10 @@ app = FastAPI(
 )
 
 
-app.include_router(
-    application_assets_router
-)
+app.include_router(application_assets_router)
 
 
-app.include_router(
-    temporal_router
-)
+app.include_router(temporal_router)
 
 
 app.add_middleware(
@@ -103,23 +96,15 @@ app.add_middleware(
         "http://127.0.0.1:5173",
     ],
     allow_credentials=True,
-    allow_methods=[
-        "*"
-    ],
-    allow_headers=[
-        "*"
-    ],
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 
-app.add_middleware(
-    CorrelationIdMiddleware
-)
+app.add_middleware(CorrelationIdMiddleware)
 
 
-class JobStateRequest(
-    BaseModel
-):
+class JobStateRequest(BaseModel):
     status: str = Field(
         min_length=1,
         max_length=50,
@@ -128,9 +113,7 @@ class JobStateRequest(
     notes: str | None = None
 
 
-class NotesRequest(
-    BaseModel
-):
+class NotesRequest(BaseModel):
     notes: str | None = None
 
 
@@ -175,16 +158,11 @@ def json_safe(
         dict,
     ):
         return {
-            str(
-                key
-            ): json_safe(
-                nested_value
-            )
+            str(key): json_safe(nested_value)
             for (
                 key,
                 nested_value,
-            )
-            in value.items()
+            ) in value.items()
         }
 
     if isinstance(
@@ -195,16 +173,9 @@ def json_safe(
             set,
         ),
     ):
-        return [
-            json_safe(
-                item
-            )
-            for item in value
-        ]
+        return [json_safe(item) for item in value]
 
-    return str(
-        value
-    )
+    return str(value)
 
 
 def serialize_model(
@@ -220,8 +191,7 @@ def serialize_model(
                 column.name,
             )
         )
-        for column
-        in record.__table__.columns
+        for column in record.__table__.columns
     }
 
 
@@ -229,39 +199,15 @@ def compact_job(
     job: JobRecord,
 ) -> dict:
     return {
-        "id": (
-            job.id
-        ),
-        "title": (
-            job.title
-        ),
-        "company": (
-            job.company
-        ),
-        "location": (
-            job.location
-        ),
-        "url": (
-            job.apply_url
-        ),
-        "is_active": (
-            job.is_active
-        ),
-        "posted_at": (
-            json_safe(
-                job.posted_at
-            )
-        ),
-        "first_seen_at": (
-            json_safe(
-                job.first_seen_at
-            )
-        ),
-        "last_seen_at": (
-            json_safe(
-                job.last_seen_at
-            )
-        ),
+        "id": (job.id),
+        "title": (job.title),
+        "company": (job.company),
+        "location": (job.location),
+        "url": (job.apply_url),
+        "is_active": (job.is_active),
+        "posted_at": (json_safe(job.posted_at)),
+        "first_seen_at": (json_safe(job.first_seen_at)),
+        "last_seen_at": (json_safe(job.last_seen_at)),
     }
 
 
@@ -277,9 +223,7 @@ def require_job(
     if job is None:
         raise HTTPException(
             status_code=404,
-            detail=(
-                "Job not found"
-            ),
+            detail=("Job not found"),
         )
 
     return job
@@ -289,16 +233,8 @@ def latest_pipeline_ranking_run_id(
     session: Session,
 ) -> int | None:
     return session.scalar(
-        select(
-            func.max(
-                JobRankingRecord.pipeline_run_id
-            )
-        )
-        .where(
-            JobRankingRecord.pipeline_run_id
-            .is_not(
-                None
-            )
+        select(func.max(JobRankingRecord.pipeline_run_id)).where(
+            JobRankingRecord.pipeline_run_id.is_not(None)
         )
     )
 
@@ -310,24 +246,14 @@ def latest_ranking_for_job(
     profile_name: str = DEFAULT_PROFILE,
 ) -> JobRankingRecord | None:
     return session.scalar(
-        select(
-            JobRankingRecord
-        )
-        .where(
-            JobRankingRecord.job_id
-            == job_id
-        )
-        .where(
-            JobRankingRecord.profile_name
-            == profile_name
-        )
+        select(JobRankingRecord)
+        .where(JobRankingRecord.job_id == job_id)
+        .where(JobRankingRecord.profile_name == profile_name)
         .order_by(
             JobRankingRecord.ranked_at.desc(),
             JobRankingRecord.id.desc(),
         )
-        .limit(
-            1
-        )
+        .limit(1)
     )
 
 
@@ -338,20 +264,10 @@ def get_job_state_record(
     profile_name: str,
 ) -> JobApplicationStateRecord | None:
     return session.scalar(
-        select(
-            JobApplicationStateRecord
-        )
-        .where(
-            JobApplicationStateRecord.job_id
-            == job_id
-        )
-        .where(
-            JobApplicationStateRecord.profile_name
-            == profile_name
-        )
-        .limit(
-            1
-        )
+        select(JobApplicationStateRecord)
+        .where(JobApplicationStateRecord.job_id == job_id)
+        .where(JobApplicationStateRecord.profile_name == profile_name)
+        .limit(1)
     )
 
 
@@ -369,97 +285,57 @@ def set_job_state(
         job_id,
     )
 
-    normalized_status = (
-        status.strip().lower()
-    )
+    normalized_status = status.strip().lower()
 
-    if (
-        normalized_status
-        not in VALID_JOB_STATUSES
-    ):
+    if normalized_status not in VALID_JOB_STATUSES:
         raise HTTPException(
             status_code=400,
             detail={
-                "message": (
-                    "Invalid job status"
-                ),
-                "allowed_statuses": (
-                    sorted(
-                        VALID_JOB_STATUSES
-                    )
-                ),
+                "message": ("Invalid job status"),
+                "allowed_statuses": (sorted(VALID_JOB_STATUSES)),
             },
         )
 
-    record = (
-        get_job_state_record(
-            session,
-            job_id=job_id,
-            profile_name=profile_name,
-        )
+    record = get_job_state_record(
+        session,
+        job_id=job_id,
+        profile_name=profile_name,
     )
 
     if record is None:
-        previous_status = (
-            "new"
+        previous_status = "new"
+
+        record = JobApplicationStateRecord(
+            job_id=job_id,
+            profile_name=(profile_name),
+            status=(normalized_status),
+            notes=notes,
         )
 
-        record = (
-            JobApplicationStateRecord(
-                job_id=job_id,
-                profile_name=(
-                    profile_name
-                ),
-                status=(
-                    normalized_status
-                ),
-                notes=notes,
-            )
-        )
-
-        session.add(
-            record
-        )
+        session.add(record)
 
     else:
-        previous_status = (
-            record.status
-        )
+        previous_status = record.status
 
-        record.status = (
-            normalized_status
-        )
+        record.status = normalized_status
 
         if notes is not None:
-            record.notes = (
-                notes
-            )
+            record.notes = notes
 
-    if (
-        previous_status
-        != normalized_status
-    ):
+    if previous_status != normalized_status:
         add_application_event(
             session=session,
             job_id=job_id,
-            profile_name=(
-                profile_name
-            ),
-            previous_status=(
-                previous_status
-            ),
-            new_status=(
-                normalized_status
-            ),
+            profile_name=(profile_name),
+            previous_status=(previous_status),
+            new_status=(normalized_status),
             notes=notes,
             source=source,
         )
 
     session.commit()
 
-    session.refresh(
-        record
-    )
+    session.refresh(record)
 
     return record
 
@@ -467,18 +343,10 @@ def set_job_state(
 @app.get("/")
 def root():
     return {
-        "service": (
-            "job-intelligence"
-        ),
-        "version": (
-            "0.3.0"
-        ),
-        "docs": (
-            "/docs"
-        ),
-        "health": (
-            "/health"
-        ),
+        "service": ("job-intelligence"),
+        "version": ("0.3.0"),
+        "docs": ("/docs"),
+        "health": ("/health"),
     }
 
 
@@ -492,75 +360,35 @@ def metrics():
 
 @app.get("/health")
 def health(
-    session: Session = Depends(
-        get_db
-    ),
+    session: Session = Depends(get_db),
 ):
     try:
-        session.execute(
-            text(
-                "SELECT 1"
-            )
+        session.execute(text("SELECT 1"))
+
+        active_jobs = session.scalar(
+            select(func.count())
+            .select_from(JobRecord)
+            .where(JobRecord.is_active.is_(True))
         )
 
-        active_jobs = (
-            session.scalar(
-                select(
-                    func.count()
-                )
-                .select_from(
-                    JobRecord
-                )
-                .where(
-                    JobRecord.is_active.is_(
-                        True
-                    )
-                )
-            )
-        )
-
-        latest_run = (
-            session.scalar(
-                select(
-                    PipelineRunRecord
-                )
-                .order_by(
-                    PipelineRunRecord.id.desc()
-                )
-                .limit(
-                    1
-                )
-            )
+        latest_run = session.scalar(
+            select(PipelineRunRecord).order_by(PipelineRunRecord.id.desc()).limit(1)
         )
 
         return {
-            "status": (
-                "ok"
-            ),
-            "database": (
-                "connected"
-            ),
-            "active_jobs": int(
-                active_jobs
-                or 0
-            ),
+            "status": ("ok"),
+            "database": ("connected"),
+            "active_jobs": int(active_jobs or 0),
             "latest_pipeline_run": (
-                serialize_model(
-                    latest_run
-                )
-                if latest_run
-                else None
+                serialize_model(latest_run) if latest_run else None
             ),
         }
 
     except Exception as exc:
         raise HTTPException(
             status_code=503,
-            detail=(
-                "Database health check "
-                f"failed: {exc}"
-            ),
-        )
+            detail=(f"Database health check failed: {exc}"),
+        ) from exc
 
 
 @app.get("/jobs")
@@ -578,248 +406,98 @@ def list_jobs(
         0,
         ge=0,
     ),
-    session: Session = Depends(
-        get_db
-    ),
+    session: Session = Depends(get_db),
 ):
-    stmt = select(
-        JobRecord
-    )
+    stmt = select(JobRecord)
 
     if active_only:
-        stmt = stmt.where(
-            JobRecord.is_active.is_(
-                True
-            )
-        )
+        stmt = stmt.where(JobRecord.is_active.is_(True))
 
     if company:
-        stmt = stmt.where(
-            func.lower(
-                JobRecord.company
-            ).contains(
-                company.lower()
-            )
-        )
+        stmt = stmt.where(func.lower(JobRecord.company).contains(company.lower()))
 
     if title:
-        stmt = stmt.where(
-            func.lower(
-                JobRecord.title
-            ).contains(
-                title.lower()
-            )
-        )
+        stmt = stmt.where(func.lower(JobRecord.title).contains(title.lower()))
 
     if location:
-        stmt = stmt.where(
-            func.lower(
-                JobRecord.location
-            ).contains(
-                location.lower()
-            )
-        )
+        stmt = stmt.where(func.lower(JobRecord.location).contains(location.lower()))
 
-    stmt = (
-        stmt
-        .order_by(
-            JobRecord.id.desc()
-        )
-        .offset(
-            offset
-        )
-        .limit(
-            limit
-        )
-    )
+    stmt = stmt.order_by(JobRecord.id.desc()).offset(offset).limit(limit)
 
-    jobs = (
-        session.scalars(
-            stmt
-        ).all()
-    )
+    jobs = session.scalars(stmt).all()
 
     return {
-        "count": (
-            len(
-                jobs
-            )
-        ),
-        "offset": (
-            offset
-        ),
-        "limit": (
-            limit
-        ),
-        "jobs": [
-            compact_job(
-                job
-            )
-            for job
-            in jobs
-        ],
+        "count": (len(jobs)),
+        "offset": (offset),
+        "limit": (limit),
+        "jobs": [compact_job(job) for job in jobs],
     }
 
 
-@app.get(
-    "/jobs/{job_id}"
-)
+@app.get("/jobs/{job_id}")
 def get_job(
     job_id: int,
     profile_name: str = DEFAULT_PROFILE,
-    session: Session = Depends(
-        get_db
-    ),
+    session: Session = Depends(get_db),
 ):
     job = require_job(
         session,
         job_id,
     )
 
-    enrichment = (
-        session.scalar(
-            select(
-                JobEnrichmentRecord
-            )
-            .where(
-                JobEnrichmentRecord.job_id
-                == job_id
-            )
-            .limit(
-                1
-            )
-        )
+    enrichment = session.scalar(
+        select(JobEnrichmentRecord).where(JobEnrichmentRecord.job_id == job_id).limit(1)
     )
 
-    gap = (
-        session.scalar(
-            select(
-                JobGapAnalysisRecord
-            )
-            .where(
-                JobGapAnalysisRecord.job_id
-                == job_id
-            )
-            .where(
-                JobGapAnalysisRecord.profile_name
-                == profile_name
-            )
-            .limit(
-                1
-            )
-        )
+    gap = session.scalar(
+        select(JobGapAnalysisRecord)
+        .where(JobGapAnalysisRecord.job_id == job_id)
+        .where(JobGapAnalysisRecord.profile_name == profile_name)
+        .limit(1)
     )
 
-    ranking = (
-        latest_ranking_for_job(
-            session,
-            job_id=job_id,
-            profile_name=(
-                profile_name
-            ),
-        )
+    ranking = latest_ranking_for_job(
+        session,
+        job_id=job_id,
+        profile_name=(profile_name),
     )
 
-    asset = (
-        session.scalar(
-            select(
-                JobApplicationAssetRecord
-            )
-            .where(
-                JobApplicationAssetRecord.job_id
-                == job_id
-            )
-            .where(
-                JobApplicationAssetRecord.profile_name
-                == profile_name
-            )
-            .limit(
-                1
-            )
-        )
+    asset = session.scalar(
+        select(JobApplicationAssetRecord)
+        .where(JobApplicationAssetRecord.job_id == job_id)
+        .where(JobApplicationAssetRecord.profile_name == profile_name)
+        .limit(1)
     )
 
-    state = (
-        get_job_state_record(
-            session,
-            job_id=job_id,
-            profile_name=(
-                profile_name
-            ),
-        )
+    state = get_job_state_record(
+        session,
+        job_id=job_id,
+        profile_name=(profile_name),
     )
 
-    history = (
-        get_application_history(
-            session=session,
-            job_id=job_id,
-            profile_name=(
-                profile_name
-            ),
-        )
+    history = get_application_history(
+        session=session,
+        job_id=job_id,
+        profile_name=(profile_name),
     )
 
     return {
-        "job": (
-            serialize_model(
-                job
-            )
-        ),
+        "job": (serialize_model(job)),
         "state": (
-            serialize_model(
-                state
-            )
+            serialize_model(state)
             if state
             else {
-                "job_id": (
-                    job_id
-                ),
-                "profile_name": (
-                    profile_name
-                ),
-                "status": (
-                    "new"
-                ),
-                "notes": (
-                    None
-                ),
+                "job_id": (job_id),
+                "profile_name": (profile_name),
+                "status": ("new"),
+                "notes": (None),
             }
         ),
-        "history": [
-            serialize_model(
-                event
-            )
-            for event
-            in history
-        ],
-        "enrichment": (
-            serialize_model(
-                enrichment
-            )
-            if enrichment
-            else None
-        ),
-        "gap_analysis": (
-            serialize_model(
-                gap
-            )
-            if gap
-            else None
-        ),
-        "ranking": (
-            serialize_model(
-                ranking
-            )
-            if ranking
-            else None
-        ),
-        "application_assets": (
-            serialize_model(
-                asset
-            )
-            if asset
-            else None
-        ),
+        "history": [serialize_model(event) for event in history],
+        "enrichment": (serialize_model(enrichment) if enrichment else None),
+        "gap_analysis": (serialize_model(gap) if gap else None),
+        "ranking": (serialize_model(ranking) if ranking else None),
+        "application_assets": (serialize_model(asset) if asset else None),
     }
 
 
@@ -834,16 +512,10 @@ def get_rankings(
         ge=1,
         le=500,
     ),
-    session: Session = Depends(
-        get_db
-    ),
+    session: Session = Depends(get_db),
 ):
     if pipeline_run_id is None:
-        pipeline_run_id = (
-            latest_pipeline_ranking_run_id(
-                session
-            )
-        )
+        pipeline_run_id = latest_pipeline_ranking_run_id(session)
 
     stmt = (
         select(
@@ -852,83 +524,41 @@ def get_rankings(
         )
         .join(
             JobRecord,
-            JobRecord.id
-            == JobRankingRecord.job_id,
+            JobRecord.id == JobRankingRecord.job_id,
         )
-        .where(
-            JobRankingRecord.profile_name
-            == profile_name
-        )
+        .where(JobRankingRecord.profile_name == profile_name)
     )
 
     if pipeline_run_id is not None:
-        stmt = stmt.where(
-            JobRankingRecord.pipeline_run_id
-            == pipeline_run_id
-        )
+        stmt = stmt.where(JobRankingRecord.pipeline_run_id == pipeline_run_id)
 
     if bucket:
-        stmt = stmt.where(
-            JobRankingRecord.bucket
-            == bucket
-        )
+        stmt = stmt.where(JobRankingRecord.bucket == bucket)
 
     if min_score is not None:
-        stmt = stmt.where(
-            JobRankingRecord.score
-            >= min_score
-        )
+        stmt = stmt.where(JobRankingRecord.score >= min_score)
 
-    stmt = (
-        stmt
-        .order_by(
-            JobRankingRecord.score.desc(),
-            JobRankingRecord.rank_position.asc(),
-        )
-        .limit(
-            limit
-        )
-    )
+    stmt = stmt.order_by(
+        JobRankingRecord.score.desc(),
+        JobRankingRecord.rank_position.asc(),
+    ).limit(limit)
 
-    rows = (
-        session.execute(
-            stmt
-        ).all()
-    )
+    rows = session.execute(stmt).all()
 
     return {
-        "profile_name": (
-            profile_name
-        ),
-        "pipeline_run_id": (
-            pipeline_run_id
-        ),
-        "bucket": (
-            bucket
-        ),
-        "count": (
-            len(
-                rows
-            )
-        ),
+        "profile_name": (profile_name),
+        "pipeline_run_id": (pipeline_run_id),
+        "bucket": (bucket),
+        "count": (len(rows)),
         "results": [
             {
-                "ranking": (
-                    serialize_model(
-                        ranking
-                    )
-                ),
-                "job": (
-                    compact_job(
-                        job
-                    )
-                ),
+                "ranking": (serialize_model(ranking)),
+                "job": (compact_job(job)),
             }
             for (
                 ranking,
                 job,
-            )
-            in rows
+            ) in rows
         ],
     }
 
@@ -951,24 +581,14 @@ def get_shortlist(
         ge=0,
         le=100,
     ),
-    session: Session = Depends(
-        get_db
-    ),
+    session: Session = Depends(get_db),
 ):
-    pipeline_run_id = (
-        latest_pipeline_ranking_run_id(
-            session
-        )
-    )
+    pipeline_run_id = latest_pipeline_ranking_run_id(session)
 
     if pipeline_run_id is None:
         return {
-            "profile_name": (
-                profile_name
-            ),
-            "pipeline_run_id": (
-                None
-            ),
+            "profile_name": (profile_name),
+            "pipeline_run_id": (None),
             "high_confidence": [],
             "discovery": [],
             "stretch": [],
@@ -981,66 +601,39 @@ def get_shortlist(
         if limit <= 0:
             return []
 
-        rows = (
-            session.execute(
-                select(
-                    JobRankingRecord,
-                    JobRecord,
-                )
-                .join(
-                    JobRecord,
-                    JobRecord.id
-                    == JobRankingRecord.job_id,
-                )
-                .where(
-                    JobRankingRecord.profile_name
-                    == profile_name
-                )
-                .where(
-                    JobRankingRecord.pipeline_run_id
-                    == pipeline_run_id
-                )
-                .where(
-                    JobRankingRecord.bucket
-                    == bucket
-                )
-                .order_by(
-                    JobRankingRecord.score.desc(),
-                    JobRankingRecord.rank_position.asc(),
-                )
-                .limit(
-                    limit
-                )
-            ).all()
-        )
+        rows = session.execute(
+            select(
+                JobRankingRecord,
+                JobRecord,
+            )
+            .join(
+                JobRecord,
+                JobRecord.id == JobRankingRecord.job_id,
+            )
+            .where(JobRankingRecord.profile_name == profile_name)
+            .where(JobRankingRecord.pipeline_run_id == pipeline_run_id)
+            .where(JobRankingRecord.bucket == bucket)
+            .order_by(
+                JobRankingRecord.score.desc(),
+                JobRankingRecord.rank_position.asc(),
+            )
+            .limit(limit)
+        ).all()
 
         return [
             {
-                "job": (
-                    compact_job(
-                        job
-                    )
-                ),
-                "ranking": (
-                    serialize_model(
-                        ranking
-                    )
-                ),
+                "job": (compact_job(job)),
+                "ranking": (serialize_model(ranking)),
             }
             for (
                 ranking,
                 job,
-            )
-            in rows
+            ) in rows
         ]
 
     return {
-        "profile_name": (
-            profile_name
-        ),
-        "pipeline_run_id": (
-            pipeline_run_id
-        ),
+        "profile_name": (profile_name),
+        "pipeline_run_id": (pipeline_run_id),
         "high_confidence": (
             load_bucket(
                 "high_confidence",
@@ -1062,15 +655,11 @@ def get_shortlist(
     }
 
 
-@app.get(
-    "/jobs/{job_id}/gap-analysis"
-)
+@app.get("/jobs/{job_id}/gap-analysis")
 def get_gap_analysis(
     job_id: int,
     profile_name: str = DEFAULT_PROFILE,
-    session: Session = Depends(
-        get_db
-    ),
+    session: Session = Depends(get_db),
 ):
     job = require_job(
         session,
@@ -1078,54 +667,29 @@ def get_gap_analysis(
     )
 
     record = session.scalar(
-        select(
-            JobGapAnalysisRecord
-        )
-        .where(
-            JobGapAnalysisRecord.job_id
-            == job_id
-        )
-        .where(
-            JobGapAnalysisRecord.profile_name
-            == profile_name
-        )
-        .limit(
-            1
-        )
+        select(JobGapAnalysisRecord)
+        .where(JobGapAnalysisRecord.job_id == job_id)
+        .where(JobGapAnalysisRecord.profile_name == profile_name)
+        .limit(1)
     )
 
     if record is None:
         raise HTTPException(
             status_code=404,
-            detail=(
-                "Gap analysis not found "
-                "for this job/profile"
-            ),
+            detail=("Gap analysis not found for this job/profile"),
         )
 
     return {
-        "job": (
-            compact_job(
-                job
-            )
-        ),
-        "gap_analysis": (
-            serialize_model(
-                record
-            )
-        ),
+        "job": (compact_job(job)),
+        "gap_analysis": (serialize_model(record)),
     }
 
 
-@app.get(
-    "/jobs/{job_id}/application-assets"
-)
+@app.get("/jobs/{job_id}/application-assets")
 def get_application_assets(
     job_id: int,
     profile_name: str = DEFAULT_PROFILE,
-    session: Session = Depends(
-        get_db
-    ),
+    session: Session = Depends(get_db),
 ):
     job = require_job(
         session,
@@ -1133,435 +697,244 @@ def get_application_assets(
     )
 
     record = session.scalar(
-        select(
-            JobApplicationAssetRecord
-        )
-        .where(
-            JobApplicationAssetRecord.job_id
-            == job_id
-        )
-        .where(
-            JobApplicationAssetRecord.profile_name
-            == profile_name
-        )
-        .limit(
-            1
-        )
+        select(JobApplicationAssetRecord)
+        .where(JobApplicationAssetRecord.job_id == job_id)
+        .where(JobApplicationAssetRecord.profile_name == profile_name)
+        .limit(1)
     )
 
     if record is None:
         raise HTTPException(
             status_code=404,
-            detail=(
-                "Application assets not found "
-                "for this job/profile"
-            ),
+            detail=("Application assets not found for this job/profile"),
         )
 
     return {
-        "job": (
-            compact_job(
-                job
-            )
-        ),
-        "application_assets": (
-            serialize_model(
-                record
-            )
-        ),
+        "job": (compact_job(job)),
+        "application_assets": (serialize_model(record)),
     }
 
 
-@app.get(
-    "/jobs/{job_id}/state"
-)
+@app.get("/jobs/{job_id}/state")
 def get_job_state(
     job_id: int,
     profile_name: str = DEFAULT_PROFILE,
-    session: Session = Depends(
-        get_db
-    ),
+    session: Session = Depends(get_db),
 ):
     job = require_job(
         session,
         job_id,
     )
 
-    record = (
-        get_job_state_record(
-            session,
-            job_id=job_id,
-            profile_name=(
-                profile_name
-            ),
-        )
+    record = get_job_state_record(
+        session,
+        job_id=job_id,
+        profile_name=(profile_name),
     )
 
     return {
-        "job": (
-            compact_job(
-                job
-            )
-        ),
+        "job": (compact_job(job)),
         "state": (
-            serialize_model(
-                record
-            )
+            serialize_model(record)
             if record
             else {
-                "job_id": (
-                    job_id
-                ),
-                "profile_name": (
-                    profile_name
-                ),
-                "status": (
-                    "new"
-                ),
-                "notes": (
-                    None
-                ),
+                "job_id": (job_id),
+                "profile_name": (profile_name),
+                "status": ("new"),
+                "notes": (None),
             }
         ),
     }
 
 
-@app.get(
-    "/jobs/{job_id}/history"
-)
+@app.get("/jobs/{job_id}/history")
 def get_job_history(
     job_id: int,
     profile_name: str = DEFAULT_PROFILE,
-    session: Session = Depends(
-        get_db
-    ),
+    session: Session = Depends(get_db),
 ):
     job = require_job(
         session,
         job_id,
     )
 
-    events = (
-        get_application_history(
-            session=session,
-            job_id=job_id,
-            profile_name=(
-                profile_name
-            ),
-        )
+    events = get_application_history(
+        session=session,
+        job_id=job_id,
+        profile_name=(profile_name),
     )
 
     return {
-        "job": (
-            compact_job(
-                job
-            )
-        ),
-        "profile_name": (
-            profile_name
-        ),
-        "count": (
-            len(
-                events
-            )
-        ),
-        "history": [
-            serialize_model(
-                event
-            )
-            for event
-            in events
-        ],
+        "job": (compact_job(job)),
+        "profile_name": (profile_name),
+        "count": (len(events)),
+        "history": [serialize_model(event) for event in events],
     }
 
 
-@app.post(
-    "/jobs/{job_id}/state"
-)
+@app.post("/jobs/{job_id}/state")
 def update_job_state(
     job_id: int,
     payload: JobStateRequest,
     profile_name: str = DEFAULT_PROFILE,
-    session: Session = Depends(
-        get_db
-    ),
+    session: Session = Depends(get_db),
 ):
     record = set_job_state(
         session,
         job_id=job_id,
-        profile_name=(
-            profile_name
-        ),
-        status=(
-            payload.status
-        ),
-        notes=(
-            payload.notes
-        ),
+        profile_name=(profile_name),
+        status=(payload.status),
+        notes=(payload.notes),
     )
 
     return {
-        "message": (
-            "Job state updated"
-        ),
-        "state": (
-            serialize_model(
-                record
-            )
-        ),
+        "message": ("Job state updated"),
+        "state": (serialize_model(record)),
     }
 
 
-@app.post(
-    "/jobs/{job_id}/save"
-)
+@app.post("/jobs/{job_id}/save")
 def save_job(
     job_id: int,
     payload: NotesRequest | None = None,
     profile_name: str = DEFAULT_PROFILE,
-    session: Session = Depends(
-        get_db
-    ),
+    session: Session = Depends(get_db),
 ):
     record = set_job_state(
         session,
         job_id=job_id,
-        profile_name=(
-            profile_name
-        ),
+        profile_name=(profile_name),
         status="saved",
-        notes=(
-            payload.notes
-            if payload
-            else None
-        ),
+        notes=(payload.notes if payload else None),
     )
 
     return {
-        "message": (
-            "Job saved"
-        ),
-        "state": (
-            serialize_model(
-                record
-            )
-        ),
+        "message": ("Job saved"),
+        "state": (serialize_model(record)),
     }
 
 
-@app.post(
-    "/jobs/{job_id}/dismiss"
-)
+@app.post("/jobs/{job_id}/dismiss")
 def dismiss_job(
     job_id: int,
     payload: NotesRequest | None = None,
     profile_name: str = DEFAULT_PROFILE,
-    session: Session = Depends(
-        get_db
-    ),
+    session: Session = Depends(get_db),
 ):
     record = set_job_state(
         session,
         job_id=job_id,
-        profile_name=(
-            profile_name
-        ),
+        profile_name=(profile_name),
         status="dismissed",
-        notes=(
-            payload.notes
-            if payload
-            else None
-        ),
+        notes=(payload.notes if payload else None),
     )
 
     return {
-        "message": (
-            "Job dismissed"
-        ),
-        "state": (
-            serialize_model(
-                record
-            )
-        ),
+        "message": ("Job dismissed"),
+        "state": (serialize_model(record)),
     }
 
 
-@app.post(
-    "/jobs/{job_id}/apply"
-)
+@app.post("/jobs/{job_id}/apply")
 def apply_to_job(
     job_id: int,
     payload: NotesRequest | None = None,
     profile_name: str = DEFAULT_PROFILE,
-    session: Session = Depends(
-        get_db
-    ),
+    session: Session = Depends(get_db),
 ):
     record = set_job_state(
         session,
         job_id=job_id,
-        profile_name=(
-            profile_name
-        ),
+        profile_name=(profile_name),
         status="applied",
-        notes=(
-            payload.notes
-            if payload
-            else None
-        ),
+        notes=(payload.notes if payload else None),
     )
 
     return {
-        "message": (
-            "Job marked as applied"
-        ),
-        "state": (
-            serialize_model(
-                record
-            )
-        ),
+        "message": ("Job marked as applied"),
+        "state": (serialize_model(record)),
     }
 
 
-@app.post(
-    "/jobs/{job_id}/seen"
-)
+@app.post("/jobs/{job_id}/seen")
 def mark_job_seen(
     job_id: int,
     profile_name: str = DEFAULT_PROFILE,
-    session: Session = Depends(
-        get_db
-    ),
+    session: Session = Depends(get_db),
 ):
     record = set_job_state(
         session,
         job_id=job_id,
-        profile_name=(
-            profile_name
-        ),
+        profile_name=(profile_name),
         status="seen",
     )
 
     return {
-        "message": (
-            "Job marked as seen"
-        ),
-        "state": (
-            serialize_model(
-                record
-            )
-        ),
+        "message": ("Job marked as seen"),
+        "state": (serialize_model(record)),
     }
 
 
-@app.post(
-    "/jobs/{job_id}/interviewing"
-)
+@app.post("/jobs/{job_id}/interviewing")
 def mark_interviewing(
     job_id: int,
     payload: NotesRequest | None = None,
     profile_name: str = DEFAULT_PROFILE,
-    session: Session = Depends(
-        get_db
-    ),
+    session: Session = Depends(get_db),
 ):
     record = set_job_state(
         session,
         job_id=job_id,
-        profile_name=(
-            profile_name
-        ),
+        profile_name=(profile_name),
         status="interviewing",
-        notes=(
-            payload.notes
-            if payload
-            else None
-        ),
+        notes=(payload.notes if payload else None),
     )
 
     return {
-        "message": (
-            "Job marked as interviewing"
-        ),
-        "state": (
-            serialize_model(
-                record
-            )
-        ),
+        "message": ("Job marked as interviewing"),
+        "state": (serialize_model(record)),
     }
 
 
-@app.post(
-    "/jobs/{job_id}/rejected"
-)
+@app.post("/jobs/{job_id}/rejected")
 def mark_rejected(
     job_id: int,
     payload: NotesRequest | None = None,
     profile_name: str = DEFAULT_PROFILE,
-    session: Session = Depends(
-        get_db
-    ),
+    session: Session = Depends(get_db),
 ):
     record = set_job_state(
         session,
         job_id=job_id,
-        profile_name=(
-            profile_name
-        ),
+        profile_name=(profile_name),
         status="rejected",
-        notes=(
-            payload.notes
-            if payload
-            else None
-        ),
+        notes=(payload.notes if payload else None),
     )
 
     return {
-        "message": (
-            "Job marked as rejected"
-        ),
-        "state": (
-            serialize_model(
-                record
-            )
-        ),
+        "message": ("Job marked as rejected"),
+        "state": (serialize_model(record)),
     }
 
 
-@app.post(
-    "/jobs/{job_id}/offer"
-)
+@app.post("/jobs/{job_id}/offer")
 def mark_offer(
     job_id: int,
     payload: NotesRequest | None = None,
     profile_name: str = DEFAULT_PROFILE,
-    session: Session = Depends(
-        get_db
-    ),
+    session: Session = Depends(get_db),
 ):
     record = set_job_state(
         session,
         job_id=job_id,
-        profile_name=(
-            profile_name
-        ),
+        profile_name=(profile_name),
         status="offer",
-        notes=(
-            payload.notes
-            if payload
-            else None
-        ),
+        notes=(payload.notes if payload else None),
     )
 
     return {
-        "message": (
-            "Job marked as offer"
-        ),
-        "state": (
-            serialize_model(
-                record
-            )
-        ),
+        "message": ("Job marked as offer"),
+        "state": (serialize_model(record)),
     }
 
 
@@ -1573,65 +946,35 @@ def get_saved_jobs(
         ge=1,
         le=500,
     ),
-    session: Session = Depends(
-        get_db
-    ),
+    session: Session = Depends(get_db),
 ):
-    rows = (
-        session.execute(
-            select(
-                JobApplicationStateRecord,
-                JobRecord,
-            )
-            .join(
-                JobRecord,
-                JobRecord.id
-                == JobApplicationStateRecord.job_id,
-            )
-            .where(
-                JobApplicationStateRecord.profile_name
-                == profile_name
-            )
-            .where(
-                JobApplicationStateRecord.status
-                == "saved"
-            )
-            .order_by(
-                JobApplicationStateRecord.updated_at.desc()
-            )
-            .limit(
-                limit
-            )
-        ).all()
-    )
+    rows = session.execute(
+        select(
+            JobApplicationStateRecord,
+            JobRecord,
+        )
+        .join(
+            JobRecord,
+            JobRecord.id == JobApplicationStateRecord.job_id,
+        )
+        .where(JobApplicationStateRecord.profile_name == profile_name)
+        .where(JobApplicationStateRecord.status == "saved")
+        .order_by(JobApplicationStateRecord.updated_at.desc())
+        .limit(limit)
+    ).all()
 
     return {
-        "profile_name": (
-            profile_name
-        ),
-        "count": (
-            len(
-                rows
-            )
-        ),
+        "profile_name": (profile_name),
+        "count": (len(rows)),
         "jobs": [
             {
-                "job": (
-                    compact_job(
-                        job
-                    )
-                ),
-                "state": (
-                    serialize_model(
-                        state
-                    )
-                ),
+                "job": (compact_job(job)),
+                "state": (serialize_model(state)),
             }
             for (
                 state,
                 job,
-            )
-            in rows
+            ) in rows
         ],
     }
 
@@ -1645,9 +988,7 @@ def get_applications(
         ge=1,
         le=500,
     ),
-    session: Session = Depends(
-        get_db
-    ),
+    session: Session = Depends(get_db),
 ):
     application_statuses = {
         "applied",
@@ -1663,156 +1004,81 @@ def get_applications(
         )
         .join(
             JobRecord,
-            JobRecord.id
-            == JobApplicationStateRecord.job_id,
+            JobRecord.id == JobApplicationStateRecord.job_id,
         )
-        .where(
-            JobApplicationStateRecord.profile_name
-            == profile_name
-        )
+        .where(JobApplicationStateRecord.profile_name == profile_name)
     )
 
     if status:
-        normalized_status = (
-            status.strip().lower()
-        )
+        normalized_status = status.strip().lower()
 
-        if (
-            normalized_status
-            not in application_statuses
-        ):
+        if normalized_status not in application_statuses:
             raise HTTPException(
                 status_code=400,
                 detail={
-                    "message": (
-                        "Invalid application status"
-                    ),
-                    "allowed_statuses": (
-                        sorted(
-                            application_statuses
-                        )
-                    ),
+                    "message": ("Invalid application status"),
+                    "allowed_statuses": (sorted(application_statuses)),
                 },
             )
 
-        stmt = stmt.where(
-            JobApplicationStateRecord.status
-            == normalized_status
-        )
+        stmt = stmt.where(JobApplicationStateRecord.status == normalized_status)
 
     else:
-        stmt = stmt.where(
-            JobApplicationStateRecord.status.in_(
-                application_statuses
-            )
-        )
+        stmt = stmt.where(JobApplicationStateRecord.status.in_(application_statuses))
 
-    stmt = (
-        stmt
-        .order_by(
-            JobApplicationStateRecord.updated_at.desc()
-        )
-        .limit(
-            limit
-        )
-    )
+    stmt = stmt.order_by(JobApplicationStateRecord.updated_at.desc()).limit(limit)
 
-    rows = (
-        session.execute(
-            stmt
-        ).all()
-    )
+    rows = session.execute(stmt).all()
 
     return {
-        "profile_name": (
-            profile_name
-        ),
-        "status": (
-            status
-        ),
-        "count": (
-            len(
-                rows
-            )
-        ),
+        "profile_name": (profile_name),
+        "status": (status),
+        "count": (len(rows)),
         "applications": [
             {
-                "job": (
-                    compact_job(
-                        job
-                    )
-                ),
-                "state": (
-                    serialize_model(
-                        state
-                    )
-                ),
+                "job": (compact_job(job)),
+                "state": (serialize_model(state)),
             }
             for (
                 state,
                 job,
-            )
-            in rows
+            ) in rows
         ],
     }
 
 
-@app.get(
-    "/application-state-summary"
-)
+@app.get("/application-state-summary")
 def application_state_summary(
     profile_name: str = DEFAULT_PROFILE,
-    session: Session = Depends(
-        get_db
-    ),
+    session: Session = Depends(get_db),
 ):
-    rows = (
-        session.execute(
-            select(
-                JobApplicationStateRecord.status,
-                func.count(
-                    JobApplicationStateRecord.id
-                ),
-            )
-            .where(
-                JobApplicationStateRecord.profile_name
-                == profile_name
-            )
-            .group_by(
-                JobApplicationStateRecord.status
-            )
-            .order_by(
-                JobApplicationStateRecord.status
-            )
-        ).all()
-    )
+    rows = session.execute(
+        select(
+            JobApplicationStateRecord.status,
+            func.count(JobApplicationStateRecord.id),
+        )
+        .where(JobApplicationStateRecord.profile_name == profile_name)
+        .group_by(JobApplicationStateRecord.status)
+        .order_by(JobApplicationStateRecord.status)
+    ).all()
 
     counts = {
-        status: int(
-            count
-        )
+        status: int(count)
         for (
             status,
             count,
-        )
-        in rows
+        ) in rows
     }
 
-    for status in (
-        VALID_JOB_STATUSES
-    ):
+    for status in VALID_JOB_STATUSES:
         counts.setdefault(
             status,
             0,
         )
 
     return {
-        "profile_name": (
-            profile_name
-        ),
-        "counts": (
-            counts
-        ),
+        "profile_name": (profile_name),
+        "counts": (counts),
     }
 
 
@@ -1823,273 +1089,107 @@ def get_pipeline_runs(
         ge=1,
         le=200,
     ),
-    session: Session = Depends(
-        get_db
-    ),
+    session: Session = Depends(get_db),
 ):
-    rows = (
-        session.scalars(
-            select(
-                PipelineRunRecord
-            )
-            .order_by(
-                PipelineRunRecord.id.desc()
-            )
-            .limit(
-                limit
-            )
-        ).all()
-    )
+    rows = session.scalars(
+        select(PipelineRunRecord).order_by(PipelineRunRecord.id.desc()).limit(limit)
+    ).all()
 
     return {
-        "count": (
-            len(
-                rows
-            )
-        ),
-        "pipeline_runs": [
-            serialize_model(
-                row
-            )
-            for row
-            in rows
-        ],
+        "count": (len(rows)),
+        "pipeline_runs": [serialize_model(row) for row in rows],
     }
 
 
-@app.get(
-    "/pipeline-runs/{run_id}"
-)
+@app.get("/pipeline-runs/{run_id}")
 def get_pipeline_run(
     run_id: int,
-    session: Session = Depends(
-        get_db
-    ),
+    session: Session = Depends(get_db),
 ):
-    record = (
-        session.get(
-            PipelineRunRecord,
-            run_id,
-        )
+    record = session.get(
+        PipelineRunRecord,
+        run_id,
     )
 
     if record is None:
         raise HTTPException(
             status_code=404,
-            detail=(
-                "Pipeline run not found"
-            ),
+            detail=("Pipeline run not found"),
         )
 
-    ranking_count = (
-        session.scalar(
-            select(
-                func.count()
-            )
-            .select_from(
-                JobRankingRecord
-            )
-            .where(
-                JobRankingRecord.pipeline_run_id
-                == run_id
-            )
-        )
+    ranking_count = session.scalar(
+        select(func.count())
+        .select_from(JobRankingRecord)
+        .where(JobRankingRecord.pipeline_run_id == run_id)
     )
 
-    bucket_rows = (
-        session.execute(
-            select(
-                JobRankingRecord.bucket,
-                func.count(
-                    JobRankingRecord.id
-                ),
-            )
-            .where(
-                JobRankingRecord.pipeline_run_id
-                == run_id
-            )
-            .group_by(
-                JobRankingRecord.bucket
-            )
-        ).all()
-    )
+    bucket_rows = session.execute(
+        select(
+            JobRankingRecord.bucket,
+            func.count(JobRankingRecord.id),
+        )
+        .where(JobRankingRecord.pipeline_run_id == run_id)
+        .group_by(JobRankingRecord.bucket)
+    ).all()
 
     buckets = {
-        bucket: int(
-            count
-        )
+        bucket: int(count)
         for (
             bucket,
             count,
-        )
-        in bucket_rows
+        ) in bucket_rows
     }
 
     return {
-        "pipeline_run": (
-            serialize_model(
-                record
-            )
-        ),
-        "ranking_count": int(
-            ranking_count
-            or 0
-        ),
-        "ranking_buckets": (
-            buckets
-        ),
+        "pipeline_run": (serialize_model(record)),
+        "ranking_count": int(ranking_count or 0),
+        "ranking_buckets": (buckets),
     }
 
 
 @app.post("/pipeline/run")
 async def trigger_pipeline():
     try:
-        return await (
-            start_temporal_pipeline()
-        )
+        return await start_temporal_pipeline()
 
     except Exception as exc:
         raise HTTPException(
             status_code=500,
-            detail=(
-                "Unable to start pipeline: "
-                f"{exc}"
-            ),
-        )
+            detail=(f"Unable to start pipeline: {exc}"),
+        ) from exc
 
 
 @app.get("/stats")
 def stats(
-    session: Session = Depends(
-        get_db
-    ),
+    session: Session = Depends(get_db),
 ):
-    active_jobs = (
-        session.scalar(
-            select(
-                func.count()
-            )
-            .select_from(
-                JobRecord
-            )
-            .where(
-                JobRecord.is_active.is_(
-                    True
-                )
-            )
-        )
+    active_jobs = session.scalar(
+        select(func.count()).select_from(JobRecord).where(JobRecord.is_active.is_(True))
     )
 
-    total_jobs = (
-        session.scalar(
-            select(
-                func.count()
-            )
-            .select_from(
-                JobRecord
-            )
-        )
-    )
+    total_jobs = session.scalar(select(func.count()).select_from(JobRecord))
 
-    enrichments = (
-        session.scalar(
-            select(
-                func.count()
-            )
-            .select_from(
-                JobEnrichmentRecord
-            )
-        )
-    )
+    enrichments = session.scalar(select(func.count()).select_from(JobEnrichmentRecord))
 
-    gaps = (
-        session.scalar(
-            select(
-                func.count()
-            )
-            .select_from(
-                JobGapAnalysisRecord
-            )
-        )
-    )
+    gaps = session.scalar(select(func.count()).select_from(JobGapAnalysisRecord))
 
-    assets = (
-        session.scalar(
-            select(
-                func.count()
-            )
-            .select_from(
-                JobApplicationAssetRecord
-            )
-        )
-    )
+    assets = session.scalar(select(func.count()).select_from(JobApplicationAssetRecord))
 
-    rankings = (
-        session.scalar(
-            select(
-                func.count()
-            )
-            .select_from(
-                JobRankingRecord
-            )
-        )
-    )
+    rankings = session.scalar(select(func.count()).select_from(JobRankingRecord))
 
-    pipeline_runs = (
-        session.scalar(
-            select(
-                func.count()
-            )
-            .select_from(
-                PipelineRunRecord
-            )
-        )
-    )
+    pipeline_runs = session.scalar(select(func.count()).select_from(PipelineRunRecord))
 
-    states = (
-        session.scalar(
-            select(
-                func.count()
-            )
-            .select_from(
-                JobApplicationStateRecord
-            )
-        )
-    )
+    states = session.scalar(select(func.count()).select_from(JobApplicationStateRecord))
 
     return {
         "jobs": {
-            "total": int(
-                total_jobs
-                or 0
-            ),
-            "active": int(
-                active_jobs
-                or 0
-            ),
+            "total": int(total_jobs or 0),
+            "active": int(active_jobs or 0),
         },
-        "enrichments": int(
-            enrichments
-            or 0
-        ),
-        "gap_analyses": int(
-            gaps
-            or 0
-        ),
-        "application_assets": int(
-            assets
-            or 0
-        ),
-        "application_states": int(
-            states
-            or 0
-        ),
-        "ranking_records": int(
-            rankings
-            or 0
-        ),
-        "pipeline_runs": int(
-            pipeline_runs
-            or 0
-        ),
+        "enrichments": int(enrichments or 0),
+        "gap_analyses": int(gaps or 0),
+        "application_assets": int(assets or 0),
+        "application_states": int(states or 0),
+        "ranking_records": int(rankings or 0),
+        "pipeline_runs": int(pipeline_runs or 0),
     }

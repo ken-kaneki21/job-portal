@@ -5,7 +5,6 @@ from jobintel.models.fetched_job import FetchedJob
 
 
 class JobSource(ABC):
-
     @abstractmethod
     async def fetch_jobs(
         self,

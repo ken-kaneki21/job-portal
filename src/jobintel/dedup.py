@@ -1,7 +1,6 @@
 import hashlib
 import re
 
-
 COMPANY_SUFFIXES = {
     "inc",
     "incorporated",
@@ -48,11 +47,7 @@ def normalize_company(
 
     value = normalize_spaces(value)
 
-    tokens = [
-        token
-        for token in value.split()
-        if token not in COMPANY_SUFFIXES
-    ]
+    tokens = [token for token in value.split() if token not in COMPANY_SUFFIXES]
 
     value = " ".join(tokens)
 
@@ -140,6 +135,4 @@ def canonical_key(
         ]
     )
 
-    return hashlib.sha256(
-        candidate.encode("utf-8")
-    ).hexdigest()
+    return hashlib.sha256(candidate.encode("utf-8")).hexdigest()

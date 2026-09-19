@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
@@ -17,7 +17,6 @@ from jobintel.db.models import (
 )
 from jobintel.db.session import SessionLocal
 
-
 BATCH_SIZE = 20
 MAX_ATTEMPTS = 1
 MAX_URLS_PER_COMPANY = 10
@@ -34,23 +33,11 @@ def load_candidate_ids() -> list[int]:
 
     with SessionLocal() as session:
         ids = session.scalars(
-            select(
-                CompanyDiscoveryCandidateRecord.id
-            )
-            .where(
-                CompanyDiscoveryCandidateRecord.status
-                == "pending"
-            )
-            .where(
-                CompanyDiscoveryCandidateRecord.attempt_count
-                < MAX_ATTEMPTS
-            )
-            .order_by(
-                CompanyDiscoveryCandidateRecord.id
-            )
-            .limit(
-                BATCH_SIZE
-            )
+            select(CompanyDiscoveryCandidateRecord.id)
+            .where(CompanyDiscoveryCandidateRecord.status == "pending")
+            .where(CompanyDiscoveryCandidateRecord.attempt_count < MAX_ATTEMPTS)
+            .order_by(CompanyDiscoveryCandidateRecord.id)
+            .limit(BATCH_SIZE)
         ).all()
 
     return list(ids)
@@ -63,21 +50,9 @@ def company_exists(
     identifier: str,
 ) -> bool:
     existing_id = session.scalar(
-        select(
-            CompanyRecord.id
-        )
-        .where(
-            func.lower(
-                CompanyRecord.ats
-            )
-            == ats.lower()
-        )
-        .where(
-            func.lower(
-                CompanyRecord.identifier
-            )
-            == identifier.lower()
-        )
+        select(CompanyRecord.id)
+        .where(func.lower(CompanyRecord.ats) == ats.lower())
+        .where(func.lower(CompanyRecord.identifier) == identifier.lower())
         .limit(1)
     )
 
@@ -128,56 +103,30 @@ def load_company_urls(
             JobRecord.id,
             JobRecord.apply_url,
         )
-        .where(
-            func.lower(
-                func.trim(
-                    JobRecord.company
-                )
-            )
-            == company_name.lower().strip()
-        )
-        .order_by(
-            JobRecord.id.desc()
-        )
-        .limit(
-            MAX_URLS_PER_COMPANY
-        )
+        .where(func.lower(func.trim(JobRecord.company)) == company_name.lower().strip())
+        .order_by(JobRecord.id.desc())
+        .limit(MAX_URLS_PER_COMPANY)
     ).all()
 
     urls: list[str] = []
     job_ids: list[int] = []
 
     for job_id, apply_url in job_rows:
-        job_ids.append(
-            job_id
-        )
+        job_ids.append(job_id)
 
         if apply_url:
-            urls.append(
-                apply_url
-            )
+            urls.append(apply_url)
 
     if job_ids:
         source_urls = session.scalars(
-            select(
-                JobSourceRecord.source_url
-            )
-            .where(
-                JobSourceRecord.job_id.in_(
-                    job_ids
-                )
-            )
-            .where(
-                JobSourceRecord.source_url
-                .is_not(None)
-            )
+            select(JobSourceRecord.source_url)
+            .where(JobSourceRecord.job_id.in_(job_ids))
+            .where(JobSourceRecord.source_url.is_not(None))
         ).all()
 
         for source_url in source_urls:
             if source_url:
-                urls.append(
-                    source_url
-                )
+                urls.append(source_url)
 
     # Preserve order while deduplicating.
     result: list[str] = []
@@ -192,17 +141,11 @@ def load_company_urls(
         if value in seen:
             continue
 
-        seen.add(
-            value
-        )
+        seen.add(value)
 
-        result.append(
-            value
-        )
+        result.append(value)
 
-    return result[
-        :MAX_URLS_PER_COMPANY
-    ]
+    return result[:MAX_URLS_PER_COMPANY]
 
 
 def resolve_candidate(
@@ -225,11 +168,7 @@ def resolve_candidate(
     )
 
     if urls:
-        url_result = (
-            inspect_urls_for_ats(
-                urls
-            )
-        )
+        url_result = inspect_urls_for_ats(urls)
 
         if url_result is not None:
             (
@@ -245,11 +184,7 @@ def resolve_candidate(
                 "existing_url",
             )
 
-    probe_result = (
-        resolve_company_ats(
-            candidate.company_name
-        )
-    )
+    probe_result = resolve_company_ats(candidate.company_name)
 
     if probe_result is not None:
         return (
@@ -286,18 +221,12 @@ def mark_candidate_failed(
                 return
 
             candidate.status = "failed"
-            candidate.error_message = (
-                message[:4000]
-            )
+            candidate.error_message = message[:4000]
 
             session.commit()
 
     except Exception as exc:
-        print(
-            "  WARNING: Could not mark "
-            f"candidate {candidate_id} failed: "
-            f"{exc}"
-        )
+        print(f"  WARNING: Could not mark candidate {candidate_id} failed: {exc}")
 
 
 def process_candidate(
@@ -336,31 +265,20 @@ def process_candidate(
             )
 
         print()
-        print(
-            f"[{candidate.id}] "
-            f"{candidate.company_name}"
-        )
+        print(f"[{candidate.id}] {candidate.company_name}")
 
         candidate.attempt_count += 1
 
-        candidate.last_attempt_at = (
-            datetime.now(
-                timezone.utc
-            )
-        )
+        candidate.last_attempt_at = datetime.now(UTC)
 
         try:
-            resolution = (
-                resolve_candidate(
-                    session,
-                    candidate,
-                )
+            resolution = resolve_candidate(
+                session,
+                candidate,
             )
 
             if resolution is None:
-                candidate.status = (
-                    "unsupported"
-                )
+                candidate.status = "unsupported"
 
                 candidate.error_message = (
                     "No supported ATS found "
@@ -370,9 +288,7 @@ def process_candidate(
 
                 session.commit()
 
-                print(
-                    "  No supported ATS found."
-                )
+                print("  No supported ATS found.")
 
                 return (
                     "unresolved",
@@ -386,21 +302,13 @@ def process_candidate(
                 method,
             ) = resolution
 
-            candidate.status = (
-                "discovered"
-            )
+            candidate.status = "discovered"
 
-            candidate.discovered_ats = (
-                ats
-            )
+            candidate.discovered_ats = ats
 
-            candidate.discovered_identifier = (
-                identifier
-            )
+            candidate.discovered_identifier = identifier
 
-            candidate.career_url = (
-                career_url
-            )
+            candidate.career_url = career_url
 
             candidate.error_message = None
 
@@ -413,26 +321,15 @@ def process_candidate(
 
             session.commit()
 
-            print(
-                f"  Method: {method}"
-            )
+            print(f"  Method: {method}")
 
-            print(
-                f"  ATS: {ats}"
-            )
+            print(f"  ATS: {ats}")
 
-            print(
-                f"  Identifier: {identifier}"
-            )
+            print(f"  Identifier: {identifier}")
 
-            print(
-                f"  URL: {career_url}"
-            )
+            print(f"  URL: {career_url}")
 
-            print(
-                f"  Added to companies: "
-                f"{added}"
-            )
+            print(f"  Added to companies: {added}")
 
             return (
                 "discovered",
@@ -444,10 +341,7 @@ def process_candidate(
             # or commit.
             session.rollback()
 
-            print(
-                "  DATABASE INTEGRITY ERROR: "
-                f"{exc.orig}"
-            )
+            print(f"  DATABASE INTEGRITY ERROR: {exc.orig}")
 
             return (
                 "failed",
@@ -457,9 +351,7 @@ def process_candidate(
         except Exception as exc:
             session.rollback()
 
-            print(
-                f"  ERROR: {exc}"
-            )
+            print(f"  ERROR: {exc}")
 
             return (
                 "failed",
@@ -468,23 +360,16 @@ def process_candidate(
 
 
 def main() -> None:
-    candidate_ids = (
-        load_candidate_ids()
-    )
+    candidate_ids = load_candidate_ids()
 
     if not candidate_ids:
         print()
-        print(
-            "No pending company discovery "
-            "candidates."
-        )
+        print("No pending company discovery candidates.")
         return
 
     print()
     print("=" * 100)
-    print(
-        "FREE ATS DISCOVERY"
-    )
+    print("FREE ATS DISCOVERY")
     print("=" * 100)
 
     processed = 0
@@ -500,23 +385,15 @@ def main() -> None:
             (
                 result_type,
                 company_inserted,
-            ) = process_candidate(
-                candidate_id
-            )
+            ) = process_candidate(candidate_id)
 
-            if (
-                result_type
-                == "discovered"
-            ):
+            if result_type == "discovered":
                 discovered += 1
 
                 if company_inserted:
                     inserted += 1
 
-            elif (
-                result_type
-                == "unresolved"
-            ):
+            elif result_type == "unresolved":
                 unresolved += 1
 
             else:
@@ -524,59 +401,34 @@ def main() -> None:
 
                 mark_candidate_failed(
                     candidate_id,
-                    (
-                        "Candidate processing "
-                        "failed. See pipeline logs."
-                    ),
+                    ("Candidate processing failed. See pipeline logs."),
                 )
 
         except Exception as exc:
             failed += 1
 
             print()
-            print(
-                f"[{candidate_id}] "
-                f"UNHANDLED ERROR: {exc}"
-            )
+            print(f"[{candidate_id}] UNHANDLED ERROR: {exc}")
 
             mark_candidate_failed(
                 candidate_id,
-                str(
-                    exc
-                ),
+                str(exc),
             )
 
     print()
     print("=" * 100)
-    print(
-        "ATS DISCOVERY SUMMARY"
-    )
+    print("ATS DISCOVERY SUMMARY")
     print("=" * 100)
 
-    print(
-        f"Processed:       "
-        f"{processed}"
-    )
+    print(f"Processed:       {processed}")
 
-    print(
-        f"Discovered:      "
-        f"{discovered}"
-    )
+    print(f"Discovered:      {discovered}")
 
-    print(
-        f"Companies added: "
-        f"{inserted}"
-    )
+    print(f"Companies added: {inserted}")
 
-    print(
-        f"Unresolved:      "
-        f"{unresolved}"
-    )
+    print(f"Unresolved:      {unresolved}")
 
-    print(
-        f"Errors:          "
-        f"{failed}"
-    )
+    print(f"Errors:          {failed}")
 
 
 if __name__ == "__main__":

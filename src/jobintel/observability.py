@@ -5,9 +5,8 @@ import logging
 import sys
 import time
 import uuid
-
 from contextvars import ContextVar
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 from fastapi import Request, Response
@@ -21,10 +20,7 @@ from starlette.middleware.base import (
     BaseHTTPMiddleware,
 )
 
-
-request_id_context: ContextVar[
-    str | None
-] = ContextVar(
+request_id_context: ContextVar[str | None] = ContextVar(
     "request_id",
     default=None,
 )
@@ -32,10 +28,7 @@ request_id_context: ContextVar[
 
 API_REQUESTS_TOTAL = Counter(
     "jobintel_api_requests_total",
-    (
-        "Total number of Job Intelligence "
-        "API requests"
-    ),
+    ("Total number of Job Intelligence API requests"),
     [
         "method",
         "path",
@@ -46,10 +39,7 @@ API_REQUESTS_TOTAL = Counter(
 
 API_REQUEST_DURATION_SECONDS = Histogram(
     "jobintel_api_request_duration_seconds",
-    (
-        "Duration of Job Intelligence "
-        "API requests in seconds"
-    ),
+    ("Duration of Job Intelligence API requests in seconds"),
     [
         "method",
         "path",
@@ -57,9 +47,7 @@ API_REQUEST_DURATION_SECONDS = Histogram(
 )
 
 
-class JsonFormatter(
-    logging.Formatter
-):
+class JsonFormatter(logging.Formatter):
     """
     Convert Python log records into one-line
     JSON objects.
@@ -90,34 +78,18 @@ class JsonFormatter(
             str,
             Any,
         ] = {
-            "timestamp": (
-                datetime.now(
-                    timezone.utc
-                ).isoformat()
-            ),
-            "level": (
-                record.levelname
-            ),
-            "logger": (
-                record.name
-            ),
-            "message": (
-                record.getMessage()
-            ),
+            "timestamp": (datetime.now(UTC).isoformat()),
+            "level": (record.levelname),
+            "logger": (record.name),
+            "message": (record.getMessage()),
         }
 
-        context_request_id = (
-            request_id_context.get()
-        )
+        context_request_id = request_id_context.get()
 
         if context_request_id:
-            payload[
-                "request_id"
-            ] = context_request_id
+            payload["request_id"] = context_request_id
 
-        for field in (
-            self.STRUCTURED_FIELDS
-        ):
+        for field in self.STRUCTURED_FIELDS:
             value = getattr(
                 record,
                 field,
@@ -125,16 +97,10 @@ class JsonFormatter(
             )
 
             if value is not None:
-                payload[
-                    field
-                ] = value
+                payload[field] = value
 
         if record.exc_info:
-            payload[
-                "exception"
-            ] = self.formatException(
-                record.exc_info
-            )
+            payload["exception"] = self.formatException(record.exc_info)
 
         return json.dumps(
             payload,
@@ -157,44 +123,26 @@ def configure_logging(
     same output format.
     """
 
-    root_logger = (
-        logging.getLogger()
-    )
+    root_logger = logging.getLogger()
 
-    root_logger.setLevel(
-        level
-    )
+    root_logger.setLevel(level)
 
-    handler = (
-        logging.StreamHandler(
-            sys.stdout
-        )
-    )
+    handler = logging.StreamHandler(sys.stdout)
 
-    handler.setFormatter(
-        JsonFormatter()
-    )
+    handler.setFormatter(JsonFormatter())
 
     root_logger.handlers.clear()
 
-    root_logger.addHandler(
-        handler
-    )
+    root_logger.addHandler(handler)
 
     # Uvicorn's normal access logger would
     # otherwise duplicate our API request log.
-    logging.getLogger(
-        "uvicorn.access"
-    ).propagate = False
+    logging.getLogger("uvicorn.access").propagate = False
 
-    logging.getLogger(
-        "jobintel"
-    ).info(
+    logging.getLogger("jobintel").info(
         "logging_configured",
         extra={
-            "service": (
-                service_name
-            ),
+            "service": (service_name),
         },
     )
 
@@ -223,9 +171,7 @@ def _resolve_metric_path(
     from exploding.
     """
 
-    route = request.scope.get(
-        "route"
-    )
+    route = request.scope.get("route")
 
     route_path = getattr(
         route,
@@ -234,16 +180,12 @@ def _resolve_metric_path(
     )
 
     if route_path:
-        return str(
-            route_path
-        )
+        return str(route_path)
 
     return request.url.path
 
 
-class CorrelationIdMiddleware(
-    BaseHTTPMiddleware
-):
+class CorrelationIdMiddleware(BaseHTTPMiddleware):
     """
     Adds X-Request-ID to every HTTP request.
 
@@ -262,47 +204,24 @@ class CorrelationIdMiddleware(
         request: Request,
         call_next,
     ):
-        request_id = (
-            request.headers.get(
-                "X-Request-ID"
-            )
-            or str(
-                uuid.uuid4()
-            )
-        )
+        request_id = request.headers.get("X-Request-ID") or str(uuid.uuid4())
 
-        token = (
-            request_id_context.set(
-                request_id
-            )
-        )
+        token = request_id_context.set(request_id)
 
-        started = (
-            time.perf_counter()
-        )
+        started = time.perf_counter()
 
-        method = (
-            request.method
-        )
+        method = request.method
 
-        logger = logging.getLogger(
-            "jobintel.api"
-        )
+        logger = logging.getLogger("jobintel.api")
 
         status_code = 500
 
         try:
-            response = await call_next(
-                request
-            )
+            response = await call_next(request)
 
-            status_code = (
-                response.status_code
-            )
+            status_code = response.status_code
 
-            response.headers[
-                "X-Request-ID"
-            ] = request_id
+            response.headers["X-Request-ID"] = request_id
 
             return response
 
@@ -310,65 +229,38 @@ class CorrelationIdMiddleware(
             logger.exception(
                 "api_request_failed",
                 extra={
-                    "service": (
-                        "jobintel-api"
-                    ),
-                    "method": (
-                        method
-                    ),
-                    "path": (
-                        request.url.path
-                    ),
-                    "status_code": (
-                        status_code
-                    ),
+                    "service": ("jobintel-api"),
+                    "method": (method),
+                    "path": (request.url.path),
+                    "status_code": (status_code),
                 },
             )
 
             raise
 
         finally:
-            duration = (
-                time.perf_counter()
-                - started
-            )
+            duration = time.perf_counter() - started
 
-            metric_path = (
-                _resolve_metric_path(
-                    request
-                )
-            )
+            metric_path = _resolve_metric_path(request)
 
             API_REQUESTS_TOTAL.labels(
                 method=method,
                 path=metric_path,
-                status=str(
-                    status_code
-                ),
+                status=str(status_code),
             ).inc()
 
             API_REQUEST_DURATION_SECONDS.labels(
                 method=method,
                 path=metric_path,
-            ).observe(
-                duration
-            )
+            ).observe(duration)
 
             logger.info(
                 "api_request_completed",
                 extra={
-                    "service": (
-                        "jobintel-api"
-                    ),
-                    "method": (
-                        method
-                    ),
-                    "path": (
-                        metric_path
-                    ),
-                    "status_code": (
-                        status_code
-                    ),
+                    "service": ("jobintel-api"),
+                    "method": (method),
+                    "path": (metric_path),
+                    "status_code": (status_code),
                     "duration_seconds": (
                         round(
                             duration,
@@ -378,9 +270,7 @@ class CorrelationIdMiddleware(
                 },
             )
 
-            request_id_context.reset(
-                token
-            )
+            request_id_context.reset(token)
 
 
 def metrics_response() -> Response:
@@ -390,7 +280,5 @@ def metrics_response() -> Response:
 
     return Response(
         content=generate_latest(),
-        media_type=(
-            CONTENT_TYPE_LATEST
-        ),
+        media_type=(CONTENT_TYPE_LATEST),
     )

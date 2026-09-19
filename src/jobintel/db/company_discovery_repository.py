@@ -22,9 +22,7 @@ def enqueue_candidate(
     """
 
     stmt = (
-        insert(
-            CompanyDiscoveryCandidateRecord
-        )
+        insert(CompanyDiscoveryCandidateRecord)
         .values(
             company_name=company_name,
             normalized_name=normalized_name,
@@ -36,13 +34,9 @@ def enqueue_candidate(
                 "normalized_name",
             ]
         )
-        .returning(
-            CompanyDiscoveryCandidateRecord.id
-        )
+        .returning(CompanyDiscoveryCandidateRecord.id)
     )
 
-    inserted_id = session.scalar(
-        stmt
-    )
+    inserted_id = session.scalar(stmt)
 
     return inserted_id is not None

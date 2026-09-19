@@ -37,14 +37,8 @@ def get_application_history(
 ) -> list[JobApplicationEventRecord]:
     return session.scalars(
         select(JobApplicationEventRecord)
-        .where(
-            JobApplicationEventRecord.job_id
-            == job_id
-        )
-        .where(
-            JobApplicationEventRecord.profile_name
-            == profile_name
-        )
+        .where(JobApplicationEventRecord.job_id == job_id)
+        .where(JobApplicationEventRecord.profile_name == profile_name)
         .order_by(
             JobApplicationEventRecord.created_at.asc(),
             JobApplicationEventRecord.id.asc(),

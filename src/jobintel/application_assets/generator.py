@@ -1,7 +1,6 @@
 from dataclasses import asdict, dataclass
 from typing import Any
 
-
 GENERATOR_VERSION = "deterministic_assets_v1"
 
 
@@ -30,12 +29,7 @@ def clean_values(
         return []
 
     return sorted(
-        {
-            str(value).strip()
-            for value in values
-            if value
-            and str(value).strip()
-        }
+        {str(value).strip() for value in values if value and str(value).strip()}
     )
 
 
@@ -57,11 +51,7 @@ def profile_skills(
         if not skills:
             continue
 
-        values.update(
-            str(skill).strip().lower()
-            for skill in skills
-            if skill
-        )
+        values.update(str(skill).strip().lower() for skill in skills if skill)
 
     return values
 
@@ -83,33 +73,19 @@ def build_skills_to_emphasize(
     profile: Any,
     gap,
 ) -> list[str]:
-    candidate_skills = profile_skills(
-        profile
-    )
+    candidate_skills = profile_skills(profile)
 
     matched = (
-        clean_values(
-            gap.matched_required_skills
-        )
-        + clean_values(
-            gap.matched_preferred_skills
-        )
-        + clean_values(
-            gap.matched_platforms
-        )
+        clean_values(gap.matched_required_skills)
+        + clean_values(gap.matched_preferred_skills)
+        + clean_values(gap.matched_platforms)
     )
 
     result: list[str] = []
 
     for skill in matched:
-        if (
-            skill.lower()
-            in candidate_skills
-            and skill not in result
-        ):
-            result.append(
-                skill
-            )
+        if skill.lower() in candidate_skills and skill not in result:
+            result.append(skill)
 
     if result:
         return result[:10]
@@ -130,18 +106,10 @@ def build_skills_to_emphasize(
             continue
 
         for value in values:
-            cleaned = str(
-                value
-            ).strip()
+            cleaned = str(value).strip()
 
-            if (
-                cleaned
-                and cleaned
-                not in fallback
-            ):
-                fallback.append(
-                    cleaned
-                )
+            if cleaned and cleaned not in fallback:
+                fallback.append(cleaned)
 
     return fallback[:10]
 
@@ -150,24 +118,16 @@ def build_missing_skills(
     gap,
 ) -> list[str]:
     values = (
-        clean_values(
-            gap.missing_required_skills
-        )
-        + clean_values(
-            gap.missing_preferred_skills
-        )
-        + clean_values(
-            gap.missing_platforms
-        )
+        clean_values(gap.missing_required_skills)
+        + clean_values(gap.missing_preferred_skills)
+        + clean_values(gap.missing_platforms)
     )
 
     result: list[str] = []
 
     for value in values:
         if value not in result:
-            result.append(
-                value
-            )
+            result.append(value)
 
     return result[:10]
 
@@ -224,31 +184,16 @@ def build_interview_points(
     ]
 
     if skills:
-        result.append(
-            "Prepare concrete examples using: "
-            + ", ".join(
-                skills[:6]
-            )
-            + "."
-        )
+        result.append("Prepare concrete examples using: " + ", ".join(skills[:6]) + ".")
 
-    missing = clean_values(
-        gap.missing_required_skills
-    )
+    missing = clean_values(gap.missing_required_skills)
 
     if missing:
         result.append(
-            "Prepare an honest bridge explanation for: "
-            + ", ".join(
-                missing[:5]
-            )
-            + "."
+            "Prepare an honest bridge explanation for: " + ", ".join(missing[:5]) + "."
         )
 
-    if (
-        gap.experience_fit
-        == "below_requirement"
-    ):
+    if gap.experience_fit == "below_requirement":
         result.append(
             "Address the experience gap by emphasizing "
             "scope, ownership, complexity, and measurable "
@@ -271,18 +216,11 @@ def generate_application_assets(
         gap=gap,
     )
 
-    missing = build_missing_skills(
-        gap
-    )
+    missing = build_missing_skills(gap)
 
-    skill_text = pretty_skills(
-        skills
-    )
+    skill_text = pretty_skills(skills)
 
-    location = (
-        job.location
-        or "the listed location"
-    )
+    location = job.location or "the listed location"
 
     recruiter_dm = (
         f"Hi, I came across the {job.title} opening at "
@@ -291,10 +229,7 @@ def generate_application_assets(
         f"connecting and sharing my resume for consideration."
     )
 
-    email_subject = (
-        f"Application interest – "
-        f"{job.title} | {job.company}"
-    )
+    email_subject = f"Application interest – {job.title} | {job.company}"
 
     email_body = (
         f"Hi,\n\n"
@@ -326,47 +261,25 @@ def generate_application_assets(
         f"and production-oriented engineering practices."
     )
 
-    resume_bullets = (
-        build_resume_bullets(
-            skills=skills,
-            job_title=job.title,
-        )
+    resume_bullets = build_resume_bullets(
+        skills=skills,
+        job_title=job.title,
     )
 
-    talking_points = (
-        build_interview_points(
-            job_title=job.title,
-            skills=skills,
-            gap=gap,
-        )
+    talking_points = build_interview_points(
+        job_title=job.title,
+        skills=skills,
+        gap=gap,
     )
 
     return ApplicationAssets(
-        recruiter_dm=(
-            recruiter_dm
-        ),
-        email_subject=(
-            email_subject
-        ),
-        email_body=(
-            email_body
-        ),
-        cover_note=(
-            cover_note
-        ),
-        resume_summary=(
-            resume_summary
-        ),
-        skills_to_emphasize=(
-            skills
-        ),
-        missing_skills_warning=(
-            missing
-        ),
-        resume_bullets_to_emphasize=(
-            resume_bullets
-        ),
-        interview_talking_points=(
-            talking_points
-        ),
+        recruiter_dm=(recruiter_dm),
+        email_subject=(email_subject),
+        email_body=(email_body),
+        cover_note=(cover_note),
+        resume_summary=(resume_summary),
+        skills_to_emphasize=(skills),
+        missing_skills_warning=(missing),
+        resume_bullets_to_emphasize=(resume_bullets),
+        interview_talking_points=(talking_points),
     )

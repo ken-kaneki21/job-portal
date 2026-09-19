@@ -5,7 +5,6 @@ import httpx
 
 from jobintel.company_discovery import detect_ats
 
-
 MAX_LINKS = 300
 
 
@@ -23,13 +22,8 @@ class LinkParser(HTMLParser):
             return
 
         for key, value in attrs:
-            if (
-                key.lower() == "href"
-                and value
-            ):
-                self.links.append(
-                    value
-                )
+            if key.lower() == "href" and value:
+                self.links.append(value)
 
                 if len(self.links) >= MAX_LINKS:
                     return
@@ -57,9 +51,7 @@ def inspect_url_for_ats(
     # 1. Direct URL detection
     # ---------------------------------------------
 
-    direct = detect_ats(
-        url
-    )
+    direct = detect_ats(url)
 
     if direct is not None:
         ats, identifier = direct
@@ -78,27 +70,16 @@ def inspect_url_for_ats(
         with httpx.Client(
             timeout=12.0,
             follow_redirects=True,
-            headers={
-                "User-Agent": (
-                    "Mozilla/5.0 "
-                    "(compatible; JobIntel/1.0)"
-                )
-            },
+            headers={"User-Agent": ("Mozilla/5.0 (compatible; JobIntel/1.0)")},
         ) as client:
-            response = client.get(
-                url
-            )
+            response = client.get(url)
 
     except httpx.HTTPError:
         return None
 
-    final_url = str(
-        response.url
-    )
+    final_url = str(response.url)
 
-    redirected = detect_ats(
-        final_url
-    )
+    redirected = detect_ats(final_url)
 
     if redirected is not None:
         ats, identifier = redirected
@@ -113,27 +94,18 @@ def inspect_url_for_ats(
     # 3. Inspect page links
     # ---------------------------------------------
 
-    content_type = (
-        response.headers
-        .get(
-            "content-type",
-            "",
-        )
-        .lower()
-    )
+    content_type = response.headers.get(
+        "content-type",
+        "",
+    ).lower()
 
-    if (
-        response.status_code != 200
-        or "text/html" not in content_type
-    ):
+    if response.status_code != 200 or "text/html" not in content_type:
         return None
 
     parser = LinkParser()
 
     try:
-        parser.feed(
-            response.text
-        )
+        parser.feed(response.text)
     except Exception:
         return None
 
@@ -143,9 +115,7 @@ def inspect_url_for_ats(
             href,
         )
 
-        detected = detect_ats(
-            absolute_url
-        )
+        detected = detect_ats(absolute_url)
 
         if detected is None:
             continue
@@ -178,13 +148,9 @@ def inspect_urls_for_ats(
         if url in seen:
             continue
 
-        seen.add(
-            url
-        )
+        seen.add(url)
 
-        result = inspect_url_for_ats(
-            url
-        )
+        result = inspect_url_for_ats(url)
 
         if result is not None:
             return result

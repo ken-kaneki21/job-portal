@@ -13,52 +13,32 @@ def main() -> None:
                 CompanyDiscoveryCandidateRecord.status,
                 func.count(),
             )
-            .group_by(
-                CompanyDiscoveryCandidateRecord.status
-            )
-            .order_by(
-                CompanyDiscoveryCandidateRecord.status
-            )
+            .group_by(CompanyDiscoveryCandidateRecord.status)
+            .order_by(CompanyDiscoveryCandidateRecord.status)
         ).all()
 
         pending = session.scalars(
-            select(
-                CompanyDiscoveryCandidateRecord
-            )
-            .where(
-                CompanyDiscoveryCandidateRecord.status
-                == "pending"
-            )
-            .order_by(
-                CompanyDiscoveryCandidateRecord.id
-            )
+            select(CompanyDiscoveryCandidateRecord)
+            .where(CompanyDiscoveryCandidateRecord.status == "pending")
+            .order_by(CompanyDiscoveryCandidateRecord.id)
             .limit(20)
         ).all()
 
     print()
     print("=" * 100)
-    print(
-        "COMPANY DISCOVERY STATUS"
-    )
+    print("COMPANY DISCOVERY STATUS")
     print("=" * 100)
 
     for status, count in rows:
-        print(
-            f"{status}: {count}"
-        )
+        print(f"{status}: {count}")
 
     if pending:
         print()
-        print(
-            "NEXT PENDING CANDIDATES"
-        )
+        print("NEXT PENDING CANDIDATES")
         print("-" * 100)
 
         for candidate in pending:
-            print(
-                f"{candidate.id} | "
-                f"{candidate.company_name}"
-            )
+            print(f"{candidate.id} | {candidate.company_name}")
 
 
 if __name__ == "__main__":

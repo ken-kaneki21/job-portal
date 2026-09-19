@@ -32,10 +32,7 @@ from jobintel.semantic.scoring import (
     score_semantic_similarity,
 )
 
-
-PROFILE_PATH = (
-    "profiles/data_engineer.json"
-)
+PROFILE_PATH = "profiles/data_engineer.json"
 
 MIN_SCORE = 40.0
 
@@ -66,10 +63,7 @@ def is_direct_source(
         "smartrecruiters",
     }
 
-    return any(
-        source in direct_sources
-        for source in result.sources
-    )
+    return any(source in direct_sources for source in result.sources)
 
 
 def is_aggregator_only(
@@ -78,14 +72,7 @@ def is_aggregator_only(
     if not result.sources:
         return False
 
-    return (
-        set(
-            result.sources
-        )
-        == {
-            "adzuna"
-        }
-    )
+    return set(result.sources) == {"adzuna"}
 
 
 def classify_result(
@@ -99,34 +86,24 @@ def classify_result(
     - stretch
     """
 
-    experience = (
-        result.detected_experience
-    )
+    experience = result.detected_experience
 
     # Known 5+ year requirements remain
     # stretch opportunities.
-    if (
-        experience is not None
-        and experience >= 5
-    ):
+    if experience is not None and experience >= 5:
         return "stretch"
 
     # Direct employer ATS posting with
     # strong score and acceptable experience.
     if (
-        is_direct_source(
-            result
-        )
+        is_direct_source(result)
         and result.score >= 65
-        and result.experience_score
-        >= 10
+        and result.experience_score >= 10
     ):
         return "high_confidence"
 
     # Aggregator-only jobs remain discovery.
-    if is_aggregator_only(
-        result
-    ):
+    if is_aggregator_only(result):
         return "discovery"
 
     return "discovery"
@@ -158,20 +135,11 @@ def print_job(
 
     print()
 
-    print(
-        f"#{index}  "
-        f"{job.title}"
-    )
+    print(f"#{index}  {job.title}")
 
-    print(
-        f"{job.company} | "
-        f"{job.location or 'Unknown'}"
-    )
+    print(f"{job.company} | {job.location or 'Unknown'}")
 
-    print(
-        f"SCORE: "
-        f"{result.score:.1f}/100"
-    )
+    print(f"SCORE: {result.score:.1f}/100")
 
     print(
         "Breakdown: "
@@ -205,29 +173,14 @@ def print_job(
         )
 
     if result.sources:
-        print(
-            "Sources: "
-            + ", ".join(
-                result.sources
-            )
-        )
+        print("Sources: " + ", ".join(result.sources))
 
     if result.reasons:
-        print(
-            "Why: "
-            + " | ".join(
-                result.reasons
-            )
-        )
+        print("Why: " + " | ".join(result.reasons))
 
-    print(
-        "Apply: "
-        f"{result.preferred_apply_url}"
-    )
+    print(f"Apply: {result.preferred_apply_url}")
 
-    print(
-        "-" * 100
-    )
+    print("-" * 100)
 
 
 def print_section(
@@ -237,24 +190,16 @@ def print_section(
 ) -> None:
     print()
 
-    print(
-        "=" * 100
-    )
+    print("=" * 100)
 
-    print(
-        title
-    )
+    print(title)
 
-    print(
-        "=" * 100
-    )
+    print("=" * 100)
 
     if not results:
         print()
 
-        print(
-            "No jobs in this category."
-        )
+        print("No jobs in this category.")
 
         return
 
@@ -273,25 +218,15 @@ def main() -> None:
     # Load candidate profile
     # -----------------------------------------------------
 
-    profile = load_profile(
-        PROFILE_PATH
-    )
+    profile = load_profile(PROFILE_PATH)
 
     # -----------------------------------------------------
     # Build profile embedding once
     # -----------------------------------------------------
 
-    profile_text = (
-        build_profile_text(
-            profile
-        )
-    )
+    profile_text = build_profile_text(profile)
 
-    profile_embedding = (
-        embed_text(
-            profile_text
-        )
-    )
+    profile_embedding = embed_text(profile_text)
 
     # -----------------------------------------------------
     # Load active jobs, provenance and gap analysis
@@ -299,20 +234,10 @@ def main() -> None:
 
     with SessionLocal() as session:
         jobs = session.scalars(
-            select(
-                JobRecord
-            )
-            .where(
-                JobRecord.is_active.is_(
-                    True
-                )
-            )
+            select(JobRecord).where(JobRecord.is_active.is_(True))
         ).all()
 
-        job_ids = [
-            job.id
-            for job in jobs
-        ]
+        job_ids = [job.id for job in jobs]
 
         # -------------------------------------------------
         # Source provenance
@@ -320,36 +245,16 @@ def main() -> None:
 
         source_map: dict[
             int,
-            list[
-                JobSourceRecord
-            ],
-        ] = defaultdict(
-            list
-        )
+            list[JobSourceRecord],
+        ] = defaultdict(list)
 
         if job_ids:
-            source_rows = (
-                session.scalars(
-                    select(
-                        JobSourceRecord
-                    )
-                    .where(
-                        JobSourceRecord
-                        .job_id
-                        .in_(
-                            job_ids
-                        )
-                    )
-                )
-                .all()
-            )
+            source_rows = session.scalars(
+                select(JobSourceRecord).where(JobSourceRecord.job_id.in_(job_ids))
+            ).all()
 
             for source in source_rows:
-                source_map[
-                    source.job_id
-                ].append(
-                    source
-                )
+                source_map[source.job_id].append(source)
 
         # -------------------------------------------------
         # Structured gap analysis
@@ -361,31 +266,13 @@ def main() -> None:
         ] = {}
 
         if job_ids:
-            gap_rows = (
-                session.scalars(
-                    select(
-                        JobGapAnalysisRecord
-                    )
-                    .where(
-                        JobGapAnalysisRecord
-                        .job_id
-                        .in_(
-                            job_ids
-                        )
-                    )
-                    .where(
-                        JobGapAnalysisRecord
-                        .profile_name
-                        == profile.name
-                    )
-                )
-                .all()
-            )
+            gap_rows = session.scalars(
+                select(JobGapAnalysisRecord)
+                .where(JobGapAnalysisRecord.job_id.in_(job_ids))
+                .where(JobGapAnalysisRecord.profile_name == profile.name)
+            ).all()
 
-            gap_map = {
-                row.job_id: row
-                for row in gap_rows
-            }
+            gap_map = {row.job_id: row for row in gap_rows}
 
         # -------------------------------------------------
         # Deterministic + semantic + gap ranking
@@ -409,9 +296,7 @@ def main() -> None:
             # ---------------------------------------------
 
             if not result.eligible:
-                evaluated.append(
-                    result
-                )
+                evaluated.append(result)
 
                 continue
 
@@ -419,43 +304,27 @@ def main() -> None:
             # Semantic similarity
             # ---------------------------------------------
 
-            job_embedding = (
-                load_job_embedding(
-                    session,
-                    job.id,
-                )
+            job_embedding = load_job_embedding(
+                session,
+                job.id,
             )
 
-            semantic_score = (
-                score_semantic_similarity(
-                    profile_embedding=(
-                        profile_embedding
-                    ),
-                    job_embedding=(
-                        job_embedding
-                    ),
-                )
+            semantic_score = score_semantic_similarity(
+                profile_embedding=(profile_embedding),
+                job_embedding=(job_embedding),
             )
 
             # ---------------------------------------------
             # Structured gap score
             # ---------------------------------------------
 
-            gap_record = (
-                gap_map.get(
-                    job.id
-                )
-            )
+            gap_record = gap_map.get(job.id)
 
             if gap_record is None:
-                gap_score = (
-                    DEFAULT_GAP_SCORE
-                )
+                gap_score = DEFAULT_GAP_SCORE
 
             else:
-                gap_score = float(
-                    gap_record.gap_score
-                )
+                gap_score = float(gap_record.gap_score)
 
             # ---------------------------------------------
             # Final blended score
@@ -473,22 +342,12 @@ def main() -> None:
             #   0..100
             # ---------------------------------------------
 
-            deterministic_score = float(
-                result.score
-            )
+            deterministic_score = float(result.score)
 
             final_score = round(
-                (
-                    deterministic_score
-                    * DETERMINISTIC_WEIGHT
-                )
-                + float(
-                    semantic_score
-                )
-                + (
-                    gap_score
-                    * GAP_WEIGHT
-                ),
+                (deterministic_score * DETERMINISTIC_WEIGHT)
+                + float(semantic_score)
+                + (gap_score * GAP_WEIGHT),
                 2,
             )
 
@@ -509,41 +368,23 @@ def main() -> None:
             result = replace(
                 result,
                 score=final_score,
-                deterministic_score=(
-                    deterministic_score
-                ),
-                semantic_score=(
-                    float(
-                        semantic_score
-                    )
-                ),
-                gap_score=(
-                    gap_score
-                ),
+                deterministic_score=(deterministic_score),
+                semantic_score=(float(semantic_score)),
+                gap_score=(gap_score),
             )
 
-            evaluated.append(
-                result
-            )
+            evaluated.append(result)
 
     # -----------------------------------------------------
     # Filter
     # -----------------------------------------------------
 
-    rejected = [
-        result
-        for result in evaluated
-        if not result.eligible
-    ]
+    rejected = [result for result in evaluated if not result.eligible]
 
     eligible = [
         result
         for result in evaluated
-        if (
-            result.eligible
-            and result.score
-            >= MIN_SCORE
-        )
+        if (result.eligible and result.score >= MIN_SCORE)
     ]
 
     # -----------------------------------------------------
@@ -572,50 +413,24 @@ def main() -> None:
     stretch = []
 
     for result in eligible:
-        bucket = (
-            classify_result(
-                result
-            )
-        )
+        bucket = classify_result(result)
 
-        if (
-            bucket
-            == "high_confidence"
-        ):
-            high_confidence.append(
-                result
-            )
+        if bucket == "high_confidence":
+            high_confidence.append(result)
 
-        elif (
-            bucket
-            == "stretch"
-        ):
-            stretch.append(
-                result
-            )
+        elif bucket == "stretch":
+            stretch.append(result)
 
         else:
-            discovery.append(
-                result
-            )
+            discovery.append(result)
 
     # -----------------------------------------------------
     # Pipeline run context
     # -----------------------------------------------------
 
-    pipeline_run_id_value = (
-        os.getenv(
-            "JOBINTEL_PIPELINE_RUN_ID"
-        )
-    )
+    pipeline_run_id_value = os.getenv("JOBINTEL_PIPELINE_RUN_ID")
 
-    pipeline_run_id = (
-        int(
-            pipeline_run_id_value
-        )
-        if pipeline_run_id_value
-        else None
-    )
+    pipeline_run_id = int(pipeline_run_id_value) if pipeline_run_id_value else None
 
     # -----------------------------------------------------
     # Persist ranking snapshot
@@ -624,21 +439,11 @@ def main() -> None:
     with SessionLocal() as session:
         saved = save_rankings(
             session=session,
-            profile_name=(
-                profile.name
-            ),
-            high_confidence=(
-                high_confidence
-            ),
-            discovery=(
-                discovery
-            ),
-            stretch=(
-                stretch
-            ),
-            pipeline_run_id=(
-                pipeline_run_id
-            ),
+            profile_name=(profile.name),
+            high_confidence=(high_confidence),
+            discovery=(discovery),
+            stretch=(stretch),
+            pipeline_run_id=(pipeline_run_id),
         )
 
         session.commit()
@@ -649,47 +454,23 @@ def main() -> None:
 
     print()
 
-    print(
-        f"Profile: "
-        f"{profile.name}"
-    )
+    print(f"Profile: {profile.name}")
 
-    print(
-        "Active jobs evaluated: "
-        f"{len(jobs)}"
-    )
+    print(f"Active jobs evaluated: {len(jobs)}")
 
-    print(
-        "Rejected by hard filters: "
-        f"{len(rejected)}"
-    )
+    print(f"Rejected by hard filters: {len(rejected)}")
 
-    print(
-        "Eligible above threshold: "
-        f"{len(eligible)}"
-    )
+    print(f"Eligible above threshold: {len(eligible)}")
 
     print()
 
-    print(
-        "High confidence: "
-        f"{len(high_confidence)}"
-    )
+    print(f"High confidence: {len(high_confidence)}")
 
-    print(
-        "Discovery:       "
-        f"{len(discovery)}"
-    )
+    print(f"Discovery:       {len(discovery)}")
 
-    print(
-        "Stretch:         "
-        f"{len(stretch)}"
-    )
+    print(f"Stretch:         {len(stretch)}")
 
-    print(
-        "Rankings persisted: "
-        f"{saved}"
-    )
+    print(f"Rankings persisted: {saved}")
 
     # -----------------------------------------------------
     # Output

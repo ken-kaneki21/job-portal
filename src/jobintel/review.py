@@ -13,7 +13,6 @@ from jobintel.db.models import (
 )
 from jobintel.db.session import SessionLocal
 
-
 PROFILE_NAME = "data_engineer"
 
 
@@ -21,19 +20,9 @@ def get_latest_ranking_run_id(
     session,
 ) -> int | None:
     return session.scalar(
-        select(
-            func.max(
-                JobRankingRecord.pipeline_run_id
-            )
-        )
-        .where(
-            JobRankingRecord.profile_name
-            == PROFILE_NAME
-        )
-        .where(
-            JobRankingRecord.pipeline_run_id
-            .is_not(None)
-        )
+        select(func.max(JobRankingRecord.pipeline_run_id))
+        .where(JobRankingRecord.profile_name == PROFILE_NAME)
+        .where(JobRankingRecord.pipeline_run_id.is_not(None))
     )
 
 
@@ -42,14 +31,10 @@ def list_jobs(
     limit: int = 25,
 ) -> None:
     with SessionLocal() as session:
-        latest_run_id = get_latest_ranking_run_id(
-            session
-        )
+        latest_run_id = get_latest_ranking_run_id(session)
 
         if latest_run_id is None:
-            print(
-                "No ranking snapshot found."
-            )
+            print("No ranking snapshot found.")
             return
 
         stmt = (
@@ -64,45 +49,25 @@ def list_jobs(
             )
             .join(
                 JobRankingRecord,
-                JobRankingRecord.job_id
-                == JobRecord.id,
+                JobRankingRecord.job_id == JobRecord.id,
             )
             .outerjoin(
                 JobApplicationStateRecord,
-                (
-                    JobApplicationStateRecord.job_id
-                    == JobRecord.id
-                )
-                & (
-                    JobApplicationStateRecord.profile_name
-                    == PROFILE_NAME
-                ),
+                (JobApplicationStateRecord.job_id == JobRecord.id)
+                & (JobApplicationStateRecord.profile_name == PROFILE_NAME),
             )
-            .where(
-                JobRankingRecord.profile_name
-                == PROFILE_NAME
-            )
-            .where(
-                JobRankingRecord.pipeline_run_id
-                == latest_run_id
-            )
+            .where(JobRankingRecord.profile_name == PROFILE_NAME)
+            .where(JobRankingRecord.pipeline_run_id == latest_run_id)
         )
 
         if status:
-            stmt = stmt.where(
-                JobApplicationStateRecord.status
-                == status
-            )
+            stmt = stmt.where(JobApplicationStateRecord.status == status)
 
         else:
             stmt = stmt.where(
-                (
-                    JobApplicationStateRecord.status
-                    .is_(None)
-                )
+                (JobApplicationStateRecord.status.is_(None))
                 | (
-                    JobApplicationStateRecord.status
-                    .in_(
+                    JobApplicationStateRecord.status.in_(
                         [
                             "new",
                             "reviewed",
@@ -113,62 +78,35 @@ def list_jobs(
                 )
             )
 
-        stmt = (
-            stmt
-            .order_by(
-                JobRankingRecord.score.desc(),
-                JobRankingRecord.rank_position.asc(),
-            )
-            .limit(limit)
-        )
+        stmt = stmt.order_by(
+            JobRankingRecord.score.desc(),
+            JobRankingRecord.rank_position.asc(),
+        ).limit(limit)
 
-        rows = session.execute(
-            stmt
-        ).all()
+        rows = session.execute(stmt).all()
 
         if not rows:
-            print(
-                "No jobs found."
-            )
+            print("No jobs found.")
             return
 
         print()
-        print(
-            f"Ranking run: {latest_run_id}"
-        )
+        print(f"Ranking run: {latest_run_id}")
 
         for row in rows:
-            current_status = (
-                row.status
-                if row.status
-                else "new"
-            )
+            current_status = row.status if row.status else "new"
 
             print()
-            print(
-                f"Job ID: {row.id}"
-            )
+            print(f"Job ID: {row.id}")
 
-            print(
-                row.title
-            )
+            print(row.title)
 
-            print(
-                f"{row.company} | "
-                f"{row.location or 'Unknown'}"
-            )
+            print(f"{row.company} | {row.location or 'Unknown'}")
 
-            print(
-                f"Bucket: {row.bucket}"
-            )
+            print(f"Bucket: {row.bucket}")
 
-            print(
-                f"Score: {row.score:.1f}"
-            )
+            print(f"Score: {row.score:.1f}")
 
-            print(
-                f"Status: {current_status}"
-            )
+            print(f"Status: {current_status}")
 
             print("-" * 80)
 
@@ -185,9 +123,7 @@ def update_status(
         )
 
         if job is None:
-            print(
-                f"Job {job_id} does not exist."
-            )
+            print(f"Job {job_id} does not exist.")
             return
 
         record = set_application_state(
@@ -200,33 +136,22 @@ def update_status(
 
         session.commit()
 
-        print(
-            f"Updated job {job_id} "
-            f"to status '{record.status}'."
-        )
+        print(f"Updated job {job_id} to status '{record.status}'.")
 
 
 def build_parser():
-    parser = argparse.ArgumentParser(
-        description=(
-            "Review and track ranked jobs."
-        )
-    )
+    parser = argparse.ArgumentParser(description=("Review and track ranked jobs."))
 
     subparsers = parser.add_subparsers(
         dest="command",
         required=True,
     )
 
-    list_parser = subparsers.add_parser(
-        "list"
-    )
+    list_parser = subparsers.add_parser("list")
 
     list_parser.add_argument(
         "--status",
-        choices=sorted(
-            VALID_STATUSES
-        ),
+        choices=sorted(VALID_STATUSES),
         default=None,
     )
 
@@ -236,14 +161,8 @@ def build_parser():
         default=25,
     )
 
-    for status in sorted(
-        VALID_STATUSES
-    ):
-        status_parser = (
-            subparsers.add_parser(
-                status
-            )
-        )
+    for status in sorted(VALID_STATUSES):
+        status_parser = subparsers.add_parser(status)
 
         status_parser.add_argument(
             "job_id",

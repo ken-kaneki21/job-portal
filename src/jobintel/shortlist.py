@@ -9,7 +9,6 @@ from jobintel.db.models import (
 )
 from jobintel.db.session import SessionLocal
 
-
 PROFILE_NAME = "data_engineer"
 
 HIGH_CONFIDENCE_LIMIT = 10
@@ -27,27 +26,15 @@ def get_ranking_run_id(
     pipeline ranking snapshot.
     """
 
-    value = os.getenv(
-        "JOBINTEL_PIPELINE_RUN_ID"
-    )
+    value = os.getenv("JOBINTEL_PIPELINE_RUN_ID")
 
     if value:
         return int(value)
 
     return session.scalar(
-        select(
-            func.max(
-                JobRankingRecord.pipeline_run_id
-            )
-        )
-        .where(
-            JobRankingRecord.profile_name
-            == PROFILE_NAME
-        )
-        .where(
-            JobRankingRecord.pipeline_run_id
-            .is_not(None)
-        )
+        select(func.max(JobRankingRecord.pipeline_run_id))
+        .where(JobRankingRecord.profile_name == PROFILE_NAME)
+        .where(JobRankingRecord.pipeline_run_id.is_not(None))
     )
 
 
@@ -70,40 +57,19 @@ def load_bucket(
         )
         .join(
             JobRankingRecord,
-            JobRankingRecord.job_id
-            == JobRecord.id,
+            JobRankingRecord.job_id == JobRecord.id,
         )
         .outerjoin(
             JobApplicationStateRecord,
-            (
-                JobApplicationStateRecord.job_id
-                == JobRecord.id
-            )
-            & (
-                JobApplicationStateRecord.profile_name
-                == PROFILE_NAME
-            ),
+            (JobApplicationStateRecord.job_id == JobRecord.id)
+            & (JobApplicationStateRecord.profile_name == PROFILE_NAME),
         )
+        .where(JobRankingRecord.profile_name == PROFILE_NAME)
+        .where(JobRankingRecord.pipeline_run_id == pipeline_run_id)
+        .where(JobRankingRecord.bucket == bucket)
         .where(
-            JobRankingRecord.profile_name
-            == PROFILE_NAME
-        )
-        .where(
-            JobRankingRecord.pipeline_run_id
-            == pipeline_run_id
-        )
-        .where(
-            JobRankingRecord.bucket
-            == bucket
-        )
-        .where(
-            (
-                JobApplicationStateRecord.status.is_(None)
-            )
-            | (
-                JobApplicationStateRecord.status
-                == "new"
-            )
+            (JobApplicationStateRecord.status.is_(None))
+            | (JobApplicationStateRecord.status == "new")
         )
         .order_by(
             JobRankingRecord.score.desc(),
@@ -112,9 +78,7 @@ def load_bucket(
         .limit(limit)
     )
 
-    return session.execute(
-        stmt
-    ).all()
+    return session.execute(stmt).all()
 
 
 def print_bucket(
@@ -137,43 +101,25 @@ def print_bucket(
     ):
         print()
 
-        print(
-            f"#{index} | Job ID: {row.id}"
-        )
+        print(f"#{index} | Job ID: {row.id}")
 
-        print(
-            row.title
-        )
+        print(row.title)
 
-        print(
-            f"{row.company} | "
-            f"{row.location or 'Unknown'}"
-        )
+        print(f"{row.company} | {row.location or 'Unknown'}")
 
-        print(
-            f"Score: {row.score:.1f}"
-        )
+        print(f"Score: {row.score:.1f}")
 
-        print(
-            f"Apply: {row.apply_url}"
-        )
+        print(f"Apply: {row.apply_url}")
 
         print("-" * 100)
 
 
 def main() -> None:
     with SessionLocal() as session:
-        pipeline_run_id = (
-            get_ranking_run_id(
-                session
-            )
-        )
+        pipeline_run_id = get_ranking_run_id(session)
 
         if pipeline_run_id is None:
-            print(
-                "No historical pipeline "
-                "ranking snapshot found."
-            )
+            print("No historical pipeline ranking snapshot found.")
             return
 
         high_confidence = load_bucket(
@@ -197,43 +143,24 @@ def main() -> None:
             limit=STRETCH_LIMIT,
         )
 
-    total = (
-        len(high_confidence)
-        + len(discovery)
-        + len(stretch)
-    )
+    total = len(high_confidence) + len(discovery) + len(stretch)
 
     print()
     print("=" * 100)
     print("DAILY JOB SHORTLIST")
     print("=" * 100)
 
-    print(
-        f"Profile: {PROFILE_NAME}"
-    )
+    print(f"Profile: {PROFILE_NAME}")
 
-    print(
-        f"Ranking run: {pipeline_run_id}"
-    )
+    print(f"Ranking run: {pipeline_run_id}")
 
-    print(
-        f"New jobs selected: {total}"
-    )
+    print(f"New jobs selected: {total}")
 
-    print(
-        f"High confidence: "
-        f"{len(high_confidence)}"
-    )
+    print(f"High confidence: {len(high_confidence)}")
 
-    print(
-        f"Discovery:       "
-        f"{len(discovery)}"
-    )
+    print(f"Discovery:       {len(discovery)}")
 
-    print(
-        f"Stretch:         "
-        f"{len(stretch)}"
-    )
+    print(f"Stretch:         {len(stretch)}")
 
     print_bucket(
         "HIGH CONFIDENCE",

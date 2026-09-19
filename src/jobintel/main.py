@@ -1,6 +1,6 @@
 import asyncio
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import httpx
 
@@ -17,7 +17,6 @@ from jobintel.models.company import Company
 from jobintel.models.fetched_job import FetchedJob
 from jobintel.sources.base import JobSource
 from jobintel.sources.registry import build_sources
-
 
 MAX_CONCURRENCY = 5
 
@@ -39,24 +38,15 @@ async def fetch_company(
     company: Company,
     semaphore: asyncio.Semaphore,
 ) -> CompanyScan:
-    started_at = datetime.now(
-        timezone.utc
-    )
+    started_at = datetime.now(UTC)
 
     async with semaphore:
         try:
-            fetched_jobs = await source.fetch_jobs(
-                company
-            )
+            fetched_jobs = await source.fetch_jobs(company)
 
-            finished_at = datetime.now(
-                timezone.utc
-            )
+            finished_at = datetime.now(UTC)
 
-            print(
-                f"{company.name:<25}"
-                f"{len(fetched_jobs):>5} jobs"
-            )
+            print(f"{company.name:<25}{len(fetched_jobs):>5} jobs")
 
             return CompanyScan(
                 company=company,
@@ -68,14 +58,9 @@ async def fetch_company(
             )
 
         except httpx.HTTPError as exc:
-            finished_at = datetime.now(
-                timezone.utc
-            )
+            finished_at = datetime.now(UTC)
 
-            print(
-                f"{company.name:<25}"
-                f"FAILED: {type(exc).__name__}"
-            )
+            print(f"{company.name:<25}FAILED: {type(exc).__name__}")
 
             return CompanyScan(
                 company=company,
@@ -97,19 +82,14 @@ def add_results(
         unchanged=left.unchanged + right.unchanged,
         reopened=left.reopened + right.reopened,
         closed=left.closed + right.closed,
-        changed_external_ids=(
-            left.changed_external_ids
-            | right.changed_external_ids
-        ),
+        changed_external_ids=(left.changed_external_ids | right.changed_external_ids),
     )
 
 
 async def main() -> None:
     companies = load_companies()
 
-    semaphore = asyncio.Semaphore(
-        MAX_CONCURRENCY
-    )
+    semaphore = asyncio.Semaphore(MAX_CONCURRENCY)
 
     timeout = httpx.Timeout(20.0)
 
@@ -131,16 +111,10 @@ async def main() -> None:
             if not company.enabled:
                 continue
 
-            source = sources.get(
-                company.ats
-            )
+            source = sources.get(company.ats)
 
             if source is None:
-                print(
-                    f"{company.name:<25}"
-                    f"FAILED: unsupported ATS "
-                    f"'{company.ats}'"
-                )
+                print(f"{company.name:<25}FAILED: unsupported ATS '{company.ats}'")
 
                 continue
 
@@ -152,9 +126,7 @@ async def main() -> None:
                 )
             )
 
-        scans = await asyncio.gather(
-            *tasks
-        )
+        scans = await asyncio.gather(*tasks)
 
     total = SyncResult()
 
@@ -163,49 +135,29 @@ async def main() -> None:
 
     with SessionLocal() as session:
         for scan in scans:
-            jobs = [
-                item.job
-                for item in scan.fetched_jobs
-            ]
+            jobs = [item.job for item in scan.fetched_jobs]
 
-            effective_success = (
-                scan.success
-            )
+            effective_success = scan.success
 
-            error_type = (
-                scan.error_type
-            )
+            error_type = scan.error_type
 
             if scan.success:
-                previous_active = (
-                    get_active_job_count(
-                        session=session,
-                        source=scan.company.ats,
-                        source_identifier=(
-                            scan.company.identifier
-                        ),
-                    )
+                previous_active = get_active_job_count(
+                    session=session,
+                    source=scan.company.ats,
+                    source_identifier=(scan.company.identifier),
                 )
 
-                current_count = len(
-                    jobs
-                )
+                current_count = len(jobs)
 
-                suspicious_drop = (
-                    previous_active > 0
-                    and current_count
-                    < (
-                        previous_active
-                        * MIN_SAFE_JOB_RATIO
-                    )
+                suspicious_drop = previous_active > 0 and current_count < (
+                    previous_active * MIN_SAFE_JOB_RATIO
                 )
 
                 if suspicious_drop:
                     effective_success = False
 
-                    error_type = (
-                        "SuspiciousJobCountDrop"
-                    )
+                    error_type = "SuspiciousJobCountDrop"
 
                     print(
                         f"{scan.company.name:<25}"
@@ -217,9 +169,7 @@ async def main() -> None:
             save_scan(
                 session=session,
                 source=scan.company.ats,
-                source_identifier=(
-                    scan.company.identifier
-                ),
+                source_identifier=(scan.company.identifier),
                 company=scan.company.name,
                 success=effective_success,
                 jobs_fetched=len(jobs),
@@ -239,28 +189,17 @@ async def main() -> None:
                 session=session,
                 jobs=jobs,
                 source=scan.company.ats,
-                source_identifier=(
-                    scan.company.identifier
-                ),
+                source_identifier=(scan.company.identifier),
             )
 
-            raw_jobs = {
-                item.job.external_id:
-                    item.raw
-                for item
-                in scan.fetched_jobs
-            }
+            raw_jobs = {item.job.external_id: item.raw for item in scan.fetched_jobs}
 
             save_raw_jobs(
                 session=session,
                 source=scan.company.ats,
-                source_identifier=(
-                    scan.company.identifier
-                ),
+                source_identifier=(scan.company.identifier),
                 raw_jobs=raw_jobs,
-                external_ids=(
-                    result.changed_external_ids
-                ),
+                external_ids=(result.changed_external_ids),
             )
 
             total = add_results(
@@ -271,48 +210,24 @@ async def main() -> None:
         session.commit()
 
     print()
-    print(
-        f"Companies configured: "
-        f"{len(companies)}"
-    )
+    print(f"Companies configured: {len(companies)}")
 
-    print(
-        f"Successful scans:     "
-        f"{successful_scans}"
-    )
+    print(f"Successful scans:     {successful_scans}")
 
-    print(
-        f"Jobs fetched:         "
-        f"{fetched}"
-    )
+    print(f"Jobs fetched:         {fetched}")
 
     print()
     print("Database:")
 
-    print(
-        f"New:                  "
-        f"{total.new}"
-    )
+    print(f"New:                  {total.new}")
 
-    print(
-        f"Updated:              "
-        f"{total.updated}"
-    )
+    print(f"Updated:              {total.updated}")
 
-    print(
-        f"Unchanged:            "
-        f"{total.unchanged}"
-    )
+    print(f"Unchanged:            {total.unchanged}")
 
-    print(
-        f"Reopened:             "
-        f"{total.reopened}"
-    )
+    print(f"Reopened:             {total.reopened}")
 
-    print(
-        f"Closed:               "
-        f"{total.closed}"
-    )
+    print(f"Closed:               {total.closed}")
 
 
 if __name__ == "__main__":

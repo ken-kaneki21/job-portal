@@ -2,6 +2,7 @@ import pytest
 
 from jobintel.enrichment.extractor import (
     EXTRACTOR_VERSION,
+    SKILL_PATTERNS,
     classify_skill_context,
     extract_deal_breakers,
     extract_education,
@@ -13,7 +14,6 @@ from jobintel.enrichment.extractor import (
     extract_skill_names,
     normalize_text,
     phrase_exists,
-    SKILL_PATTERNS,
 )
 
 
@@ -22,9 +22,7 @@ def test_extractor_version_exists():
 
 
 def test_normalize_text_collapses_whitespace():
-    result = normalize_text(
-        "  Python   SQL \n Snowflake  "
-    )
+    result = normalize_text("  Python   SQL \n Snowflake  ")
 
     assert result == "Python SQL Snowflake"
 
@@ -43,10 +41,7 @@ def test_phrase_exists_matches_whole_phrase():
 
 def test_skill_extraction_detects_aliases():
     result = extract_skill_names(
-        (
-            "Experience with Py Spark, ADF, "
-            "Postgres and PowerBI."
-        ),
+        ("Experience with Py Spark, ADF, Postgres and PowerBI."),
         SKILL_PATTERNS,
     )
 
@@ -105,9 +100,7 @@ def test_experience_extraction(
     minimum,
     maximum,
 ):
-    result = extract_experience_range(
-        description
-    )
+    result = extract_experience_range(description)
 
     assert result == (
         minimum,
@@ -116,9 +109,7 @@ def test_experience_extraction(
 
 
 def test_experience_unknown_when_not_present():
-    assert extract_experience_range(
-        "Strong Python and SQL skills required"
-    ) == (
+    assert extract_experience_range("Strong Python and SQL skills required") == (
         None,
         None,
     )
@@ -178,10 +169,13 @@ def test_seniority_extraction(
     description,
     expected,
 ):
-    assert extract_seniority(
-        title,
-        description,
-    ) == expected
+    assert (
+        extract_seniority(
+            title,
+            description,
+        )
+        == expected
+    )
 
 
 @pytest.mark.parametrize(
@@ -216,15 +210,11 @@ def test_employment_type(
     text,
     expected,
 ):
-    assert extract_employment_type(
-        text
-    ) == expected
+    assert extract_employment_type(text) == expected
 
 
 def test_unknown_employment_type():
-    assert extract_employment_type(
-        "Work with our data engineering team."
-    ) is None
+    assert extract_employment_type("Work with our data engineering team.") is None
 
 
 @pytest.mark.parametrize(
@@ -259,9 +249,7 @@ def test_education_extraction(
     text,
     expected,
 ):
-    assert extract_education(
-        text
-    ) == expected
+    assert extract_education(text) == expected
 
 
 def test_required_and_preferred_skill_context():
@@ -273,11 +261,7 @@ Nice to have:
 Kafka and Terraform experience.
 """
 
-    required, preferred = (
-        classify_skill_context(
-            description
-        )
-    )
+    required, preferred = classify_skill_context(description)
 
     assert set(required) == {
         "python",
@@ -297,20 +281,14 @@ We use Python, SQL, Airflow and Snowflake
 to build production data pipelines.
 """
 
-    required, preferred = (
-        classify_skill_context(
-            description
-        )
-    )
+    required, preferred = classify_skill_context(description)
 
     assert {
         "python",
         "sql",
         "airflow",
         "snowflake",
-    }.issubset(
-        set(required)
-    )
+    }.issubset(set(required))
 
     assert preferred == []
 
@@ -321,11 +299,7 @@ Python is required.
 Python is also listed as a nice to have skill.
 """
 
-    required, preferred = (
-        classify_skill_context(
-            description
-        )
-    )
+    required, preferred = classify_skill_context(description)
 
     assert "python" in required
     assert "python" not in preferred
@@ -339,27 +313,13 @@ Collaborate with analysts and engineers.
 Python and SQL knowledge required.
 """
 
-    result = extract_responsibilities(
-        description
-    )
+    result = extract_responsibilities(description)
 
-    assert any(
-        "Build scalable ETL pipelines"
-        in item
-        for item in result
-    )
+    assert any("Build scalable ETL pipelines" in item for item in result)
 
-    assert any(
-        "Design reliable batch processing"
-        in item
-        for item in result
-    )
+    assert any("Design reliable batch processing" in item for item in result)
 
-    assert any(
-        "Collaborate with analysts"
-        in item
-        for item in result
-    )
+    assert any("Collaborate with analysts" in item for item in result)
 
 
 def test_deal_breakers_are_detected():
@@ -371,9 +331,7 @@ Willingness to travel is required.
 No visa sponsorship is available.
 """
 
-    result = extract_deal_breakers(
-        description
-    )
+    result = extract_deal_breakers(description)
 
     assert set(result) == {
         "security_clearance",
@@ -385,12 +343,7 @@ No visa sponsorship is available.
 
 
 def test_clean_job_has_no_deal_breakers():
-    result = extract_deal_breakers(
-        (
-            "Remote data engineering role "
-            "using Python and SQL."
-        )
-    )
+    result = extract_deal_breakers("Remote data engineering role using Python and SQL.")
 
     assert result == []
 
@@ -419,22 +372,13 @@ Collaborate with engineering teams.
         description=description,
     )
 
-    assert (
-        result.minimum_experience_years
-        == 3
-    )
+    assert result.minimum_experience_years == 3
 
-    assert (
-        result.maximum_experience_years
-        == 5
-    )
+    assert result.maximum_experience_years == 5
 
     assert result.seniority == "senior"
 
-    assert (
-        result.employment_type
-        == "full_time"
-    )
+    assert result.employment_type == "full_time"
 
     assert result.education == "bachelors"
 
@@ -444,28 +388,18 @@ Collaborate with engineering teams.
         "pyspark",
         "airflow",
         "snowflake",
-    }.issubset(
-        set(result.required_skills)
-    )
+    }.issubset(set(result.required_skills))
 
     assert {
         "dbt",
         "terraform",
-    }.issubset(
-        set(result.preferred_skills)
-    )
+    }.issubset(set(result.preferred_skills))
 
     assert "aws" in result.cloud_platforms
 
-    assert (
-        "snowflake"
-        in result.data_platforms
-    )
+    assert "snowflake" in result.data_platforms
 
-    assert (
-        len(result.responsibilities)
-        >= 2
-    )
+    assert len(result.responsibilities) >= 2
 
 
 def test_extractor_is_deterministic():
@@ -488,10 +422,7 @@ Airflow and dbt.
         description=description,
     )
 
-    assert (
-        first.to_dict()
-        == second.to_dict()
-    )
+    assert first.to_dict() == second.to_dict()
 
 
 def test_empty_description_is_supported():
@@ -500,15 +431,9 @@ def test_empty_description_is_supported():
         description=None,
     )
 
-    assert (
-        result.minimum_experience_years
-        is None
-    )
+    assert result.minimum_experience_years is None
 
-    assert (
-        result.maximum_experience_years
-        is None
-    )
+    assert result.maximum_experience_years is None
 
     assert result.seniority == "mid"
 

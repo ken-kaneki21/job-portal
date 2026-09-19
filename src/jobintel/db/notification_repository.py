@@ -34,18 +34,10 @@ def enqueue_notifications(
     stmt = (
         insert(NotificationRecord)
         .values(rows)
-        .on_conflict_do_nothing(
-            constraint=(
-                "uq_notification_job_profile_type"
-            )
-        )
-        .returning(
-            NotificationRecord.id
-        )
+        .on_conflict_do_nothing(constraint=("uq_notification_job_profile_type"))
+        .returning(NotificationRecord.id)
     )
 
-    inserted_ids = session.scalars(
-        stmt
-    ).all()
+    inserted_ids = session.scalars(stmt).all()
 
     return len(inserted_ids)

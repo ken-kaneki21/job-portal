@@ -22,70 +22,54 @@ depends_on: Union[str, Sequence[str], None] = None
 def upgrade() -> None:
     op.create_table(
         "job_application_events",
-
         sa.Column(
             "id",
             sa.Integer(),
             nullable=False,
         ),
-
         sa.Column(
             "job_id",
             sa.Integer(),
             nullable=False,
         ),
-
         sa.Column(
             "profile_name",
             sa.String(length=100),
             nullable=False,
         ),
-
         sa.Column(
             "previous_status",
             sa.String(length=50),
             nullable=True,
         ),
-
         sa.Column(
             "new_status",
             sa.String(length=50),
             nullable=False,
         ),
-
         sa.Column(
             "notes",
             sa.Text(),
             nullable=True,
         ),
-
         sa.Column(
             "source",
             sa.String(length=50),
             nullable=False,
-            server_default=sa.text(
-                "'api'"
-            ),
+            server_default=sa.text("'api'"),
         ),
-
         sa.Column(
             "created_at",
             sa.DateTime(timezone=True),
             nullable=False,
-            server_default=sa.text(
-                "now()"
-            ),
+            server_default=sa.text("now()"),
         ),
-
         sa.ForeignKeyConstraint(
             ["job_id"],
             ["jobs.id"],
             ondelete="CASCADE",
         ),
-
-        sa.PrimaryKeyConstraint(
-            "id"
-        ),
+        sa.PrimaryKeyConstraint("id"),
     )
 
     op.create_index(
@@ -150,6 +134,4 @@ def downgrade() -> None:
         table_name="job_application_events",
     )
 
-    op.drop_table(
-        "job_application_events"
-    )
+    op.drop_table("job_application_events")

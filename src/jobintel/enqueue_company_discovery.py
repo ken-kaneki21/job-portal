@@ -48,34 +48,19 @@ def normalize_company_name(
 def main() -> None:
     with SessionLocal() as session:
         configured_companies = {
-            normalize_company_name(
-                name
-            )
-            for name in session.scalars(
-                select(
-                    CompanyRecord.name
-                )
-            ).all()
+            normalize_company_name(name)
+            for name in session.scalars(select(CompanyRecord.name)).all()
             if name
         }
 
         broad_companies = {
             company.strip()
             for company in session.scalars(
-                select(
-                    JobRecord.company
-                )
-                .where(
-                    JobRecord.source
-                    == "adzuna"
-                )
-                .where(
-                    JobRecord.company
-                    .is_not(None)
-                )
+                select(JobRecord.company)
+                .where(JobRecord.source == "adzuna")
+                .where(JobRecord.company.is_not(None))
             ).all()
-            if company
-            and company.strip()
+            if company and company.strip()
         }
 
         eligible: list[
@@ -85,22 +70,13 @@ def main() -> None:
             ]
         ] = []
 
-        for company_name in sorted(
-            broad_companies
-        ):
-            normalized = (
-                normalize_company_name(
-                    company_name
-                )
-            )
+        for company_name in sorted(broad_companies):
+            normalized = normalize_company_name(company_name)
 
             if not normalized:
                 continue
 
-            if (
-                normalized
-                in configured_companies
-            ):
+            if normalized in configured_companies:
                 continue
 
             eligible.append(
@@ -116,16 +92,10 @@ def main() -> None:
             company_name,
             normalized_name,
         ) in eligible:
-            was_inserted = (
-                enqueue_candidate(
-                    session,
-                    company_name=(
-                        company_name
-                    ),
-                    normalized_name=(
-                        normalized_name
-                    ),
-                )
+            was_inserted = enqueue_candidate(
+                session,
+                company_name=(company_name),
+                normalized_name=(normalized_name),
             )
 
             if was_inserted:
@@ -135,25 +105,14 @@ def main() -> None:
 
     print()
     print("=" * 100)
-    print(
-        "COMPANY DISCOVERY QUEUE"
-    )
+    print("COMPANY DISCOVERY QUEUE")
     print("=" * 100)
 
-    print(
-        "Broad-search companies: "
-        f"{len(broad_companies)}"
-    )
+    print(f"Broad-search companies: {len(broad_companies)}")
 
-    print(
-        "Eligible candidates: "
-        f"{len(eligible)}"
-    )
+    print(f"Eligible candidates: {len(eligible)}")
 
-    print(
-        "New candidates queued: "
-        f"{inserted}"
-    )
+    print(f"New candidates queued: {inserted}")
 
 
 if __name__ == "__main__":

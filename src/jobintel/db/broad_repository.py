@@ -53,10 +53,7 @@ def persist_broad_jobs(
             job=job,
         )
 
-        if (
-            match.matched
-            and match.job_id is not None
-        ):
+        if match.matched and match.job_id is not None:
             attach_source(
                 session=session,
                 job_id=match.job_id,

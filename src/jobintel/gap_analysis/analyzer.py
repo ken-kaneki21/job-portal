@@ -1,7 +1,6 @@
 from dataclasses import asdict, dataclass
 from typing import Any
 
-
 ANALYZER_VERSION = "deterministic_gap_v2"
 
 
@@ -59,9 +58,7 @@ class GapAnalysis:
 def normalize_skill(
     value: str,
 ) -> str:
-    normalized = (
-        value.strip().lower()
-    )
+    normalized = value.strip().lower()
 
     return SKILL_ALIASES.get(
         normalized,
@@ -75,12 +72,7 @@ def normalize_collection(
     if not values:
         return set()
 
-    return {
-        normalize_skill(value)
-        for value in values
-        if value
-        and value.strip()
-    }
+    return {normalize_skill(value) for value in values if value and value.strip()}
 
 
 def get_profile_skills(
@@ -98,11 +90,7 @@ def get_profile_skills(
             None,
         )
 
-        skills.update(
-            normalize_collection(
-                values
-            )
-        )
+        skills.update(normalize_collection(values))
 
     return skills
 
@@ -157,8 +145,7 @@ def calculate_ratio(
         return 0.0
 
     return round(
-        len(matched)
-        / len(expected),
+        len(matched) / len(expected),
         4,
     )
 
@@ -183,10 +170,7 @@ def analyze_experience(
             None,
         )
 
-    gap = (
-        profile_experience
-        - float(required_years)
-    )
+    gap = profile_experience - float(required_years)
 
     if gap >= 0:
         return (
@@ -242,28 +226,19 @@ def calculate_gap_score(
     if required_skills:
         available += 55.0
 
-        earned += (
-            required_ratio
-            * 55.0
-        )
+        earned += required_ratio * 55.0
 
     # Preferred skills
     if preferred_skills:
         available += 10.0
 
-        earned += (
-            preferred_ratio
-            * 10.0
-        )
+        earned += preferred_ratio * 10.0
 
     # Platforms
     if platforms:
         available += 15.0
 
-        earned += (
-            platform_ratio
-            * 15.0
-        )
+        earned += platform_ratio * 15.0
 
     # Experience
     if required_experience is not None:
@@ -289,10 +264,7 @@ def calculate_gap_score(
     if available <= 0:
         return 50.0
 
-    evidence_fit = (
-        earned
-        / available
-    ) * 100.0
+    evidence_fit = (earned / available) * 100.0
 
     # How much useful JD evidence was
     # actually available?
@@ -303,14 +275,7 @@ def calculate_gap_score(
 
     # Sparse jobs gravitate toward neutral
     # rather than incorrectly becoming 100.
-    adjusted = (
-        evidence_fit
-        * (
-            0.5
-            + 0.5
-            * evidence_coverage
-        )
-    )
+    adjusted = evidence_fit * (0.5 + 0.5 * evidence_coverage)
 
     # Truly empty JDs should be neutral.
     has_real_requirements = any(
@@ -318,8 +283,7 @@ def calculate_gap_score(
             bool(required_skills),
             bool(preferred_skills),
             bool(platforms),
-            required_experience
-            is not None,
+            required_experience is not None,
         )
     )
 
@@ -359,111 +323,44 @@ def build_fit_summary(
 
     if required_skills:
         if matched_required:
-            parts.append(
-                "Matched required: "
-                + ", ".join(
-                    sorted(
-                        matched_required
-                    )
-                )
-            )
+            parts.append("Matched required: " + ", ".join(sorted(matched_required)))
 
         if missing_required:
-            parts.append(
-                "Missing required: "
-                + ", ".join(
-                    sorted(
-                        missing_required
-                    )
-                )
-            )
+            parts.append("Missing required: " + ", ".join(sorted(missing_required)))
 
     else:
-        parts.append(
-            "Required skills not clearly specified"
-        )
+        parts.append("Required skills not clearly specified")
 
     if preferred_skills:
         if matched_preferred:
-            parts.append(
-                "Matched preferred: "
-                + ", ".join(
-                    sorted(
-                        matched_preferred
-                    )
-                )
-            )
+            parts.append("Matched preferred: " + ", ".join(sorted(matched_preferred)))
 
         if missing_preferred:
-            parts.append(
-                "Missing preferred: "
-                + ", ".join(
-                    sorted(
-                        missing_preferred
-                    )
-                )
-            )
+            parts.append("Missing preferred: " + ", ".join(sorted(missing_preferred)))
 
     if platforms:
         if matched_platforms:
-            parts.append(
-                "Matched platforms: "
-                + ", ".join(
-                    sorted(
-                        matched_platforms
-                    )
-                )
-            )
+            parts.append("Matched platforms: " + ", ".join(sorted(matched_platforms)))
 
         if missing_platforms:
-            parts.append(
-                "Missing platforms: "
-                + ", ".join(
-                    sorted(
-                        missing_platforms
-                    )
-                )
-            )
+            parts.append("Missing platforms: " + ", ".join(sorted(missing_platforms)))
 
     if required_experience is None:
-        parts.append(
-            "Experience requirement not specified"
-        )
+        parts.append("Experience requirement not specified")
 
     elif experience_fit == "meets":
-        parts.append(
-            "Experience requirement met"
-        )
+        parts.append("Experience requirement met")
 
     elif experience_fit == "unknown":
-        parts.append(
-            "Candidate experience not explicitly "
-            "stored in profile"
-        )
+        parts.append("Candidate experience not explicitly stored in profile")
 
-    elif (
-        experience_fit
-        == "below_requirement"
-    ):
-        parts.append(
-            "Experience gap: "
-            f"{experience_gap_years} years"
-        )
+    elif experience_fit == "below_requirement":
+        parts.append(f"Experience gap: {experience_gap_years} years")
 
     if deal_breakers:
-        parts.append(
-            "Potential deal-breakers: "
-            + ", ".join(
-                sorted(
-                    deal_breakers
-                )
-            )
-        )
+        parts.append("Potential deal-breakers: " + ", ".join(sorted(deal_breakers)))
 
-    parts.append(
-        f"Gap fit score: "
-        f"{gap_score:.1f}/100"
-    )
+    parts.append(f"Gap fit score: {gap_score:.1f}/100")
 
     return " | ".join(parts)
 
@@ -473,232 +370,99 @@ def analyze_job_gap(
     profile: Any,
     enrichment: Any,
 ) -> GapAnalysis:
-    profile_skills = (
-        get_profile_skills(
-            profile
-        )
+    profile_skills = get_profile_skills(profile)
+
+    required_skills = normalize_collection(enrichment.required_skills)
+
+    preferred_skills = normalize_collection(enrichment.preferred_skills)
+
+    platforms = normalize_collection(enrichment.cloud_platforms) | normalize_collection(
+        enrichment.data_platforms
     )
 
-    required_skills = (
-        normalize_collection(
-            enrichment.required_skills
-        )
+    matched_required = required_skills & profile_skills
+
+    missing_required = required_skills - profile_skills
+
+    matched_preferred = preferred_skills & profile_skills
+
+    missing_preferred = preferred_skills - profile_skills
+
+    matched_platforms = platforms & profile_skills
+
+    missing_platforms = platforms - profile_skills
+
+    required_ratio = calculate_ratio(
+        matched_required,
+        required_skills,
     )
 
-    preferred_skills = (
-        normalize_collection(
-            enrichment.preferred_skills
-        )
+    preferred_ratio = calculate_ratio(
+        matched_preferred,
+        preferred_skills,
     )
 
-    platforms = (
-        normalize_collection(
-            enrichment.cloud_platforms
-        )
-        | normalize_collection(
-            enrichment.data_platforms
-        )
+    platform_ratio = calculate_ratio(
+        matched_platforms,
+        platforms,
     )
 
-    matched_required = (
-        required_skills
-        & profile_skills
-    )
+    profile_experience = get_profile_experience(profile)
 
-    missing_required = (
-        required_skills
-        - profile_skills
-    )
-
-    matched_preferred = (
-        preferred_skills
-        & profile_skills
-    )
-
-    missing_preferred = (
-        preferred_skills
-        - profile_skills
-    )
-
-    matched_platforms = (
-        platforms
-        & profile_skills
-    )
-
-    missing_platforms = (
-        platforms
-        - profile_skills
-    )
-
-    required_ratio = (
-        calculate_ratio(
-            matched_required,
-            required_skills,
-        )
-    )
-
-    preferred_ratio = (
-        calculate_ratio(
-            matched_preferred,
-            preferred_skills,
-        )
-    )
-
-    platform_ratio = (
-        calculate_ratio(
-            matched_platforms,
-            platforms,
-        )
-    )
-
-    profile_experience = (
-        get_profile_experience(
-            profile
-        )
-    )
-
-    required_experience = (
-        enrichment
-        .minimum_experience_years
-    )
+    required_experience = enrichment.minimum_experience_years
 
     (
         experience_fit,
         experience_gap_years,
     ) = analyze_experience(
-        required_years=(
-            required_experience
-        ),
-        profile_experience=(
-            profile_experience
-        ),
+        required_years=(required_experience),
+        profile_experience=(profile_experience),
     )
 
-    deal_breakers = sorted(
-        set(
-            enrichment.deal_breakers
-            or []
-        )
-    )
+    deal_breakers = sorted(set(enrichment.deal_breakers or []))
 
-    gap_score = (
-        calculate_gap_score(
-            required_skills=(
-                required_skills
-            ),
-            required_ratio=(
-                required_ratio
-            ),
-            preferred_skills=(
-                preferred_skills
-            ),
-            preferred_ratio=(
-                preferred_ratio
-            ),
-            platforms=(
-                platforms
-            ),
-            platform_ratio=(
-                platform_ratio
-            ),
-            required_experience=(
-                required_experience
-            ),
-            experience_fit=(
-                experience_fit
-            ),
-            deal_breakers=(
-                deal_breakers
-            ),
-        )
+    gap_score = calculate_gap_score(
+        required_skills=(required_skills),
+        required_ratio=(required_ratio),
+        preferred_skills=(preferred_skills),
+        preferred_ratio=(preferred_ratio),
+        platforms=(platforms),
+        platform_ratio=(platform_ratio),
+        required_experience=(required_experience),
+        experience_fit=(experience_fit),
+        deal_breakers=(deal_breakers),
     )
 
     summary = build_fit_summary(
-        required_skills=(
-            required_skills
-        ),
-        matched_required=(
-            matched_required
-        ),
-        missing_required=(
-            missing_required
-        ),
-        preferred_skills=(
-            preferred_skills
-        ),
-        matched_preferred=(
-            matched_preferred
-        ),
-        missing_preferred=(
-            missing_preferred
-        ),
-        platforms=(
-            platforms
-        ),
-        matched_platforms=(
-            matched_platforms
-        ),
-        missing_platforms=(
-            missing_platforms
-        ),
-        required_experience=(
-            required_experience
-        ),
-        experience_fit=(
-            experience_fit
-        ),
-        experience_gap_years=(
-            experience_gap_years
-        ),
-        deal_breakers=(
-            deal_breakers
-        ),
-        gap_score=(
-            gap_score
-        ),
+        required_skills=(required_skills),
+        matched_required=(matched_required),
+        missing_required=(missing_required),
+        preferred_skills=(preferred_skills),
+        matched_preferred=(matched_preferred),
+        missing_preferred=(missing_preferred),
+        platforms=(platforms),
+        matched_platforms=(matched_platforms),
+        missing_platforms=(missing_platforms),
+        required_experience=(required_experience),
+        experience_fit=(experience_fit),
+        experience_gap_years=(experience_gap_years),
+        deal_breakers=(deal_breakers),
+        gap_score=(gap_score),
     )
 
     return GapAnalysis(
-        matched_required_skills=sorted(
-            matched_required
-        ),
-        missing_required_skills=sorted(
-            missing_required
-        ),
-        matched_preferred_skills=sorted(
-            matched_preferred
-        ),
-        missing_preferred_skills=sorted(
-            missing_preferred
-        ),
-        matched_platforms=sorted(
-            matched_platforms
-        ),
-        missing_platforms=sorted(
-            missing_platforms
-        ),
-        deal_breakers=(
-            deal_breakers
-        ),
-        experience_fit=(
-            experience_fit
-        ),
-        experience_gap_years=(
-            experience_gap_years
-        ),
-        required_skill_match_ratio=(
-            required_ratio
-        ),
-        preferred_skill_match_ratio=(
-            preferred_ratio
-        ),
-        platform_match_ratio=(
-            platform_ratio
-        ),
-        gap_score=(
-            gap_score
-        ),
-        fit_summary=(
-            summary
-        ),
+        matched_required_skills=sorted(matched_required),
+        missing_required_skills=sorted(missing_required),
+        matched_preferred_skills=sorted(matched_preferred),
+        missing_preferred_skills=sorted(missing_preferred),
+        matched_platforms=sorted(matched_platforms),
+        missing_platforms=sorted(missing_platforms),
+        deal_breakers=(deal_breakers),
+        experience_fit=(experience_fit),
+        experience_gap_years=(experience_gap_years),
+        required_skill_match_ratio=(required_ratio),
+        preferred_skill_match_ratio=(preferred_ratio),
+        platform_match_ratio=(platform_ratio),
+        gap_score=(gap_score),
+        fit_summary=(summary),
     )

@@ -93,10 +93,7 @@ def test_skills_to_emphasize_only_contains_profile_skills():
         gap=gap,
     )
 
-    normalized = {
-        value.lower()
-        for value in result
-    }
+    normalized = {value.lower() for value in result}
 
     assert "python" in normalized
     assert "sql" in normalized
@@ -110,9 +107,7 @@ def test_skills_to_emphasize_only_contains_profile_skills():
 def test_missing_skills_combines_gap_categories():
     gap = make_gap()
 
-    result = build_missing_skills(
-        gap
-    )
+    result = build_missing_skills(gap)
 
     assert "Kafka" in result
     assert "Terraform" in result
@@ -149,25 +144,13 @@ def test_generated_assets_reference_target_job():
         ranking=make_ranking(),
     )
 
-    assert (
-        "Data Engineer"
-        in assets.recruiter_dm
-    )
+    assert "Data Engineer" in assets.recruiter_dm
 
-    assert (
-        "Example Company"
-        in assets.recruiter_dm
-    )
+    assert "Example Company" in assets.recruiter_dm
 
-    assert (
-        "Data Engineer"
-        in assets.email_subject
-    )
+    assert "Data Engineer" in assets.email_subject
 
-    assert (
-        "Example Company"
-        in assets.email_subject
-    )
+    assert "Example Company" in assets.email_subject
 
 
 def test_assets_do_not_claim_missing_skill():
@@ -179,13 +162,9 @@ def test_assets_do_not_claim_missing_skill():
         ranking=make_ranking(),
     )
 
-    recruiter_dm = (
-        assets.recruiter_dm.lower()
-    )
+    recruiter_dm = assets.recruiter_dm.lower()
 
-    resume_summary = (
-        assets.resume_summary.lower()
-    )
+    resume_summary = assets.resume_summary.lower()
 
     assert "kafka" not in recruiter_dm
     assert "terraform" not in recruiter_dm
@@ -203,15 +182,8 @@ def test_generator_is_deterministic():
         "ranking": make_ranking(),
     }
 
-    first = generate_application_assets(
-        **inputs
-    )
+    first = generate_application_assets(**inputs)
 
-    second = generate_application_assets(
-        **inputs
-    )
+    second = generate_application_assets(**inputs)
 
-    assert (
-        first.to_dict()
-        == second.to_dict()
-    )
+    assert first.to_dict() == second.to_dict()

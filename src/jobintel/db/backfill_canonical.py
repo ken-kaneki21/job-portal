@@ -7,9 +7,7 @@ from jobintel.dedup import canonical_key
 
 def main() -> None:
     with SessionLocal() as session:
-        jobs = session.scalars(
-            select(JobRecord)
-        ).all()
+        jobs = session.scalars(select(JobRecord)).all()
 
         updated = 0
 
@@ -24,10 +22,7 @@ def main() -> None:
 
         session.commit()
 
-    print(
-        f"Canonical keys backfilled: "
-        f"{updated}"
-    )
+    print(f"Canonical keys backfilled: {updated}")
 
 
 if __name__ == "__main__":

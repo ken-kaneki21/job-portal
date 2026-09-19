@@ -39,21 +39,11 @@ def make_enrichment(
 ):
     return SimpleNamespace(
         required_skills=required_skills,
-        preferred_skills=(
-            preferred_skills or []
-        ),
-        cloud_platforms=(
-            cloud_platforms or []
-        ),
-        data_platforms=(
-            data_platforms or []
-        ),
-        minimum_experience_years=(
-            minimum_experience_years
-        ),
-        deal_breakers=(
-            deal_breakers or []
-        ),
+        preferred_skills=(preferred_skills or []),
+        cloud_platforms=(cloud_platforms or []),
+        data_platforms=(data_platforms or []),
+        minimum_experience_years=(minimum_experience_years),
+        deal_breakers=(deal_breakers or []),
     )
 
 
@@ -103,15 +93,9 @@ def test_good_fit_beats_weak_fit():
         enrichment=weak_job,
     )
 
-    assert (
-        good.gap_score
-        > weak.gap_score
-    )
+    assert good.gap_score > weak.gap_score
 
-    assert (
-        good.required_skill_match_ratio
-        > weak.required_skill_match_ratio
-    )
+    assert good.required_skill_match_ratio > weak.required_skill_match_ratio
 
 
 def test_matching_role_beats_experience_stretch():
@@ -141,34 +125,21 @@ def test_matching_role_beats_experience_stretch():
         minimum_experience_years=7,
     )
 
-    matching_result = (
-        analyze_job_gap(
-            profile=profile,
-            enrichment=matching,
-        )
+    matching_result = analyze_job_gap(
+        profile=profile,
+        enrichment=matching,
     )
 
-    stretch_result = (
-        analyze_job_gap(
-            profile=profile,
-            enrichment=stretch,
-        )
+    stretch_result = analyze_job_gap(
+        profile=profile,
+        enrichment=stretch,
     )
 
-    assert (
-        matching_result.gap_score
-        > stretch_result.gap_score
-    )
+    assert matching_result.gap_score > stretch_result.gap_score
 
-    assert (
-        matching_result.experience_fit
-        == "meets"
-    )
+    assert matching_result.experience_fit == "meets"
 
-    assert (
-        stretch_result.experience_fit
-        == "below_requirement"
-    )
+    assert stretch_result.experience_fit == "below_requirement"
 
 
 def test_missing_required_skill_hurts_more_than_preferred():
@@ -196,24 +167,17 @@ def test_missing_required_skill_hurts_more_than_preferred():
         ],
     )
 
-    required_result = (
-        analyze_job_gap(
-            profile=profile,
-            enrichment=missing_required,
-        )
+    required_result = analyze_job_gap(
+        profile=profile,
+        enrichment=missing_required,
     )
 
-    preferred_result = (
-        analyze_job_gap(
-            profile=profile,
-            enrichment=missing_preferred,
-        )
+    preferred_result = analyze_job_gap(
+        profile=profile,
+        enrichment=missing_preferred,
     )
 
-    assert (
-        preferred_result.gap_score
-        > required_result.gap_score
-    )
+    assert preferred_result.gap_score > required_result.gap_score
 
 
 def test_deal_breaker_job_scores_lower():
@@ -240,31 +204,19 @@ def test_deal_breaker_job_scores_lower():
         ],
     )
 
-    clean_result = (
-        analyze_job_gap(
-            profile=profile,
-            enrichment=clean_job,
-        )
+    clean_result = analyze_job_gap(
+        profile=profile,
+        enrichment=clean_job,
     )
 
-    blocker_result = (
-        analyze_job_gap(
-            profile=profile,
-            enrichment=blocker_job,
-        )
+    blocker_result = analyze_job_gap(
+        profile=profile,
+        enrichment=blocker_job,
     )
 
-    assert (
-        clean_result.gap_score
-        > blocker_result.gap_score
-    )
+    assert clean_result.gap_score > blocker_result.gap_score
 
-    assert (
-        blocker_result.deal_breakers
-        == [
-            "US security clearance required"
-        ]
-    )
+    assert blocker_result.deal_breakers == ["US security clearance required"]
 
 
 def test_empty_jd_is_neutral_not_high_confidence():
@@ -277,15 +229,9 @@ def test_empty_jd_is_neutral_not_high_confidence():
 
     assert result.gap_score == 50.0
 
-    assert (
-        result.required_skill_match_ratio
-        == 0.0
-    )
+    assert result.required_skill_match_ratio == 0.0
 
-    assert (
-        result.experience_fit
-        == "not_specified"
-    )
+    assert result.experience_fit == "not_specified"
 
 
 def test_unknown_candidate_experience_is_not_perfect():
@@ -311,14 +257,8 @@ def test_unknown_candidate_experience_is_not_perfect():
         enrichment=job,
     )
 
-    assert (
-        result.experience_fit
-        == "unknown"
-    )
+    assert result.experience_fit == "unknown"
 
-    assert (
-        result.experience_gap_years
-        is None
-    )
+    assert result.experience_gap_years is None
 
     assert result.gap_score < 100

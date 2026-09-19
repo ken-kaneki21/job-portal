@@ -3,18 +3,12 @@ from functools import lru_cache
 import numpy as np
 from sentence_transformers import SentenceTransformer
 
-
-MODEL_NAME = (
-    "sentence-transformers/"
-    "all-MiniLM-L6-v2"
-)
+MODEL_NAME = "sentence-transformers/all-MiniLM-L6-v2"
 
 
 @lru_cache(maxsize=1)
 def get_model() -> SentenceTransformer:
-    return SentenceTransformer(
-        MODEL_NAME
-    )
+    return SentenceTransformer(MODEL_NAME)
 
 
 def embed_text(
@@ -48,24 +42,14 @@ def cosine_similarity(
         dtype=np.float32,
     )
 
-    if (
-        left_array.size == 0
-        or right_array.size == 0
-    ):
+    if left_array.size == 0 or right_array.size == 0:
         return 0.0
 
-    left_norm = np.linalg.norm(
-        left_array
-    )
+    left_norm = np.linalg.norm(left_array)
 
-    right_norm = np.linalg.norm(
-        right_array
-    )
+    right_norm = np.linalg.norm(right_array)
 
-    if (
-        left_norm == 0
-        or right_norm == 0
-    ):
+    if left_norm == 0 or right_norm == 0:
         return 0.0
 
     similarity = float(
@@ -73,10 +57,7 @@ def cosine_similarity(
             left_array,
             right_array,
         )
-        / (
-            left_norm
-            * right_norm
-        )
+        / (left_norm * right_norm)
     )
 
     return max(
