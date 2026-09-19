@@ -1,0 +1,148 @@
+[build-system]
+requires = [
+    "setuptools>=68",
+    "wheel",
+]
+build-backend = "setuptools.build_meta"
+
+
+[project]
+name = "job-intelligence"
+version = "0.1.0"
+description = "Private AI-powered job intelligence and application orchestration platform"
+requires-python = ">=3.13"
+
+dependencies = [
+    "httpx>=0.27",
+    "pydantic>=2.8",
+    "sqlalchemy>=2.0",
+    "psycopg[binary]>=3.2",
+    "alembic>=1.16",
+    "python-dotenv>=1.0",
+    "fastapi>=0.115",
+    "uvicorn>=0.30",
+    "temporalio>=1.8",
+    "prometheus-client>=0.21",
+    "pgvector>=0.3",
+    "sentence-transformers>=3.0",
+]
+
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=9.0",
+    "pytest-cov>=7.0",
+    "ruff>=0.13",
+    "black>=25.0",
+    "mypy>=1.18",
+    "pre-commit>=4.0",
+]
+
+
+[tool.setuptools.packages.find]
+where = [
+    "src",
+]
+
+
+[tool.pytest.ini_options]
+testpaths = [
+    "tests",
+]
+
+pythonpath = [
+    "src",
+]
+
+addopts = [
+    "-ra",
+]
+
+
+[tool.coverage.run]
+branch = true
+source = [
+    "jobintel",
+]
+
+omit = [
+    "*/migrations/*",
+]
+
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = false
+precision = 1
+
+
+[tool.black]
+line-length = 88
+target-version = [
+    "py313",
+]
+
+exclude = '''
+/(
+    \.git
+  | \.venv
+  | \.pytest_cache
+  | \.mypy_cache
+  | \.ruff_cache
+  | migrations
+)/
+'''
+
+
+[tool.ruff]
+line-length = 88
+target-version = "py313"
+
+exclude = [
+    ".git",
+    ".venv",
+    ".pytest_cache",
+    ".mypy_cache",
+    ".ruff_cache",
+    "migrations",
+]
+
+
+[tool.ruff.lint]
+select = [
+    "E",
+    "F",
+    "W",
+    "I",
+    "B",
+    "UP",
+]
+
+ignore = [
+    "E501",
+]
+
+
+[tool.ruff.lint.isort]
+known-first-party = [
+    "jobintel",
+]
+
+
+[tool.mypy]
+python_version = "3.13"
+packages = [
+    "jobintel",
+]
+
+ignore_missing_imports = true
+check_untyped_defs = true
+warn_unused_ignores = true
+warn_redundant_casts = true
+warn_unused_configs = true
+show_error_codes = true
+pretty = true
+
+exclude = [
+    "migrations/",
+]

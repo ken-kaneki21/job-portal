@@ -1,0 +1,84 @@
+{
+  "name": "data_engineer",
+  "target_titles": [
+    "data engineer",
+    "analytics engineer",
+    "data platform engineer",
+    "cloud data engineer",
+    "etl engineer",
+    "data integration engineer",
+    "data analytics engineer"
+  ],
+  "adjacent_titles": [
+    "data analyst",
+    "business intelligence developer",
+    "bi developer",
+    "database engineer",
+    "data operations"
+  ],
+  "exclude_titles": [
+    "director",
+    "vice president",
+    "vp",
+    "manager",
+    "principal",
+    "staff",
+    "intern",
+    "internship",
+    "architect",
+    "developer advocate",
+    "design engineer",
+    "security engineer",
+    "sales",
+    "marketing",
+    "rewards",
+    "human resources"
+  ],
+  "preferred_locations": [
+    "bangalore",
+    "bengaluru",
+    "hyderabad",
+    "pune",
+    "india"
+  ],
+  "allowed_countries": [
+    "india"
+  ],
+  "blocked_location_terms": [
+    "united states",
+    "usa",
+    "us only",
+    "remote - us",
+    "remote \u2013 us",
+    "canada",
+    "european union",
+    "remote - eu",
+    "remote \u2013 eu",
+    "united kingdom",
+    "uk only"
+  ],
+  "core_skills": [
+    "python",
+    "sql",
+    "snowflake",
+    "dbt",
+    "airflow",
+    "azure data factory",
+    "pyspark",
+    "databricks"
+  ],
+  "secondary_skills": [
+    "aws",
+    "azure",
+    "postgresql",
+    "spark",
+    "etl",
+    "elt",
+    "data modeling",
+    "power bi",
+    "docker",
+    "git"
+  ],
+  "max_preferred_experience_years": 4,
+  "hard_max_experience_years": 5
+}
