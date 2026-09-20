@@ -5,9 +5,9 @@ services:
     container_name: jobintel-postgres
 
     environment:
-      POSTGRES_DB: jobintel
-      POSTGRES_USER: jobintel
-      POSTGRES_PASSWORD: jobintel_dev
+      POSTGRES_DB: ${JOBINTEL_POSTGRES_DB:-jobintel}
+      POSTGRES_USER: ${JOBINTEL_POSTGRES_USER:-jobintel}
+      POSTGRES_PASSWORD: ${JOBINTEL_POSTGRES_PASSWORD:-jobintel_dev}
 
     ports:
       - "55432:5432"
@@ -19,11 +19,13 @@ services:
       test:
         [
           "CMD-SHELL",
-          "pg_isready -U jobintel -d jobintel"
+          "pg_isready -U ${JOBINTEL_POSTGRES_USER:-jobintel} -d ${JOBINTEL_POSTGRES_DB:-jobintel}"
         ]
       interval: 5s
       timeout: 5s
       retries: 10
+
+    restart: unless-stopped
 
 
   temporal-postgres:
@@ -31,9 +33,9 @@ services:
     container_name: jobintel-temporal-postgres
 
     environment:
-      POSTGRES_DB: temporal
-      POSTGRES_USER: temporal
-      POSTGRES_PASSWORD: temporal
+      POSTGRES_DB: ${TEMPORAL_POSTGRES_DB:-temporal}
+      POSTGRES_USER: ${TEMPORAL_POSTGRES_USER:-temporal}
+      POSTGRES_PASSWORD: ${TEMPORAL_POSTGRES_PASSWORD:-temporal}
 
     volumes:
       - jobintel_temporal_postgres:/var/lib/postgresql/data
@@ -42,11 +44,13 @@ services:
       test:
         [
           "CMD-SHELL",
-          "pg_isready -U temporal -d temporal"
+          "pg_isready -U ${TEMPORAL_POSTGRES_USER:-temporal} -d ${TEMPORAL_POSTGRES_DB:-temporal}"
         ]
       interval: 5s
       timeout: 5s
       retries: 10
+
+    restart: unless-stopped
 
 
   temporal:
@@ -60,12 +64,14 @@ services:
     environment:
       DB: postgres12
       DB_PORT: 5432
-      POSTGRES_USER: temporal
-      POSTGRES_PWD: temporal
+      POSTGRES_USER: ${TEMPORAL_POSTGRES_USER:-temporal}
+      POSTGRES_PWD: ${TEMPORAL_POSTGRES_PASSWORD:-temporal}
       POSTGRES_SEEDS: temporal-postgres
 
     ports:
       - "7233:7233"
+
+    restart: unless-stopped
 
 
   temporal-ui:
@@ -73,19 +79,140 @@ services:
     container_name: jobintel-temporal-ui
 
     depends_on:
-      - temporal
+      temporal:
+        condition: service_started
 
     environment:
       TEMPORAL_ADDRESS: temporal:7233
-      TEMPORAL_CORS_ORIGINS: http://localhost:3000
+      TEMPORAL_CORS_ORIGINS: ${TEMPORAL_UI_CORS_ORIGINS:-http://localhost:3000}
 
     ports:
       - "8080:8080"
+
+    restart: unless-stopped
+
+
+  migrate:
+    image: job-intelligence:local
+
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+    container_name: jobintel-migrate
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+    environment:
+      DATABASE_URL: ${JOBINTEL_DOCKER_DATABASE_URL:-postgresql+psycopg://jobintel:jobintel_dev@postgres:5432/jobintel}
+
+    command:
+      [
+        "alembic",
+        "upgrade",
+        "head"
+      ]
+
+    restart: "no"
+
+    healthcheck:
+      disable: true
+
+
+  api:
+    image: job-intelligence:local
+    container_name: jobintel-api
+
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      temporal:
+        condition: service_started
+
+    env_file:
+      - .env
+
+    environment:
+      DATABASE_URL: ${JOBINTEL_DOCKER_DATABASE_URL:-postgresql+psycopg://jobintel:jobintel_dev@postgres:5432/jobintel}
+      JOBINTEL_TEMPORAL_ADDRESS: ${JOBINTEL_TEMPORAL_ADDRESS_DOCKER:-temporal:7233}
+      JOBINTEL_TEMPORAL_NAMESPACE: ${JOBINTEL_TEMPORAL_NAMESPACE:-default}
+      JOBINTEL_TEMPORAL_TASK_QUEUE: ${JOBINTEL_TEMPORAL_TASK_QUEUE:-job-intelligence-pipeline}
+
+    command:
+      [
+        "python",
+        "-m",
+        "uvicorn",
+        "jobintel.api:app",
+        "--host",
+        "0.0.0.0",
+        "--port",
+        "8000"
+      ]
+
+    ports:
+      - "8000:8000"
+
+    restart: unless-stopped
+
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "curl --fail http://127.0.0.1:8000/health || exit 1"
+        ]
+      interval: 30s
+      timeout: 5s
+      start_period: 20s
+      retries: 3
+
+
+  worker:
+    image: job-intelligence:local
+    container_name: jobintel-worker
+
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      temporal:
+        condition: service_started
+
+    env_file:
+      - .env
+
+    environment:
+      DATABASE_URL: ${JOBINTEL_DOCKER_DATABASE_URL:-postgresql+psycopg://jobintel:jobintel_dev@postgres:5432/jobintel}
+      JOBINTEL_TEMPORAL_ADDRESS: ${JOBINTEL_TEMPORAL_ADDRESS_DOCKER:-temporal:7233}
+      JOBINTEL_TEMPORAL_NAMESPACE: ${JOBINTEL_TEMPORAL_NAMESPACE:-default}
+      JOBINTEL_TEMPORAL_TASK_QUEUE: ${JOBINTEL_TEMPORAL_TASK_QUEUE:-job-intelligence-pipeline}
+
+    command:
+      [
+        "python",
+        "-m",
+        "jobintel.temporal_pipeline.worker"
+      ]
+
+    ports:
+      - "9101:9101"
+
+    restart: unless-stopped
+
+    healthcheck:
+      disable: true
 
 
   prometheus:
     image: prom/prometheus:v3.5.0
     container_name: jobintel-prometheus
+
+    depends_on:
+      api:
+        condition: service_healthy
+      worker:
+        condition: service_started
 
     command:
       - "--config.file=/etc/prometheus/prometheus.yml"
@@ -99,8 +226,7 @@ services:
     ports:
       - "9090:9090"
 
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
+    restart: unless-stopped
 
 
   grafana:
@@ -108,11 +234,12 @@ services:
     container_name: jobintel-grafana
 
     depends_on:
-      - prometheus
+      prometheus:
+        condition: service_started
 
     environment:
-      GF_SECURITY_ADMIN_USER: admin
-      GF_SECURITY_ADMIN_PASSWORD: jobintel_dev
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-jobintel_dev}
       GF_USERS_ALLOW_SIGN_UP: "false"
 
     volumes:
@@ -122,6 +249,8 @@ services:
 
     ports:
       - "3000:3000"
+
+    restart: unless-stopped
 
 
 volumes:

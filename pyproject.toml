@@ -23,6 +23,7 @@ dependencies = [
     "prometheus-client>=0.21",
     "pgvector>=0.3",
     "sentence-transformers>=3.0",
+    "resend>=2.0",
 ]
 
 [project.optional-dependencies]
