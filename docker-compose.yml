@@ -5,9 +5,9 @@ services:
     container_name: jobintel-postgres
 
     environment:
-      POSTGRES_DB: ${JOBINTEL_POSTGRES_DB:-jobintel}
-      POSTGRES_USER: ${JOBINTEL_POSTGRES_USER:-jobintel}
-      POSTGRES_PASSWORD: ${JOBINTEL_POSTGRES_PASSWORD:-jobintel_dev}
+      POSTGRES_DB: ${JOBINTEL_POSTGRES_DB}
+      POSTGRES_USER: ${JOBINTEL_POSTGRES_USER}
+      POSTGRES_PASSWORD: ${JOBINTEL_POSTGRES_PASSWORD}
 
     ports:
       - "55432:5432"
@@ -19,7 +19,7 @@ services:
       test:
         [
           "CMD-SHELL",
-          "pg_isready -U ${JOBINTEL_POSTGRES_USER:-jobintel} -d ${JOBINTEL_POSTGRES_DB:-jobintel}"
+          "pg_isready -U ${JOBINTEL_POSTGRES_USER} -d ${JOBINTEL_POSTGRES_DB}"
         ]
       interval: 5s
       timeout: 5s
@@ -33,9 +33,9 @@ services:
     container_name: jobintel-temporal-postgres
 
     environment:
-      POSTGRES_DB: ${TEMPORAL_POSTGRES_DB:-temporal}
-      POSTGRES_USER: ${TEMPORAL_POSTGRES_USER:-temporal}
-      POSTGRES_PASSWORD: ${TEMPORAL_POSTGRES_PASSWORD:-temporal}
+      POSTGRES_DB: ${TEMPORAL_POSTGRES_DB}
+      POSTGRES_USER: ${TEMPORAL_POSTGRES_USER}
+      POSTGRES_PASSWORD: ${TEMPORAL_POSTGRES_PASSWORD}
 
     volumes:
       - jobintel_temporal_postgres:/var/lib/postgresql/data
@@ -44,7 +44,7 @@ services:
       test:
         [
           "CMD-SHELL",
-          "pg_isready -U ${TEMPORAL_POSTGRES_USER:-temporal} -d ${TEMPORAL_POSTGRES_DB:-temporal}"
+          "pg_isready -U ${TEMPORAL_POSTGRES_USER} -d ${TEMPORAL_POSTGRES_DB}"
         ]
       interval: 5s
       timeout: 5s
@@ -64,8 +64,8 @@ services:
     environment:
       DB: postgres12
       DB_PORT: 5432
-      POSTGRES_USER: ${TEMPORAL_POSTGRES_USER:-temporal}
-      POSTGRES_PWD: ${TEMPORAL_POSTGRES_PASSWORD:-temporal}
+      POSTGRES_USER: ${TEMPORAL_POSTGRES_USER}
+      POSTGRES_PWD: ${TEMPORAL_POSTGRES_PASSWORD}
       POSTGRES_SEEDS: temporal-postgres
 
     ports:
@@ -106,7 +106,7 @@ services:
         condition: service_healthy
 
     environment:
-      DATABASE_URL: ${JOBINTEL_DOCKER_DATABASE_URL:-postgresql+psycopg://jobintel:jobintel_dev@postgres:5432/jobintel}
+      DATABASE_URL: ${JOBINTEL_DOCKER_DATABASE_URL}
 
     command:
       [
@@ -136,7 +136,7 @@ services:
         required: false
 
     environment:
-      DATABASE_URL: ${JOBINTEL_DOCKER_DATABASE_URL:-postgresql+psycopg://jobintel:jobintel_dev@postgres:5432/jobintel}
+      DATABASE_URL: ${JOBINTEL_DOCKER_DATABASE_URL}
       JOBINTEL_TEMPORAL_ADDRESS: ${JOBINTEL_TEMPORAL_ADDRESS_DOCKER:-temporal:7233}
       JOBINTEL_TEMPORAL_NAMESPACE: ${JOBINTEL_TEMPORAL_NAMESPACE:-default}
       JOBINTEL_TEMPORAL_TASK_QUEUE: ${JOBINTEL_TEMPORAL_TASK_QUEUE:-job-intelligence-pipeline}
@@ -185,7 +185,7 @@ services:
         required: false
 
     environment:
-      DATABASE_URL: ${JOBINTEL_DOCKER_DATABASE_URL:-postgresql+psycopg://jobintel:jobintel_dev@postgres:5432/jobintel}
+      DATABASE_URL: ${JOBINTEL_DOCKER_DATABASE_URL}
       JOBINTEL_TEMPORAL_ADDRESS: ${JOBINTEL_TEMPORAL_ADDRESS_DOCKER:-temporal:7233}
       JOBINTEL_TEMPORAL_NAMESPACE: ${JOBINTEL_TEMPORAL_NAMESPACE:-default}
       JOBINTEL_TEMPORAL_TASK_QUEUE: ${JOBINTEL_TEMPORAL_TASK_QUEUE:-job-intelligence-pipeline}
@@ -240,8 +240,8 @@ services:
         condition: service_started
 
     environment:
-      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
-      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-jobintel_dev}
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD}
       GF_USERS_ALLOW_SIGN_UP: "false"
 
     volumes:

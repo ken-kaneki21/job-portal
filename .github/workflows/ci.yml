@@ -1,16 +1,12 @@
 name: CI
 
-
 on:
-
   push:
-
     branches:
       - main
       - develop
 
   pull_request:
-
 
 jobs:
 
@@ -29,7 +25,7 @@ jobs:
         env:
           POSTGRES_DB: jobintel
           POSTGRES_USER: jobintel
-          POSTGRES_PASSWORD: jobintel_dev
+          POSTGRES_PASSWORD: ci_test_only_password
 
         ports:
           - 5432:5432
@@ -40,68 +36,53 @@ jobs:
           --health-timeout 5s
           --health-retries 10
 
-
     env:
-
       DATABASE_URL: >-
-        postgresql+psycopg://jobintel:jobintel_dev@localhost:5432/jobintel
+        postgresql+psycopg://jobintel:ci_test_only_password@localhost:5432/jobintel
 
-      TEMPORAL_ADDRESS: localhost:7233
-
-      TEMPORAL_NAMESPACE: default
-
-      TEMPORAL_TASK_QUEUE: job-intelligence-pipeline
-
+      JOBINTEL_TEMPORAL_ADDRESS: localhost:7233
+      JOBINTEL_TEMPORAL_NAMESPACE: default
+      JOBINTEL_TEMPORAL_TASK_QUEUE: job-intelligence-pipeline
 
     steps:
 
       - name: Checkout
         uses: actions/checkout@v4
 
-
       - name: Set up Python
         uses: actions/setup-python@v5
-
         with:
           python-version: "3.13"
           cache: pip
-
 
       - name: Upgrade pip
         run: |
           python -m pip install --upgrade pip
 
-
       - name: Install project
         run: |
           pip install -e ".[dev]"
-
 
       - name: Ruff
         run: |
           ruff check src tests
 
-
       - name: Black
         run: |
           black --check src tests
-
 
       - name: Mypy
         run: |
           mypy src/jobintel
 
-
       - name: Alembic upgrade
         run: |
           alembic upgrade head
-
 
       - name: Verify Alembic head
         run: |
           alembic current
           alembic heads
-
 
       - name: Tests
         run: |
@@ -114,16 +95,29 @@ jobs:
 
     runs-on: ubuntu-latest
 
+    env:
+      JOBINTEL_POSTGRES_DB: jobintel
+      JOBINTEL_POSTGRES_USER: jobintel
+      JOBINTEL_POSTGRES_PASSWORD: ci_test_only_password
+
+      JOBINTEL_DOCKER_DATABASE_URL: >-
+        postgresql+psycopg://jobintel:ci_test_only_password@postgres:5432/jobintel
+
+      TEMPORAL_POSTGRES_DB: temporal
+      TEMPORAL_POSTGRES_USER: temporal
+      TEMPORAL_POSTGRES_PASSWORD: ci_test_only_password
+
+      GRAFANA_ADMIN_USER: admin
+      GRAFANA_ADMIN_PASSWORD: ci_test_only_password
+
     steps:
 
       - name: Checkout
         uses: actions/checkout@v4
 
-
       - name: Validate Docker Compose
         run: |
           docker compose config
-
 
       - name: Build application image
         run: |
