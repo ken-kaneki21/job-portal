@@ -132,7 +132,8 @@ services:
         condition: service_started
 
     env_file:
-      - .env
+      - path: .env
+        required: false
 
     environment:
       DATABASE_URL: ${JOBINTEL_DOCKER_DATABASE_URL:-postgresql+psycopg://jobintel:jobintel_dev@postgres:5432/jobintel}
@@ -180,7 +181,8 @@ services:
         condition: service_started
 
     env_file:
-      - .env
+      - path: .env
+        required: false
 
     environment:
       DATABASE_URL: ${JOBINTEL_DOCKER_DATABASE_URL:-postgresql+psycopg://jobintel:jobintel_dev@postgres:5432/jobintel}
