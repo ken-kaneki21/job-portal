@@ -8,8 +8,9 @@ from jobintel.db.models import (
     PipelineRunRecord,
 )
 from jobintel.db.session import SessionLocal
+from jobintel.profile.runtime import ACTIVE_PROFILE_NAME
 
-PROFILE_NAME = "data_engineer"
+PROFILE_NAME = ACTIVE_PROFILE_NAME
 BUCKET = "high_confidence"
 
 

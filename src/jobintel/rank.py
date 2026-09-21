@@ -18,6 +18,7 @@ from jobintel.db.session import (
 from jobintel.profile.loader import (
     load_profile,
 )
+from jobintel.profile.runtime import ACTIVE_PROFILE_PATH
 from jobintel.ranking.scoring import (
     rank_job,
 )
@@ -32,7 +33,7 @@ from jobintel.semantic.scoring import (
     score_semantic_similarity,
 )
 
-PROFILE_PATH = "profiles/data_engineer.json"
+PROFILE_PATH = ACTIVE_PROFILE_PATH
 
 MIN_SCORE = 40.0
 

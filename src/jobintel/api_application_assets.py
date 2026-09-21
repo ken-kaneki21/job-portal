@@ -12,6 +12,7 @@ from jobintel.application_assets.service import (
 from jobintel.db.session import (
     SessionLocal,
 )
+from jobintel.profile.runtime import ACTIVE_PROFILE_NAME
 
 router = APIRouter(tags=["Application Assets"])
 
@@ -53,7 +54,7 @@ def serialize_asset(
 @router.post("/jobs/{job_id}/regenerate-assets")
 def regenerate_assets(
     job_id: int,
-    profile_name: str = "data_engineer",
+    profile_name: str = ACTIVE_PROFILE_NAME,
     session: Session = Depends(get_db),
 ):
     try:

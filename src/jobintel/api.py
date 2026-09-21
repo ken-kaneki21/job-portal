@@ -23,6 +23,7 @@ from sqlalchemy.orm import Session
 from jobintel.api_application_assets import (
     router as application_assets_router,
 )
+from jobintel.api_profile import router as profile_router
 from jobintel.api_temporal import (
     router as temporal_router,
 )
@@ -50,8 +51,9 @@ from jobintel.observability import (
     configure_logging,
     metrics_response,
 )
+from jobintel.profile.runtime import ACTIVE_PROFILE_NAME
 
-DEFAULT_PROFILE = "data_engineer"
+DEFAULT_PROFILE = ACTIVE_PROFILE_NAME
 
 
 VALID_JOB_STATUSES = {
@@ -82,6 +84,7 @@ app = FastAPI(
 
 
 app.include_router(application_assets_router)
+app.include_router(profile_router)
 
 
 app.include_router(temporal_router)

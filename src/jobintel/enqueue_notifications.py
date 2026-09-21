@@ -6,8 +6,9 @@ from jobintel.new_high_confidence import (
     get_high_confidence_job_ids,
     get_recent_successful_ranking_runs,
 )
+from jobintel.profile.runtime import ACTIVE_PROFILE_NAME
 
-PROFILE_NAME = "data_engineer"
+PROFILE_NAME = ACTIVE_PROFILE_NAME
 
 NOTIFICATION_TYPE = "new_high_confidence"
 

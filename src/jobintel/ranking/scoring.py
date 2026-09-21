@@ -246,47 +246,43 @@ def check_title_eligibility(
 def check_location_eligibility(
     location: str | None,
     profile: CandidateProfile,
-) -> tuple[
-    bool,
-    list[str],
-]:
+) -> tuple[bool, list[str]]:
     normalized = normalize_text(location)
 
     if not normalized:
-        return (
-            True,
-            [],
-        )
+        return True, []
 
-    for blocked in profile.blocked_location_terms:
-        if blocked in normalized:
-            return (
-                False,
-                [f"Location restriction: {location}"],
-            )
+    blocked_locations = [
+        normalize_text(value)
+        for value in profile.blocked_location_terms
+        if normalize_text(value)
+    ]
 
-    if any(preferred in normalized for preferred in profile.preferred_locations):
-        return (
-            True,
-            [],
-        )
+    preferred_locations = [
+        normalize_text(value)
+        for value in profile.preferred_locations
+        if normalize_text(value)
+    ]
 
-    if any(country in normalized for country in profile.allowed_countries):
-        return (
-            True,
-            [],
-        )
+    allowed_countries = [
+        normalize_text(value)
+        for value in profile.allowed_countries
+        if normalize_text(value)
+    ]
 
-    if normalized == "remote":
-        return (
-            True,
-            [],
-        )
+    if any(blocked in normalized for blocked in blocked_locations):
+        return False, [f"Location restriction: {location}"]
 
-    return (
-        False,
-        [f"Outside preferred geography: {location}"],
-    )
+    if any(preferred in normalized for preferred in preferred_locations):
+        return True, []
+
+    if any(country in normalized for country in allowed_countries):
+        return True, []
+
+    if "remote" in normalized:
+        return True, []
+
+    return False, [f"Outside preferred geography: {location}"]
 
 
 def score_title(
@@ -327,41 +323,35 @@ def score_title(
 def score_location(
     location: str | None,
     profile: CandidateProfile,
-) -> tuple[
-    float,
-    list[str],
-]:
+) -> tuple[float, list[str]]:
     normalized = normalize_text(location)
 
     if not normalized:
-        return (
-            8.0,
-            ["Location unspecified"],
-        )
+        return 8.0, ["Location unspecified"]
 
-    for preferred in profile.preferred_locations:
+    preferred_locations = [
+        normalize_text(value)
+        for value in profile.preferred_locations
+        if normalize_text(value)
+    ]
+
+    allowed_countries = [
+        normalize_text(value)
+        for value in profile.allowed_countries
+        if normalize_text(value)
+    ]
+
+    for preferred in preferred_locations:
         if preferred in normalized:
-            return (
-                20.0,
-                [f"Preferred location: {location}"],
-            )
+            return 20.0, [f"Preferred location: {location}"]
 
-    if normalized == "remote":
-        return (
-            18.0,
-            ["Remote role"],
-        )
+    if "remote" in normalized:
+        return 18.0, ["Remote role"]
 
-    if any(country in normalized for country in profile.allowed_countries):
-        return (
-            15.0,
-            [f"Allowed country: {location}"],
-        )
+    if any(country in normalized for country in allowed_countries):
+        return 15.0, [f"Allowed country: {location}"]
 
-    return (
-        0.0,
-        [],
-    )
+    return 0.0, []
 
 
 def score_skills(

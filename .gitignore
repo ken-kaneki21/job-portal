@@ -128,3 +128,5 @@ dist/
 # --------------------------------------------------
 
 .TXT
+profiles/universal.json
+profiles/generated_v2.json

@@ -15,8 +15,7 @@ from jobintel.db.models import (
     JobRecord,
 )
 from jobintel.profile.loader import load_profile
-
-PROFILE_PATH = "profiles/data_engineer.json"
+from jobintel.profile.runtime import ACTIVE_PROFILE_NAME, ACTIVE_PROFILE_PATH
 
 
 class AssetGenerationError(Exception):
@@ -72,9 +71,9 @@ def regenerate_application_assets_for_job(
     *,
     session,
     job_id: int,
-    profile_name: str = "data_engineer",
+    profile_name: str = ACTIVE_PROFILE_NAME,
 ) -> JobApplicationAssetRecord:
-    profile = load_profile(PROFILE_PATH)
+    profile = load_profile(ACTIVE_PROFILE_PATH)
 
     if profile.name != profile_name:
         raise AssetGenerationError(f"Profile '{profile_name}' is not configured.")
