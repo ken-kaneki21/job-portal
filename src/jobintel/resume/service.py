@@ -11,9 +11,7 @@ from jobintel.db.profile_repository import (
     get_universal_profile_payload,
     upsert_candidate_profile,
 )
-from jobintel.db.session import (
-    SessionLocal,
-)
+from jobintel.db.session import SessionLocal
 from jobintel.profile.adapter import (
     build_legacy_candidate_profile,
 )
@@ -24,14 +22,15 @@ from jobintel.profile.universal import (
     CandidatePreferences,
     UniversalCandidateProfile,
 )
-from jobintel.resume.parser import (
-    extract_pdf_text,
-)
-from jobintel.resume.skills import (
-    extract_skills,
+from jobintel.resume.parser import extract_pdf_text
+from jobintel.resume.skills import extract_skills
+from jobintel.resume.structured import (
+    extract_resume_structure,
 )
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger(
+    __name__,
+)
 
 PROFILE_DIR = Path(
     "profiles",
@@ -61,10 +60,7 @@ def build_profile_from_resume(
         content,
     )
 
-    (
-        core_skills,
-        secondary_skills,
-    ) = extract_skills(
+    core_skills, secondary_skills = extract_skills(
         resume_text,
     )
 
@@ -72,13 +68,19 @@ def build_profile_from_resume(
         resume_text,
     )
 
-    profile = UniversalCandidateProfile(
+    structure = extract_resume_structure(
+        resume_text,
+    )
+
+    return UniversalCandidateProfile(
         profile_name="universal",
-        headline=None,
-        summary=None,
+        identity=structure.identity,
+        headline=structure.headline,
+        summary=structure.summary,
+        total_experience_years=(structure.total_experience_years),
         role_families=role_families,
         core_skills=core_skills,
-        secondary_skills=(secondary_skills),
+        secondary_skills=secondary_skills,
         tools=[],
         cloud_platforms=[
             skill
@@ -89,29 +91,28 @@ def build_profile_from_resume(
             )
             if skill in (core_skills + secondary_skills)
         ],
-        preferences=(
-            CandidatePreferences(
-                preferred_locations=[
-                    "Bengaluru",
-                    "Bangalore",
-                    "Hyderabad",
-                ],
-                allowed_countries=[
-                    "India",
-                ],
-                blocked_location_terms=[],
-                blocked_titles=[],
-            )
+        industries=[],
+        certifications=structure.certifications,
+        experience=structure.experience,
+        education=structure.education,
+        projects=structure.projects,
+        preferences=CandidatePreferences(
+            preferred_locations=[
+                "Bengaluru",
+                "Bangalore",
+                "Hyderabad",
+            ],
+            allowed_countries=[
+                "India",
+            ],
+            blocked_location_terms=[],
+            blocked_titles=[],
         ),
-        source_resume_filename=(filename),
-        source_resume_sha256=(
-            resume_sha256(
-                content,
-            )
+        source_resume_filename=filename,
+        source_resume_sha256=resume_sha256(
+            content,
         ),
     )
-
-    return profile
 
 
 def write_json_file(
@@ -153,7 +154,9 @@ def save_legacy_profile(
 
     write_json_file(
         LEGACY_PROFILE_PATH,
-        legacy_profile.model_dump(),
+        legacy_profile.model_dump(
+            mode="json",
+        ),
     )
 
 
@@ -197,10 +200,10 @@ def persist_profile(
     with SessionLocal() as session:
         upsert_candidate_profile(
             session,
-            profile_name=(profile.profile_name),
-            schema_version=(profile.schema_version),
-            universal_payload=(universal_payload),
-            legacy_payload=(legacy_payload),
+            profile_name=profile.profile_name,
+            schema_version=profile.schema_version,
+            universal_payload=universal_payload,
+            legacy_payload=legacy_payload,
         )
 
         session.commit()
@@ -230,7 +233,7 @@ def load_universal_profile() -> UniversalCandidateProfile | None:
         with SessionLocal() as session:
             payload = get_universal_profile_payload(
                 session,
-                profile_name=(DEFAULT_PROFILE_NAME),
+                profile_name=DEFAULT_PROFILE_NAME,
             )
 
         if payload is not None:
