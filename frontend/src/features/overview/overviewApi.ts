@@ -53,12 +53,28 @@ export interface OverviewRanking {
   };
 }
 
-interface RankingResponse {
+interface RankingStatsResponse {
   profile_name: string;
   pipeline_run_id: number | null;
-  bucket: RankingBucket | null;
-  count: number;
-  results: OverviewRanking[];
+
+  total: number;
+
+  buckets: {
+    high_confidence: number;
+    discovery: number;
+    stretch: number;
+
+    [bucket: string]: number;
+  };
+}
+
+interface ShortlistResponse {
+  profile_name: string;
+  pipeline_run_id: number | null;
+
+  high_confidence: OverviewRanking[];
+  discovery: OverviewRanking[];
+  stretch: OverviewRanking[];
 }
 
 export interface OverviewData {
@@ -90,113 +106,105 @@ async function fetchJson<T>(
   return response.json() as Promise<T>;
 }
 
-function rankingUrl(
-  bucket: RankingBucket,
-): string {
+function shortlistUrl(): string {
   const params = new URLSearchParams({
     profile_name: "universal",
-    bucket,
-    limit: "500",
+
+    high_confidence_limit: "5",
+    discovery_limit: "5",
+    stretch_limit: "5",
   });
 
-  return `/rankings?${params.toString()}`;
+  return `/shortlist?${params.toString()}`;
+}
+
+function rankingStatsUrl(): string {
+  const params = new URLSearchParams({
+    profile_name: "universal",
+  });
+
+  return `/rankings/stats?${params.toString()}`;
+}
+
+function prioritySort(
+  left: OverviewRanking,
+  right: OverviewRanking,
+): number {
+  const bucketPriority: Record<
+    RankingBucket,
+    number
+  > = {
+    high_confidence: 0,
+    discovery: 1,
+    stretch: 2,
+  };
+
+  const bucketDifference =
+    bucketPriority[
+      left.ranking.bucket
+    ] -
+    bucketPriority[
+      right.ranking.bucket
+    ];
+
+  if (bucketDifference !== 0) {
+    return bucketDifference;
+  }
+
+  return (
+    right.ranking.score -
+    left.ranking.score
+  );
 }
 
 export async function fetchOverviewData(): Promise<OverviewData> {
   const [
     health,
-    highConfidence,
-    discovery,
-    stretch,
+    rankingStats,
+    shortlist,
   ] = await Promise.all([
     fetchJson<HealthResponse>(
       "/health",
     ),
 
-    fetchJson<RankingResponse>(
-      rankingUrl(
-        "high_confidence",
-      ),
+    fetchJson<RankingStatsResponse>(
+      rankingStatsUrl(),
     ),
 
-    fetchJson<RankingResponse>(
-      rankingUrl(
-        "discovery",
-      ),
-    ),
-
-    fetchJson<RankingResponse>(
-      rankingUrl(
-        "stretch",
-      ),
+    fetchJson<ShortlistResponse>(
+      shortlistUrl(),
     ),
   ]);
 
-  const highConfidenceCount =
-    highConfidence.results.length;
-
-  const discoveryCount =
-    discovery.results.length;
-
-  const stretchCount =
-    stretch.results.length;
-
-  const relevantCount =
-    health.latest_pipeline_run
-      ?.rankings_persisted ??
-    highConfidenceCount +
-      discoveryCount +
-      stretchCount;
-
   const priorities = [
-    ...highConfidence.results,
-    ...discovery.results,
-    ...stretch.results,
+    ...shortlist.high_confidence,
+    ...shortlist.discovery,
+    ...shortlist.stretch,
   ]
-    .sort((left, right) => {
-      const bucketPriority: Record<
-        RankingBucket,
-        number
-      > = {
-        high_confidence: 0,
-        discovery: 1,
-        stretch: 2,
-      };
-
-      const bucketDifference =
-        bucketPriority[
-          left.ranking.bucket
-        ] -
-        bucketPriority[
-          right.ranking.bucket
-        ];
-
-      if (bucketDifference !== 0) {
-        return bucketDifference;
-      }
-
-      return (
-        right.ranking.score -
-        left.ranking.score
-      );
-    })
-    .slice(0, 5);
+    .sort(prioritySort)
+    .slice(
+      0,
+      5,
+    );
 
   return {
     health,
 
     counts: {
       highConfidence:
-        highConfidenceCount,
+        rankingStats.buckets
+          .high_confidence,
 
       discovery:
-        discoveryCount,
+        rankingStats.buckets
+          .discovery,
 
       stretch:
-        stretchCount,
+        rankingStats.buckets
+          .stretch,
 
       relevant:
-        relevantCount,
+        rankingStats.total,
     },
 
     priorities,

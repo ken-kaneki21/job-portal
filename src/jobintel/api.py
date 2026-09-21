@@ -566,6 +566,61 @@ def get_rankings(
     }
 
 
+@app.get("/rankings/stats")
+def get_ranking_stats(
+    profile_name: str = DEFAULT_PROFILE,
+    pipeline_run_id: int | None = None,
+    session: Session = Depends(get_db),
+):
+    if pipeline_run_id is None:
+        pipeline_run_id = latest_pipeline_ranking_run_id(session)
+
+    empty_buckets = {
+        "high_confidence": 0,
+        "discovery": 0,
+        "stretch": 0,
+    }
+
+    if pipeline_run_id is None:
+        return {
+            "profile_name": profile_name,
+            "pipeline_run_id": None,
+            "total": 0,
+            "buckets": empty_buckets,
+        }
+
+    total = session.scalar(
+        select(func.count(JobRankingRecord.id))
+        .where(JobRankingRecord.profile_name == profile_name)
+        .where(JobRankingRecord.pipeline_run_id == pipeline_run_id)
+    )
+
+    bucket_rows = session.execute(
+        select(
+            JobRankingRecord.bucket,
+            func.count(JobRankingRecord.id),
+        )
+        .where(JobRankingRecord.profile_name == profile_name)
+        .where(JobRankingRecord.pipeline_run_id == pipeline_run_id)
+        .group_by(JobRankingRecord.bucket)
+    ).all()
+
+    buckets = empty_buckets.copy()
+
+    for bucket, count in bucket_rows:
+        if bucket is None:
+            continue
+
+        buckets[str(bucket)] = int(count)
+
+    return {
+        "profile_name": profile_name,
+        "pipeline_run_id": pipeline_run_id,
+        "total": int(total or 0),
+        "buckets": buckets,
+    }
+
+
 @app.get("/shortlist")
 def get_shortlist(
     profile_name: str = DEFAULT_PROFILE,
