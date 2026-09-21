@@ -2,8 +2,18 @@ from __future__ import annotations
 
 import hashlib
 import json
+import logging
 from pathlib import Path
 
+from sqlalchemy.exc import SQLAlchemyError
+
+from jobintel.db.profile_repository import (
+    get_universal_profile_payload,
+    upsert_candidate_profile,
+)
+from jobintel.db.session import (
+    SessionLocal,
+)
 from jobintel.profile.adapter import (
     build_legacy_candidate_profile,
 )
@@ -21,6 +31,8 @@ from jobintel.resume.skills import (
     extract_skills,
 )
 
+logger = logging.getLogger(__name__)
+
 PROFILE_DIR = Path(
     "profiles",
 )
@@ -28,6 +40,8 @@ PROFILE_DIR = Path(
 UNIVERSAL_PROFILE_PATH = PROFILE_DIR / "universal.json"
 
 LEGACY_PROFILE_PATH = PROFILE_DIR / "generated_v2.json"
+
+DEFAULT_PROFILE_NAME = "universal"
 
 
 def resume_sha256(
@@ -47,7 +61,10 @@ def build_profile_from_resume(
         content,
     )
 
-    core_skills, secondary_skills = extract_skills(
+    (
+        core_skills,
+        secondary_skills,
+    ) = extract_skills(
         resume_text,
     )
 
@@ -61,7 +78,7 @@ def build_profile_from_resume(
         summary=None,
         role_families=role_families,
         core_skills=core_skills,
-        secondary_skills=secondary_skills,
+        secondary_skills=(secondary_skills),
         tools=[],
         cloud_platforms=[
             skill
@@ -72,44 +89,58 @@ def build_profile_from_resume(
             )
             if skill in (core_skills + secondary_skills)
         ],
-        preferences=CandidatePreferences(
-            preferred_locations=[
-                "Bengaluru",
-                "Bangalore",
-                "Hyderabad",
-            ],
-            allowed_countries=[
-                "India",
-            ],
-            blocked_location_terms=[],
-            blocked_titles=[],
+        preferences=(
+            CandidatePreferences(
+                preferred_locations=[
+                    "Bengaluru",
+                    "Bangalore",
+                    "Hyderabad",
+                ],
+                allowed_countries=[
+                    "India",
+                ],
+                blocked_location_terms=[],
+                blocked_titles=[],
+            )
         ),
-        source_resume_filename=filename,
-        source_resume_sha256=resume_sha256(
-            content,
+        source_resume_filename=(filename),
+        source_resume_sha256=(
+            resume_sha256(
+                content,
+            )
         ),
     )
 
     return profile
 
 
-def save_universal_profile(
-    profile: UniversalCandidateProfile,
+def write_json_file(
+    path: Path,
+    payload: dict,
 ) -> None:
     PROFILE_DIR.mkdir(
         parents=True,
         exist_ok=True,
     )
 
-    UNIVERSAL_PROFILE_PATH.write_text(
+    path.write_text(
         json.dumps(
-            profile.model_dump(
-                mode="json",
-            ),
+            payload,
             indent=2,
             ensure_ascii=False,
         ),
         encoding="utf-8",
+    )
+
+
+def save_universal_profile(
+    profile: UniversalCandidateProfile,
+) -> None:
+    write_json_file(
+        UNIVERSAL_PROFILE_PATH,
+        profile.model_dump(
+            mode="json",
+        ),
     )
 
 
@@ -120,34 +151,66 @@ def save_legacy_profile(
         profile,
     )
 
-    PROFILE_DIR.mkdir(
-        parents=True,
-        exist_ok=True,
+    write_json_file(
+        LEGACY_PROFILE_PATH,
+        legacy_profile.model_dump(),
     )
 
-    LEGACY_PROFILE_PATH.write_text(
-        json.dumps(
-            legacy_profile.model_dump(),
-            indent=2,
-            ensure_ascii=False,
-        ),
-        encoding="utf-8",
-    )
+
+def save_profile_compatibility_files(
+    profile: UniversalCandidateProfile,
+) -> None:
+    try:
+        save_universal_profile(
+            profile,
+        )
+
+        save_legacy_profile(
+            profile,
+        )
+    except OSError:
+        logger.warning(
+            (
+                "Candidate profile was persisted "
+                "to the database, but compatibility "
+                "JSON files could not be written."
+            ),
+            exc_info=True,
+        )
 
 
 def persist_profile(
     profile: UniversalCandidateProfile,
 ) -> None:
-    save_universal_profile(
+    legacy_profile = build_legacy_candidate_profile(
         profile,
     )
 
-    save_legacy_profile(
+    universal_payload = profile.model_dump(
+        mode="json",
+    )
+
+    legacy_payload = legacy_profile.model_dump(
+        mode="json",
+    )
+
+    with SessionLocal() as session:
+        upsert_candidate_profile(
+            session,
+            profile_name=(profile.profile_name),
+            schema_version=(profile.schema_version),
+            universal_payload=(universal_payload),
+            legacy_payload=(legacy_payload),
+        )
+
+        session.commit()
+
+    save_profile_compatibility_files(
         profile,
     )
 
 
-def load_universal_profile() -> UniversalCandidateProfile | None:
+def load_universal_profile_from_file() -> UniversalCandidateProfile | None:
     if not UNIVERSAL_PROFILE_PATH.exists():
         return None
 
@@ -160,3 +223,29 @@ def load_universal_profile() -> UniversalCandidateProfile | None:
     return UniversalCandidateProfile.model_validate(
         payload,
     )
+
+
+def load_universal_profile() -> UniversalCandidateProfile | None:
+    try:
+        with SessionLocal() as session:
+            payload = get_universal_profile_payload(
+                session,
+                profile_name=(DEFAULT_PROFILE_NAME),
+            )
+
+        if payload is not None:
+            return UniversalCandidateProfile.model_validate(
+                payload,
+            )
+
+    except SQLAlchemyError:
+        logger.warning(
+            (
+                "Unable to read candidate profile "
+                "from the database; falling back "
+                "to the compatibility JSON file."
+            ),
+            exc_info=True,
+        )
+
+    return load_universal_profile_from_file()

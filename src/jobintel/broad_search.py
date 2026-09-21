@@ -10,10 +10,11 @@ from jobintel.db.broad_repository import (
 )
 from jobintel.db.session import SessionLocal
 from jobintel.models.fetched_job import FetchedJob
-from jobintel.profile.loader import load_profile
 from jobintel.profile.models import CandidateProfile
 from jobintel.profile.runtime import (
+    ACTIVE_PROFILE_NAME,
     ACTIVE_PROFILE_PATH,
+    load_active_candidate_profile,
 )
 from jobintel.search_sources.adzuna import (
     AdzunaSource,
@@ -80,6 +81,7 @@ def unique_strings(
             continue
 
         seen.add(key)
+
         output.append(cleaned)
 
     return output
@@ -145,8 +147,8 @@ def add_search(
 
     searches.append(
         SearchSpec(
-            query=normalized_query,
-            location=normalized_location,
+            query=(normalized_query),
+            location=(normalized_location),
         )
     )
 
@@ -166,15 +168,10 @@ def build_profile_searches(
 
     country = country_search_location(profile)
 
-    # -------------------------------------------------
-    # 1. Primary role searches
-    #
-    # Give each primary title one preferred city.
-    # Locations rotate instead of creating a full
-    # role x city matrix.
-    # -------------------------------------------------
-
-    for index, title in enumerate(primary_titles):
+    for (
+        index,
+        title,
+    ) in enumerate(primary_titles):
         location = locations[index % len(locations)]
 
         add_search(
@@ -184,13 +181,6 @@ def build_profile_searches(
             location=location,
         )
 
-    # -------------------------------------------------
-    # 2. Adjacent role discovery
-    #
-    # Adjacent roles search country-wide so they add
-    # useful breadth without multiplying API calls.
-    # -------------------------------------------------
-
     for title in adjacent_titles:
         add_search(
             searches,
@@ -198,14 +188,6 @@ def build_profile_searches(
             query=title,
             location=country,
         )
-
-    # -------------------------------------------------
-    # 3. Skill-enhanced searches
-    #
-    # Add only a few high-value skill + primary-role
-    # searches. This replaces old hardcoded queries
-    # such as "snowflake data engineer".
-    # -------------------------------------------------
 
     anchor_title = (
         primary_titles[0]
@@ -237,10 +219,6 @@ def build_profile_searches(
             if len(searches) > before:
                 skill_queries_added += 1
 
-    # -------------------------------------------------
-    # 4. Fallback
-    # -------------------------------------------------
-
     if not searches:
         add_search(
             searches,
@@ -253,7 +231,7 @@ def build_profile_searches(
 
 
 def load_active_search_profile() -> CandidateProfile:
-    return load_profile(ACTIVE_PROFILE_PATH)
+    return load_active_candidate_profile()
 
 
 async def fetch_jobs(
@@ -278,7 +256,10 @@ async def fetch_jobs(
 
         all_jobs: list[FetchedJob] = []
 
-        for index, search in enumerate(
+        for (
+            index,
+            search,
+        ) in enumerate(
             searches,
             start=1,
         ):
@@ -292,9 +273,9 @@ async def fetch_jobs(
             )
 
             jobs = await source.search_jobs(
-                query=search.query,
-                location=search.location,
-                max_pages=MAX_PAGES,
+                query=(search.query),
+                location=(search.location),
+                max_pages=(MAX_PAGES),
             )
 
             print(f"{len(jobs):>5} jobs")
@@ -344,7 +325,9 @@ def print_search_plan(
 
     print(f"Profile: {profile.name}")
 
-    print(f"Profile path: {ACTIVE_PROFILE_PATH}")
+    print(f"Active profile: {ACTIVE_PROFILE_NAME}")
+
+    print(f"Fallback path: {ACTIVE_PROFILE_PATH}")
 
     print(f"Searches: {len(searches)}")
 
@@ -352,7 +335,10 @@ def print_search_plan(
 
     print()
 
-    for index, search in enumerate(
+    for (
+        index,
+        search,
+    ) in enumerate(
         searches,
         start=1,
     ):
@@ -382,7 +368,7 @@ async def main() -> None:
     with SessionLocal() as session:
         result = persist_broad_jobs(
             session=session,
-            fetched_jobs=unique_jobs,
+            fetched_jobs=(unique_jobs),
         )
 
         session.commit()
