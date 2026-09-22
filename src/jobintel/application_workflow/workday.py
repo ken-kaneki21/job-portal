@@ -11,6 +11,8 @@ class WorkdayField:
     value: str
     labels: tuple[str, ...]
     sensitive: bool = False
+    review_required: bool = False
+    field_type: str = "text"
 
 
 @dataclass(frozen=True)
@@ -36,18 +38,24 @@ def add_field(
     value,
     labels: tuple[str, ...],
     sensitive: bool = False,
+    review_required: bool = False,
+    field_type: str = "text",
 ) -> None:
     if value is None:
         return
+
     cleaned = str(value).strip()
     if not cleaned:
         return
+
     fields.append(
         WorkdayField(
             key=key,
             value=cleaned,
             labels=labels,
             sensitive=sensitive,
+            review_required=review_required,
+            field_type=field_type,
         )
     )
 
@@ -74,13 +82,15 @@ def build_workday_plan(packet: ApplicationPacket) -> WorkdayPlan:
         value=answers.get("email"),
         labels=("Email", "Email Address"),
         sensitive=True,
+        field_type="email",
     )
     add_field(
         fields,
         key="phone",
         value=answers.get("phone"),
-        labels=("Phone", "Phone Number", "Mobile"),
+        labels=("Phone", "Phone Number", "Mobile", "Mobile Number"),
         sensitive=True,
+        field_type="tel",
     )
     add_field(
         fields,
@@ -93,18 +103,21 @@ def build_workday_plan(packet: ApplicationPacket) -> WorkdayPlan:
         key="linkedin",
         value=answers.get("linkedin_url"),
         labels=("LinkedIn", "LinkedIn Profile", "LinkedIn URL"),
+        field_type="url",
     )
     add_field(
         fields,
         key="github",
         value=answers.get("github_url"),
         labels=("GitHub", "GitHub Profile", "GitHub URL"),
+        field_type="url",
     )
     add_field(
         fields,
         key="portfolio",
         value=answers.get("portfolio_url"),
         labels=("Portfolio", "Website", "Personal Website"),
+        field_type="url",
     )
     add_field(
         fields,
@@ -122,7 +135,22 @@ def build_workday_plan(packet: ApplicationPacket) -> WorkdayPlan:
         fields,
         key="experience",
         value=answers.get("total_experience_years"),
-        labels=("Years of Experience", "Total Experience"),
+        labels=("Years of Experience", "Total Experience", "Total Years of Experience"),
+    )
+    add_field(
+        fields,
+        key="notice_period",
+        value=answers.get("notice_period_days"),
+        labels=("Notice Period", "Notice Period in Days"),
+        review_required=True,
+    )
+    add_field(
+        fields,
+        key="expected_compensation",
+        value=answers.get("expected_compensation"),
+        labels=("Expected Compensation", "Expected Salary", "Expected CTC"),
+        sensitive=True,
+        review_required=True,
     )
 
     return WorkdayPlan(apply_url=packet.apply_url, fields=tuple(fields))
