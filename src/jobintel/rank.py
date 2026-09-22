@@ -15,6 +15,13 @@ from jobintel.db.ranking_repository import (
 from jobintel.db.session import (
     SessionLocal,
 )
+from jobintel.outcome_learning.features import (
+    extract_outcome_features,
+)
+from jobintel.outcome_learning.service import (
+    build_outcome_model,
+    score_outcome_adjustment,
+)
 from jobintel.profile.runtime import (
     load_active_candidate_profile,
 )
@@ -229,6 +236,12 @@ def main() -> None:
     profile = load_active_candidate_profile()
     universal_profile = load_universal_profile()
 
+    with SessionLocal() as outcome_session:
+        outcome_model = build_outcome_model(
+            session=outcome_session,
+            profile=profile,
+        )
+
     # -----------------------------------------------------
     # Build profile embedding once
     # -----------------------------------------------------
@@ -372,6 +385,22 @@ def main() -> None:
                 2,
             )
 
+            outcome_features = extract_outcome_features(
+                job=job,
+                ranking=result,
+                profile=profile,
+            )
+
+            outcome_adjustment = score_outcome_adjustment(
+                model=outcome_model,
+                features=outcome_features,
+            )
+
+            final_score = round(
+                final_score + outcome_adjustment.score,
+                2,
+            )
+
             # Clamp to expected range.
             final_score = min(
                 100.0,
@@ -392,7 +421,11 @@ def main() -> None:
                 deterministic_score=(deterministic_score),
                 semantic_score=(float(semantic_score)),
                 gap_score=(gap_score),
-                reasons=(result.reasons + profile_evidence_reasons),
+                reasons=(
+                    result.reasons
+                    + profile_evidence_reasons
+                    + outcome_adjustment.reasons
+                ),
             )
 
             evaluated.append(result)
