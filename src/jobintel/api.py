@@ -30,6 +30,7 @@ from jobintel.api_application_workflow import (
 from jobintel.api_evaluation import router as evaluation_router
 from jobintel.api_outcomes import router as outcomes_router
 from jobintel.api_profile import router as profile_router
+from jobintel.api_system import router as system_router
 from jobintel.api_temporal import (
     router as temporal_router,
 )
@@ -58,6 +59,7 @@ from jobintel.observability import (
     metrics_response,
 )
 from jobintel.profile.runtime import ACTIVE_PROFILE_NAME
+from jobintel.version import __version__
 
 DEFAULT_PROFILE = ACTIVE_PROFILE_NAME
 
@@ -85,7 +87,7 @@ app = FastAPI(
         "assets, application tracking, "
         "history, and pipeline observability."
     ),
-    version="0.3.0",
+    version=__version__,
 )
 
 
@@ -94,6 +96,7 @@ app.include_router(application_workflow_router)
 app.include_router(outcomes_router)
 app.include_router(evaluation_router)
 app.include_router(application_ops_router)
+app.include_router(system_router)
 app.include_router(profile_router)
 
 
@@ -357,7 +360,7 @@ def set_job_state(
 def root():
     return {
         "service": ("job-intelligence"),
-        "version": ("0.3.0"),
+        "version": (__version__),
         "docs": ("/docs"),
         "health": ("/health"),
     }

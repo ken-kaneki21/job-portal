@@ -2,6 +2,7 @@ from fastapi.testclient import TestClient
 
 import jobintel.api as api_module
 from jobintel.api import app
+from jobintel.version import __version__
 
 client = TestClient(app)
 
@@ -14,7 +15,7 @@ def test_root_endpoint():
     payload = response.json()
 
     assert payload["service"] == "job-intelligence"
-    assert payload["version"] == "0.3.0"
+    assert payload["version"] == __version__
     assert payload["docs"] == "/docs"
     assert payload["health"] == "/health"
 
