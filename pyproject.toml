@@ -7,7 +7,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "job-intelligence"
-version = "0.1.0"
+version = "2.0.0"
 description = "Private AI-powered job intelligence and application orchestration platform"
 requires-python = ">=3.13"
 dependencies = [
