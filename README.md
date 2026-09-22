@@ -497,3 +497,22 @@ Potential future work:
 ## License
 
 This project is currently intended for personal and portfolio use.
+
+## Production readiness
+
+Run the release gate:
+
+```bat
+python -m jobintel.release_check
+```
+
+Useful documentation:
+
+- `docs/architecture.md`
+- `docs/production_deployment.md`
+- `docs/release_checklist.md`
+- `docs/production_operations.md`
+
+The application workflow remains review-first. Workday assistance never clicks
+the final Submit button, and portal ingestion uses user-assisted imports rather
+than credential scraping.

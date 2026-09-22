@@ -18,8 +18,9 @@ from jobintel.gap_analysis.analyzer import (
 from jobintel.profile.loader import (
     load_profile,
 )
+from jobintel.profile.runtime import ACTIVE_PROFILE_PATH
 
-PROFILE_PATH = "profiles/data_engineer.json"
+PROFILE_PATH = ACTIVE_PROFILE_PATH
 
 BATCH_SIZE = 100
 

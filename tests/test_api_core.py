@@ -2,6 +2,7 @@ from fastapi.testclient import TestClient
 
 import jobintel.api as api_module
 from jobintel.api import app
+from jobintel.version import __version__
 
 client = TestClient(app)
 
@@ -14,7 +15,7 @@ def test_root_endpoint():
     payload = response.json()
 
     assert payload["service"] == "job-intelligence"
-    assert payload["version"] == "0.3.0"
+    assert payload["version"] == __version__
     assert payload["docs"] == "/docs"
     assert payload["health"] == "/health"
 
@@ -36,7 +37,12 @@ def test_expected_routes_exist():
 
     schema = response.json()
 
-    paths = set(schema.get("paths", {}).keys())
+    paths = set(
+        schema.get(
+            "paths",
+            {},
+        ).keys()
+    )
 
     expected = {
         "/",
@@ -44,6 +50,7 @@ def test_expected_routes_exist():
         "/jobs",
         "/jobs/{job_id}",
         "/rankings",
+        "/rankings/stats",
         "/shortlist",
         "/saved-jobs",
         "/applications",
@@ -68,6 +75,98 @@ def test_expected_routes_exist():
         "Actual OpenAPI routes: "
         f"{sorted(paths)}"
     )
+
+
+def test_ranking_stats(
+    monkeypatch,
+):
+    class FakeResult:
+        def all(self):
+            return [
+                (
+                    "high_confidence",
+                    1,
+                ),
+                (
+                    "discovery",
+                    466,
+                ),
+                (
+                    "stretch",
+                    100,
+                ),
+            ]
+
+    class FakeSession:
+        def scalar(
+            self,
+            statement,
+        ):
+            del statement
+
+            return 567
+
+        def execute(
+            self,
+            statement,
+        ):
+            del statement
+
+            return FakeResult()
+
+    monkeypatch.setattr(
+        api_module,
+        "latest_pipeline_ranking_run_id",
+        lambda session: 28,
+    )
+
+    payload = api_module.get_ranking_stats(
+        profile_name="universal",
+        pipeline_run_id=None,
+        session=FakeSession(),
+    )
+
+    assert payload["profile_name"] == "universal"
+
+    assert payload["pipeline_run_id"] == 28
+
+    assert payload["total"] == 567
+
+    assert payload["buckets"] == {
+        "high_confidence": 1,
+        "discovery": 466,
+        "stretch": 100,
+    }
+
+
+def test_ranking_stats_without_run(
+    monkeypatch,
+):
+    class FakeSession:
+        pass
+
+    monkeypatch.setattr(
+        api_module,
+        "latest_pipeline_ranking_run_id",
+        lambda session: None,
+    )
+
+    payload = api_module.get_ranking_stats(
+        profile_name="universal",
+        pipeline_run_id=None,
+        session=FakeSession(),
+    )
+
+    assert payload == {
+        "profile_name": "universal",
+        "pipeline_run_id": None,
+        "total": 0,
+        "buckets": {
+            "high_confidence": 0,
+            "discovery": 0,
+            "stretch": 0,
+        },
+    }
 
 
 def test_pipeline_run_uses_temporal(

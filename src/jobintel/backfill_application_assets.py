@@ -20,10 +20,11 @@ from jobintel.db.session import (
 from jobintel.profile.loader import (
     load_profile,
 )
+from jobintel.profile.runtime import ACTIVE_PROFILE_NAME, ACTIVE_PROFILE_PATH
 
-PROFILE_PATH = "profiles/data_engineer.json"
+PROFILE_PATH = ACTIVE_PROFILE_PATH
 
-PROFILE_NAME = "data_engineer"
+PROFILE_NAME = ACTIVE_PROFILE_NAME
 
 MAX_JOBS = 100
 

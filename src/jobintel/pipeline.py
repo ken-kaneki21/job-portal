@@ -12,6 +12,7 @@ from jobintel.db.models import (
     ScanRecord,
 )
 from jobintel.db.session import SessionLocal
+from jobintel.profile.runtime import ACTIVE_PROFILE_NAME
 
 STEPS = [
     (
@@ -165,7 +166,7 @@ def finalize_pipeline_run(
         rankings_persisted = session.scalar(
             select(func.count())
             .select_from(JobRankingRecord)
-            .where(JobRankingRecord.profile_name == "data_engineer")
+            .where(JobRankingRecord.profile_name == ACTIVE_PROFILE_NAME)
             .where(JobRankingRecord.pipeline_run_id == run_id)
         )
 

@@ -14,8 +14,9 @@ from jobintel.notifications.resend_provider import (
 from jobintel.notifications.templates import (
     build_job_email,
 )
+from jobintel.profile.runtime import ACTIVE_PROFILE_NAME
 
-PROFILE_NAME = "data_engineer"
+PROFILE_NAME = ACTIVE_PROFILE_NAME
 
 NOTIFICATION_TYPE = "new_high_confidence"
 

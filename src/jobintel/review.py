@@ -12,8 +12,9 @@ from jobintel.db.models import (
     JobRecord,
 )
 from jobintel.db.session import SessionLocal
+from jobintel.profile.runtime import ACTIVE_PROFILE_NAME
 
-PROFILE_NAME = "data_engineer"
+PROFILE_NAME = ACTIVE_PROFILE_NAME
 
 
 def get_latest_ranking_run_id(

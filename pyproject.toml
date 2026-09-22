@@ -7,7 +7,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "job-intelligence"
-version = "0.1.0"
+version = "2.0.0"
 description = "Private AI-powered job intelligence and application orchestration platform"
 requires-python = ">=3.13"
 dependencies = [
@@ -24,6 +24,8 @@ dependencies = [
     "pgvector>=0.3",
     "sentence-transformers>=3.0",
     "resend>=2.0",
+    "pypdf>=6.0",
+    "python-multipart>=0.0.20",
 ]
 
 [project.optional-dependencies]
@@ -34,6 +36,10 @@ dev = [
     "black>=25.0",
     "mypy>=1.18",
     "pre-commit>=4.0",
+]
+
+automation = [
+    "playwright>=1.55",
 ]
 
 [tool.setuptools.packages.find]

@@ -23,6 +23,14 @@ from sqlalchemy.orm import Session
 from jobintel.api_application_assets import (
     router as application_assets_router,
 )
+from jobintel.api_application_ops import router as application_ops_router
+from jobintel.api_application_workflow import (
+    router as application_workflow_router,
+)
+from jobintel.api_evaluation import router as evaluation_router
+from jobintel.api_outcomes import router as outcomes_router
+from jobintel.api_profile import router as profile_router
+from jobintel.api_system import router as system_router
 from jobintel.api_temporal import (
     router as temporal_router,
 )
@@ -50,8 +58,10 @@ from jobintel.observability import (
     configure_logging,
     metrics_response,
 )
+from jobintel.profile.runtime import ACTIVE_PROFILE_NAME
+from jobintel.version import __version__
 
-DEFAULT_PROFILE = "data_engineer"
+DEFAULT_PROFILE = ACTIVE_PROFILE_NAME
 
 
 VALID_JOB_STATUSES = {
@@ -77,11 +87,17 @@ app = FastAPI(
         "assets, application tracking, "
         "history, and pipeline observability."
     ),
-    version="0.3.0",
+    version=__version__,
 )
 
 
 app.include_router(application_assets_router)
+app.include_router(application_workflow_router)
+app.include_router(outcomes_router)
+app.include_router(evaluation_router)
+app.include_router(application_ops_router)
+app.include_router(system_router)
+app.include_router(profile_router)
 
 
 app.include_router(temporal_router)
@@ -344,7 +360,7 @@ def set_job_state(
 def root():
     return {
         "service": ("job-intelligence"),
-        "version": ("0.3.0"),
+        "version": (__version__),
         "docs": ("/docs"),
         "health": ("/health"),
     }
@@ -560,6 +576,61 @@ def get_rankings(
                 job,
             ) in rows
         ],
+    }
+
+
+@app.get("/rankings/stats")
+def get_ranking_stats(
+    profile_name: str = DEFAULT_PROFILE,
+    pipeline_run_id: int | None = None,
+    session: Session = Depends(get_db),
+):
+    if pipeline_run_id is None:
+        pipeline_run_id = latest_pipeline_ranking_run_id(session)
+
+    empty_buckets = {
+        "high_confidence": 0,
+        "discovery": 0,
+        "stretch": 0,
+    }
+
+    if pipeline_run_id is None:
+        return {
+            "profile_name": profile_name,
+            "pipeline_run_id": None,
+            "total": 0,
+            "buckets": empty_buckets,
+        }
+
+    total = session.scalar(
+        select(func.count(JobRankingRecord.id))
+        .where(JobRankingRecord.profile_name == profile_name)
+        .where(JobRankingRecord.pipeline_run_id == pipeline_run_id)
+    )
+
+    bucket_rows = session.execute(
+        select(
+            JobRankingRecord.bucket,
+            func.count(JobRankingRecord.id),
+        )
+        .where(JobRankingRecord.profile_name == profile_name)
+        .where(JobRankingRecord.pipeline_run_id == pipeline_run_id)
+        .group_by(JobRankingRecord.bucket)
+    ).all()
+
+    buckets = empty_buckets.copy()
+
+    for bucket, count in bucket_rows:
+        if bucket is None:
+            continue
+
+        buckets[str(bucket)] = int(count)
+
+    return {
+        "profile_name": profile_name,
+        "pipeline_run_id": pipeline_run_id,
+        "total": int(total or 0),
+        "buckets": buckets,
     }
 
 
