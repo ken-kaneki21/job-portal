@@ -73,6 +73,21 @@ class CandidateIdentity(BaseModel):
     portfolio_url: str | None = None
 
 
+class LLMProfileEnrichment(BaseModel):
+    provider: str
+    model: str
+    prompt_version: str
+    suggested_summary: str | None = None
+    industries: list[str] = Field(default_factory=list)
+    tools: list[str] = Field(default_factory=list)
+    experience_evidence: list[str] = Field(default_factory=list)
+    project_evidence: list[str] = Field(default_factory=list)
+    role_rationales: dict[str, str] = Field(default_factory=dict)
+    generated_at: datetime = Field(
+        default_factory=lambda: datetime.now(UTC),
+    )
+
+
 class UniversalCandidateProfile(BaseModel):
     schema_version: str = "2.0"
 
@@ -126,6 +141,8 @@ class UniversalCandidateProfile(BaseModel):
     projects: list[ProjectEntry] = Field(
         default_factory=list,
     )
+
+    llm_enrichment: LLMProfileEnrichment | None = None
 
     preferences: CandidatePreferences = Field(
         default_factory=CandidatePreferences,

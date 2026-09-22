@@ -15,12 +15,17 @@ from jobintel.db.ranking_repository import (
 from jobintel.db.session import (
     SessionLocal,
 )
-from jobintel.profile.loader import (
-    load_profile,
+from jobintel.profile.runtime import (
+    load_active_candidate_profile,
 )
-from jobintel.profile.runtime import ACTIVE_PROFILE_PATH
+from jobintel.ranking.profile_evidence import (
+    score_profile_evidence,
+)
 from jobintel.ranking.scoring import (
     rank_job,
+)
+from jobintel.resume.service import (
+    load_universal_profile,
 )
 from jobintel.semantic.embeddings import (
     embed_text,
@@ -33,8 +38,6 @@ from jobintel.semantic.scoring import (
     score_semantic_similarity,
 )
 
-PROFILE_PATH = ACTIVE_PROFILE_PATH
-
 MIN_SCORE = 40.0
 
 HIGH_CONFIDENCE_LIMIT = 15
@@ -46,11 +49,15 @@ STRETCH_LIMIT = 15
 # Final ranking weights
 # ---------------------------------------------------------
 
-DETERMINISTIC_WEIGHT = 0.75
+DETERMINISTIC_WEIGHT = 0.65
 GAP_WEIGHT = 0.15
+PROFILE_EVIDENCE_WEIGHT = 1.0
 
-# semantic_score is already on a 0..10 scale.
-# Therefore it contributes a maximum of 10 points directly.
+# deterministic: 0..65
+# semantic:      0..10
+# gap:           0..15
+# evidence:      0..10
+# total:         0..100
 DEFAULT_GAP_SCORE = 50.0
 
 
@@ -219,7 +226,8 @@ def main() -> None:
     # Load candidate profile
     # -----------------------------------------------------
 
-    profile = load_profile(PROFILE_PATH)
+    profile = load_active_candidate_profile()
+    universal_profile = load_universal_profile()
 
     # -----------------------------------------------------
     # Build profile embedding once
@@ -345,10 +353,22 @@ def main() -> None:
 
             deterministic_score = float(result.score)
 
+            profile_evidence_score = 0.0
+            profile_evidence_reasons: tuple[str, ...] = ()
+
+            if universal_profile is not None:
+                evidence = score_profile_evidence(
+                    job,
+                    universal_profile,
+                )
+                profile_evidence_score = evidence.score
+                profile_evidence_reasons = evidence.reasons
+
             final_score = round(
                 (deterministic_score * DETERMINISTIC_WEIGHT)
                 + float(semantic_score)
-                + (gap_score * GAP_WEIGHT),
+                + (gap_score * GAP_WEIGHT)
+                + (profile_evidence_score * PROFILE_EVIDENCE_WEIGHT),
                 2,
             )
 
@@ -372,6 +392,7 @@ def main() -> None:
                 deterministic_score=(deterministic_score),
                 semantic_score=(float(semantic_score)),
                 gap_score=(gap_score),
+                reasons=(result.reasons + profile_evidence_reasons),
             )
 
             evaluated.append(result)

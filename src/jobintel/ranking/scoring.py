@@ -79,6 +79,13 @@ DIRECT_SOURCES = {
     "smartrecruiters",
 }
 
+PORTAL_SOURCES = {
+    "linkedin",
+    "naukri",
+    "foundit",
+    "indeed",
+}
+
 
 @dataclass(frozen=True)
 class RankedJob:
@@ -474,7 +481,9 @@ def score_source_quality(
 
     direct_sources = [source for source in sources if (source.source in DIRECT_SOURCES)]
 
-    aggregator_sources = [source for source in sources if (source.source == "adzuna")]
+    aggregator_sources = [source for source in sources if source.source == "adzuna"]
+
+    portal_sources = [source for source in sources if source.source in PORTAL_SOURCES]
 
     if direct_sources:
         preferred_source = next(
@@ -530,6 +539,25 @@ def score_source_quality(
             source_names,
             preferred_url,
             ["Aggregator discovery source"],
+        )
+
+    if portal_sources:
+        preferred_source = next(
+            (source for source in portal_sources if source.source_url),
+            None,
+        )
+
+        preferred_url = (
+            str(preferred_source.source_url)
+            if preferred_source is not None and preferred_source.source_url
+            else ""
+        )
+
+        return (
+            4.0,
+            source_names,
+            preferred_url,
+            ["User-assisted job portal source"],
         )
 
     preferred_source = next(
