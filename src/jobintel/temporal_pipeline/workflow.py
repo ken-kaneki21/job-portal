@@ -14,23 +14,6 @@ with workflow.unsafe.imports_passed_through():
     )
 
 
-# ---------------------------------------------------------
-# Pipeline step policy
-# ---------------------------------------------------------
-#
-# Critical:
-# If one of these fails after Temporal retries,
-# the whole pipeline should fail.
-#
-# Best effort:
-# If one of these fails after retries,
-# record the warning and continue.
-#
-# This keeps transient third-party/search/notification
-# problems from blocking the core job intelligence system.
-# ---------------------------------------------------------
-
-
 CRITICAL_STEPS = {
     "Direct ATS ingestion",
     "JD enrichment",
@@ -47,6 +30,7 @@ BEST_EFFORT_STEPS = {
     "Resolve company ATS",
     "Generate application assets",
     "Daily shortlist",
+    "Daily email digest",
     "New high-confidence jobs",
     "Queue notifications",
     "Retry failed notifications",
@@ -62,11 +46,44 @@ def is_best_effort_step(
 
 @workflow.defn
 class JobIntelligencePipelineWorkflow:
+    _total_steps: int
+    _completed_steps_count: int
+    _current_step_index: int
+    _current_step: str
+
+    def __init__(self) -> None:
+        self._total_steps = len(STEPS)
+        self._completed_steps_count = 0
+        self._current_step_index = 0
+        self._current_step = "Starting pipeline"
+
+    @workflow.query
+    def progress(self) -> dict[str, int | float | str]:
+        percent = 0.0
+
+        if self._total_steps > 0:
+            percent = round(
+                min(
+                    100.0,
+                    (self._completed_steps_count / self._total_steps) * 100.0,
+                ),
+                1,
+            )
+
+        return {
+            "current_step": self._current_step,
+            "current_step_index": self._current_step_index,
+            "completed_steps": self._completed_steps_count,
+            "total_steps": self._total_steps,
+            "percent": percent,
+        }
+
     @workflow.run
-    async def run(self) -> dict:
-        # -------------------------------------------------
-        # Create pipeline run
-        # -------------------------------------------------
+    async def run(self) -> dict[str, object]:
+        self._total_steps = len(STEPS)
+        self._completed_steps_count = 0
+        self._current_step_index = 0
+        self._current_step = "Creating pipeline run"
 
         run_id = await workflow.execute_activity(
             create_pipeline_run_activity,
@@ -80,10 +97,8 @@ class JobIntelligencePipelineWorkflow:
         )
 
         completed_steps: list[str] = []
-
         skipped_steps: list[str] = []
-
-        warnings: list[dict] = []
+        warnings: list[dict[str, str]] = []
 
         workflow.logger.info(
             "Starting Job Intelligence pipeline run %s",
@@ -91,11 +106,13 @@ class JobIntelligencePipelineWorkflow:
         )
 
         try:
-            # ---------------------------------------------
-            # Execute pipeline steps
-            # ---------------------------------------------
+            for index, (label, module) in enumerate(
+                STEPS,
+                start=1,
+            ):
+                self._current_step_index = index
+                self._current_step = label
 
-            for label, module in STEPS:
                 workflow.logger.info(
                     "Starting step: %s",
                     label,
@@ -109,16 +126,17 @@ class JobIntelligencePipelineWorkflow:
                             label=label,
                             module=module,
                         ),
-                        start_to_close_timeout=(timedelta(hours=2)),
+                        start_to_close_timeout=timedelta(hours=2),
                         retry_policy=RetryPolicy(
                             maximum_attempts=3,
-                            initial_interval=(timedelta(seconds=10)),
-                            maximum_interval=(timedelta(minutes=5)),
+                            initial_interval=timedelta(seconds=10),
+                            maximum_interval=timedelta(minutes=5),
                             backoff_coefficient=2.0,
                         ),
                     )
 
                     completed_steps.append(label)
+                    self._completed_steps_count = len(completed_steps)
 
                     workflow.logger.info(
                         "Completed step: %s",
@@ -128,10 +146,6 @@ class JobIntelligencePipelineWorkflow:
                 except Exception as exc:
                     error_message = str(exc)
 
-                    # -------------------------------------
-                    # Best-effort step
-                    # -------------------------------------
-
                     if is_best_effort_step(label):
                         workflow.logger.warning(
                             "Best-effort step failed after retries: %s",
@@ -140,19 +154,19 @@ class JobIntelligencePipelineWorkflow:
 
                         skipped_steps.append(label)
 
+                        self._completed_steps_count = len(completed_steps) + len(
+                            skipped_steps
+                        )
+
                         warnings.append(
                             {
                                 "step": label,
                                 "module": module,
-                                "error": (error_message),
+                                "error": error_message,
                             }
                         )
 
                         continue
-
-                    # -------------------------------------
-                    # Critical step
-                    # -------------------------------------
 
                     workflow.logger.error(
                         "Critical step failed: %s",
@@ -160,12 +174,10 @@ class JobIntelligencePipelineWorkflow:
                     )
 
                     raise RuntimeError(
-                        f"Critical pipeline step failed: {label}. {error_message}"
+                        "Critical pipeline step failed: " f"{label}. {error_message}"
                     ) from exc
 
-            # ---------------------------------------------
-            # Successful pipeline
-            # ---------------------------------------------
+            self._current_step = "Finalizing pipeline"
 
             await workflow.execute_activity(
                 finalize_pipeline_run_activity,
@@ -174,14 +186,17 @@ class JobIntelligencePipelineWorkflow:
                     success=True,
                     error_message=None,
                 ),
-                start_to_close_timeout=(timedelta(minutes=2)),
+                start_to_close_timeout=timedelta(minutes=2),
                 retry_policy=RetryPolicy(
                     maximum_attempts=5,
-                    initial_interval=(timedelta(seconds=2)),
-                    maximum_interval=(timedelta(seconds=30)),
+                    initial_interval=timedelta(seconds=2),
+                    maximum_interval=timedelta(seconds=30),
                     backoff_coefficient=2.0,
                 ),
             )
+
+            self._completed_steps_count = self._total_steps
+            self._current_step = "Completed"
 
             workflow.logger.info(
                 "Pipeline run %s completed",
@@ -191,18 +206,15 @@ class JobIntelligencePipelineWorkflow:
             return {
                 "pipeline_run_id": run_id,
                 "success": True,
-                "completed_steps": (completed_steps),
-                "skipped_steps": (skipped_steps),
+                "completed_steps": completed_steps,
+                "skipped_steps": skipped_steps,
                 "warnings": warnings,
                 "warning_count": len(warnings),
             }
 
         except Exception as exc:
-            # ---------------------------------------------
-            # Failed pipeline
-            # ---------------------------------------------
-
             error_message = str(exc)
+            self._current_step = "Failed"
 
             workflow.logger.error(
                 "Pipeline run %s failed: %s",
@@ -216,17 +228,16 @@ class JobIntelligencePipelineWorkflow:
                     FinalizePipelineInput(
                         run_id=run_id,
                         success=False,
-                        error_message=(error_message),
+                        error_message=error_message,
                     ),
-                    start_to_close_timeout=(timedelta(minutes=2)),
+                    start_to_close_timeout=timedelta(minutes=2),
                     retry_policy=RetryPolicy(
                         maximum_attempts=5,
-                        initial_interval=(timedelta(seconds=2)),
-                        maximum_interval=(timedelta(seconds=30)),
+                        initial_interval=timedelta(seconds=2),
+                        maximum_interval=timedelta(seconds=30),
                         backoff_coefficient=2.0,
                     ),
                 )
-
             except Exception as finalize_exc:
                 workflow.logger.error(
                     "Unable to finalize failed pipeline run %s: %s",

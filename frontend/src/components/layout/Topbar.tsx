@@ -129,6 +129,15 @@ export function Topbar() {
       : null,
   );
 
+  const [
+    progressPercent,
+    setProgressPercent,
+  ] = useState<number | null>(
+    workflowId
+      ? 0
+      : null,
+  );
+
   const pollingRef =
     useRef<number | null>(
       null,
@@ -290,6 +299,8 @@ export function Topbar() {
               "completed",
             );
 
+            setProgressPercent(100);
+
             setStatusMessage(
               `Run ${latest.id} · ${latest.rankings_persisted} ranked`,
             );
@@ -308,6 +319,8 @@ export function Topbar() {
           setRunState(
             "failed",
           );
+
+          setProgressPercent(null);
 
           setStatusMessage(
             latest.error_message ??
@@ -363,6 +376,8 @@ export function Topbar() {
             "failed",
           );
 
+          setProgressPercent(null);
+
           setStatusMessage(
             "Run status timed out",
           );
@@ -395,6 +410,8 @@ export function Topbar() {
           setRunState(
             "completed",
           );
+
+          setProgressPercent(100);
 
           setStatusMessage(
             "Intelligence updated",
@@ -437,8 +454,14 @@ export function Topbar() {
           "running",
         );
 
+        setProgressPercent(
+          response.progress?.percent ??
+            null,
+        );
+
         setStatusMessage(
-          "Temporal workflow active",
+          response.progress?.current_step ??
+            "Temporal workflow active",
         );
       } catch {
         await resolveFromHealth();
@@ -559,8 +582,10 @@ export function Topbar() {
           "running",
         );
 
+        setProgressPercent(0);
+
         setStatusMessage(
-          "Temporal workflow active",
+          "Starting pipeline",
         );
 
         startedAtRef.current =
@@ -583,6 +608,8 @@ export function Topbar() {
         setRunState(
           "failed",
         );
+
+        setProgressPercent(null);
 
         setStatusMessage(
           "Unable to start workflow",
@@ -634,7 +661,26 @@ export function Topbar() {
       return (
         <>
           <span className="run-live-dot" />
-          Running
+          <span className="run-progress-label">
+            Running
+            {progressPercent !== null
+              ? ` ${Math.round(progressPercent)}%`
+              : ""}
+          </span>
+
+          <span
+            className="run-progress-track"
+            aria-hidden="true"
+          >
+            <span
+              style={{
+                width: `${Math.max(
+                  3,
+                  progressPercent ?? 3,
+                )}%`,
+              }}
+            />
+          </span>
         </>
       );
     }

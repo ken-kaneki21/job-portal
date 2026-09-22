@@ -7,6 +7,14 @@ export type PipelineStartResponse = {
   task_queue?: string;
 };
 
+export type WorkflowProgress = {
+  current_step: string;
+  current_step_index: number;
+  completed_steps: number;
+  total_steps: number;
+  percent: number;
+};
+
 export type WorkflowStatusResponse = {
   workflow_id: string;
   status: string;
@@ -19,6 +27,7 @@ export type WorkflowStatusResponse = {
   close_time?: string | null;
 
   temporal_managed?: boolean;
+  progress?: WorkflowProgress | null;
 
   result?: unknown;
   error?: string | null;

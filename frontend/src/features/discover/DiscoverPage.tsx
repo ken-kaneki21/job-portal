@@ -35,6 +35,19 @@ type BucketFilter =
   | "all"
   | RankingBucket;
 
+type SortMode =
+  | "newest"
+  | "best_match"
+  | "oldest";
+
+type FreshnessDays =
+  | 7
+  | 14
+  | 30
+  | 60
+  | 90
+  | "any";
+
 const bucketOrder: Record<
   RankingBucket,
   number
@@ -160,6 +173,21 @@ function parseJobId(
   return parsed;
 }
 
+function jobTimestamp(
+  result: RankingResult,
+): number {
+  const value =
+    result.job.posted_at ??
+    result.job.first_seen_at;
+
+  const parsed =
+    new Date(value).getTime();
+
+  return Number.isFinite(parsed)
+    ? parsed
+    : 0;
+}
+
 function DiscoverLoading() {
   return (
     <div className="page">
@@ -279,6 +307,16 @@ export function DiscoverPage() {
   );
 
   const [
+    freshnessDays,
+    setFreshnessDays,
+  ] = useState<FreshnessDays>(30);
+
+  const [
+    sortMode,
+    setSortMode,
+  ] = useState<SortMode>("newest");
+
+  const [
     searchParams,
     setSearchParams,
   ] = useSearchParams();
@@ -324,6 +362,16 @@ export function DiscoverPage() {
           .trim()
           .toLowerCase();
 
+      const cutoff =
+        freshnessDays === "any"
+          ? null
+          : query.dataUpdatedAt -
+            freshnessDays *
+              24 *
+              60 *
+              60 *
+              1000;
+
       return jobs
         .filter(
           (
@@ -335,6 +383,14 @@ export function DiscoverPage() {
               result.ranking
                 .bucket !==
                 bucketFilter
+            ) {
+              return false;
+            }
+
+            if (
+              cutoff !== null &&
+              jobTimestamp(result) <
+                cutoff
             ) {
               return false;
             }
@@ -370,6 +426,42 @@ export function DiscoverPage() {
             left,
             right,
           ) => {
+            if (
+              sortMode ===
+              "newest"
+            ) {
+              const difference =
+                jobTimestamp(right) -
+                jobTimestamp(left);
+
+              if (difference !== 0) {
+                return difference;
+              }
+
+              return (
+                right.ranking.score -
+                left.ranking.score
+              );
+            }
+
+            if (
+              sortMode ===
+              "oldest"
+            ) {
+              const difference =
+                jobTimestamp(left) -
+                jobTimestamp(right);
+
+              if (difference !== 0) {
+                return difference;
+              }
+
+              return (
+                right.ranking.score -
+                left.ranking.score
+              );
+            }
+
             const bucketDifference =
               bucketOrder[
                 left.ranking
@@ -399,6 +491,9 @@ export function DiscoverPage() {
       query.data,
       searchText,
       bucketFilter,
+      freshnessDays,
+      sortMode,
+      query.dataUpdatedAt,
     ]);
 
   const selectedJob =
@@ -421,34 +516,34 @@ export function DiscoverPage() {
       return;
     }
 
-    const timer =
-      window.setTimeout(
-        () => {
-          const element =
-            document.querySelector(
-              `[data-job-id="${selectedJobId}"]`,
-            );
+    if (
+      window.matchMedia(
+        "(max-width: 1100px)",
+      ).matches
+    ) {
+      const timer =
+        window.setTimeout(
+          () => {
+            document
+              .querySelector(
+                ".job-preview",
+              )
+              ?.scrollIntoView({
+                behavior:
+                  "smooth",
+                block:
+                  "start",
+              });
+          },
+          80,
+        );
 
-          if (
-            element instanceof
-            HTMLElement
-          ) {
-            element.scrollIntoView({
-              behavior:
-                "smooth",
-              block:
-                "center",
-            });
-          }
-        },
-        120,
-      );
-
-    return () => {
-      window.clearTimeout(
-        timer,
-      );
-    };
+      return () => {
+        window.clearTimeout(
+          timer,
+        );
+      };
+    }
   }, [
     selectedJobId,
     query.data,
@@ -552,7 +647,7 @@ function selectJob(
           query.data
             ?.pipelineRunId ??
           "—"
-        } · ${totalJobs} relevant opportunities`}
+        } · ${filteredJobs.length} visible of ${totalJobs} ranked opportunities`}
       />
 
       <div className="discover-toolbar">
@@ -576,6 +671,70 @@ function selectJob(
             placeholder="Search role, company, location..."
           />
         </div>
+
+        <label className="discover-control">
+          <span>Posted</span>
+          <select
+            value={freshnessDays}
+            onChange={(event) => {
+              const value =
+                event.target.value;
+
+              setFreshnessDays(
+                value === "any"
+                  ? "any"
+                  : (Number(
+                      value,
+                    ) as Exclude<
+                      FreshnessDays,
+                      "any"
+                    >),
+              );
+            }}
+          >
+            <option value={7}>
+              Last 7 days
+            </option>
+            <option value={14}>
+              Last 14 days
+            </option>
+            <option value={30}>
+              Last 30 days
+            </option>
+            <option value={60}>
+              Last 60 days
+            </option>
+            <option value={90}>
+              Last 90 days
+            </option>
+            <option value="any">
+              Any time
+            </option>
+          </select>
+        </label>
+
+        <label className="discover-control">
+          <span>Sort</span>
+          <select
+            value={sortMode}
+            onChange={(event) =>
+              setSortMode(
+                event.target
+                  .value as SortMode,
+              )
+            }
+          >
+            <option value="newest">
+              Newest first
+            </option>
+            <option value="best_match">
+              Best match
+            </option>
+            <option value="oldest">
+              Oldest first
+            </option>
+          </select>
+        </label>
 
         <button
           className={

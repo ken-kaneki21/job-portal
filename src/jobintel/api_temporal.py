@@ -49,7 +49,7 @@ async def start_temporal_pipeline() -> dict:
     )
 
     return {
-        "message": ("Temporal pipeline workflow started"),
+        "message": "Temporal pipeline workflow started",
         "workflow_id": handle.id,
         "temporal_managed": True,
         "task_queue": TASK_QUEUE,
@@ -64,7 +64,7 @@ async def run_pipeline_temporal():
     except Exception as exc:
         raise HTTPException(
             status_code=500,
-            detail=(f"Unable to start Temporal workflow: {exc}"),
+            detail=("Unable to start Temporal workflow: " f"{exc}"),
         ) from exc
 
 
@@ -79,12 +79,22 @@ async def get_temporal_workflow_status(
 
         description = await handle.describe()
 
+        status = workflow_status_name(description.status)
+
+        progress = None
+
+        if status == "RUNNING":
+            try:
+                progress = await handle.query(JobIntelligencePipelineWorkflow.progress)
+            except Exception:
+                progress = None
+
         return {
             "workflow_id": workflow_id,
-            "status": (workflow_status_name(description.status)),
-            "workflow_type": (description.workflow_type),
-            "run_id": (description.run_id),
-            "task_queue": (description.task_queue),
+            "status": status,
+            "workflow_type": description.workflow_type,
+            "run_id": description.run_id,
+            "task_queue": description.task_queue,
             "start_time": (
                 description.start_time.isoformat() if description.start_time else None
             ),
@@ -92,12 +102,13 @@ async def get_temporal_workflow_status(
                 description.close_time.isoformat() if description.close_time else None
             ),
             "temporal_managed": True,
+            "progress": progress,
         }
 
     except Exception as exc:
         raise HTTPException(
             status_code=404,
-            detail=(f"Unable to get workflow status: {exc}"),
+            detail=("Unable to get workflow status: " f"{exc}"),
         ) from exc
 
 
@@ -133,5 +144,5 @@ async def get_temporal_workflow_result(
     except Exception as exc:
         raise HTTPException(
             status_code=404,
-            detail=(f"Unable to get workflow result: {exc}"),
+            detail=("Unable to get workflow result: " f"{exc}"),
         ) from exc

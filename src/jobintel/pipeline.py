@@ -56,6 +56,10 @@ STEPS = [
         "jobintel.shortlist",
     ),
     (
+        "Daily email digest",
+        "jobintel.daily_digest",
+    ),
+    (
         "New high-confidence jobs",
         "jobintel.new_high_confidence",
     ),

@@ -42,7 +42,7 @@ jobs:
 
       JOBINTEL_TEMPORAL_ADDRESS: localhost:7233
       JOBINTEL_TEMPORAL_NAMESPACE: default
-      JOBINTEL_JOBINTEL_TEMPORAL_TASK_QUEUE: job-intelligence-pipeline-v2-v2
+      JOBINTEL_TEMPORAL_TASK_QUEUE: job-intelligence-pipeline-v2
 
     steps:
 
