@@ -26,6 +26,7 @@ from jobintel.api_application_assets import (
 from jobintel.api_application_workflow import (
     router as application_workflow_router,
 )
+from jobintel.api_evaluation import router as evaluation_router
 from jobintel.api_outcomes import router as outcomes_router
 from jobintel.api_profile import router as profile_router
 from jobintel.api_temporal import (
@@ -90,6 +91,7 @@ app = FastAPI(
 app.include_router(application_assets_router)
 app.include_router(application_workflow_router)
 app.include_router(outcomes_router)
+app.include_router(evaluation_router)
 app.include_router(profile_router)
 
 
