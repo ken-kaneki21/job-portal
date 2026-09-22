@@ -19,10 +19,14 @@ from jobintel.profile.role_detection import (
     detect_role_families,
 )
 from jobintel.profile.universal import (
+    CandidateIdentity,
     CandidatePreferences,
     UniversalCandidateProfile,
 )
-from jobintel.resume.parser import extract_pdf_text
+from jobintel.resume.parser import (
+    extract_pdf_links,
+    extract_pdf_text,
+)
 from jobintel.resume.skills import extract_skills
 from jobintel.resume.structured import (
     extract_resume_structure,
@@ -51,12 +55,69 @@ def resume_sha256(
     ).hexdigest()
 
 
+def classify_profile_links(
+    links: list[str],
+) -> tuple[
+    str | None,
+    str | None,
+    str | None,
+]:
+    linkedin_url: str | None = None
+    github_url: str | None = None
+    portfolio_url: str | None = None
+
+    for link in links:
+        lowered = link.lower()
+
+        if linkedin_url is None and "linkedin.com/" in lowered:
+            linkedin_url = link
+            continue
+
+        if github_url is None and "github.com/" in lowered:
+            github_url = link
+            continue
+
+        if portfolio_url is None:
+            portfolio_url = link
+
+    return (
+        linkedin_url,
+        github_url,
+        portfolio_url,
+    )
+
+
+def enrich_identity_with_pdf_links(
+    identity: CandidateIdentity,
+    links: list[str],
+) -> CandidateIdentity:
+    (
+        linkedin_url,
+        github_url,
+        portfolio_url,
+    ) = classify_profile_links(
+        links,
+    )
+
+    return identity.model_copy(
+        update={
+            "linkedin_url": (identity.linkedin_url or linkedin_url),
+            "github_url": (identity.github_url or github_url),
+            "portfolio_url": (identity.portfolio_url or portfolio_url),
+        }
+    )
+
+
 def build_profile_from_resume(
     *,
     filename: str,
     content: bytes,
 ) -> UniversalCandidateProfile:
     resume_text = extract_pdf_text(
+        content,
+    )
+
+    pdf_links = extract_pdf_links(
         content,
     )
 
@@ -72,15 +133,20 @@ def build_profile_from_resume(
         resume_text,
     )
 
+    identity = enrich_identity_with_pdf_links(
+        structure.identity,
+        pdf_links,
+    )
+
     return UniversalCandidateProfile(
         profile_name="universal",
-        identity=structure.identity,
+        identity=identity,
         headline=structure.headline,
         summary=structure.summary,
         total_experience_years=(structure.total_experience_years),
         role_families=role_families,
         core_skills=core_skills,
-        secondary_skills=secondary_skills,
+        secondary_skills=(secondary_skills),
         tools=[],
         cloud_platforms=[
             skill
@@ -92,10 +158,10 @@ def build_profile_from_resume(
             if skill in (core_skills + secondary_skills)
         ],
         industries=[],
-        certifications=structure.certifications,
-        experience=structure.experience,
-        education=structure.education,
-        projects=structure.projects,
+        certifications=(structure.certifications),
+        experience=(structure.experience),
+        education=(structure.education),
+        projects=(structure.projects),
         preferences=CandidatePreferences(
             preferred_locations=[
                 "Bengaluru",
@@ -109,8 +175,10 @@ def build_profile_from_resume(
             blocked_titles=[],
         ),
         source_resume_filename=filename,
-        source_resume_sha256=resume_sha256(
-            content,
+        source_resume_sha256=(
+            resume_sha256(
+                content,
+            )
         ),
     )
 
@@ -200,10 +268,10 @@ def persist_profile(
     with SessionLocal() as session:
         upsert_candidate_profile(
             session,
-            profile_name=profile.profile_name,
-            schema_version=profile.schema_version,
-            universal_payload=universal_payload,
-            legacy_payload=legacy_payload,
+            profile_name=(profile.profile_name),
+            schema_version=(profile.schema_version),
+            universal_payload=(universal_payload),
+            legacy_payload=(legacy_payload),
         )
 
         session.commit()
@@ -233,7 +301,7 @@ def load_universal_profile() -> UniversalCandidateProfile | None:
         with SessionLocal() as session:
             payload = get_universal_profile_payload(
                 session,
-                profile_name=DEFAULT_PROFILE_NAME,
+                profile_name=(DEFAULT_PROFILE_NAME),
             )
 
         if payload is not None:
