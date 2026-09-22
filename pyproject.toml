@@ -38,6 +38,10 @@ dev = [
     "pre-commit>=4.0",
 ]
 
+automation = [
+    "playwright>=1.55",
+]
+
 [tool.setuptools.packages.find]
 where = ["src"]
 
