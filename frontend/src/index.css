@@ -1550,3 +1550,181 @@ input:focus-visible {
     gap: 3px;
   }
 }
+
+/* V2.1 PRODUCTIZATION: fixed shell, discover controls, and live pipeline progress */
+
+html {
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+@media (min-width: 821px) {
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 238px;
+  }
+
+  .app-main {
+    margin-left: 238px;
+  }
+}
+
+@media (min-width: 621px) and (max-width: 820px) {
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 72px;
+  }
+
+  .app-main {
+    margin-left: 72px;
+  }
+}
+
+@media (max-width: 620px) {
+  .app-main {
+    margin-left: 0;
+  }
+}
+
+.discover-control {
+  min-width: 132px;
+  display: grid;
+  gap: 3px;
+  padding: 5px 9px;
+  border: 1px solid var(--border);
+  border-radius: 11px;
+  background: var(--surface);
+}
+
+.discover-control span {
+  color: var(--text-faint);
+  font-size: 8px;
+  font-weight: 750;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.discover-control select {
+  width: 100%;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.discover-control select option {
+  background: var(--surface-solid);
+  color: var(--text);
+}
+
+.job-preview {
+  scroll-margin-top: 86px;
+}
+
+.run-button-running {
+  position: relative;
+  min-width: 142px;
+  overflow: hidden;
+  padding-bottom: 5px;
+}
+
+.run-progress-track {
+  position: absolute;
+  right: 9px;
+  bottom: 3px;
+  left: 9px;
+  height: 2px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: color-mix(
+    in srgb,
+    currentColor 18%,
+    transparent
+  );
+}
+
+.run-progress-track > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: currentColor;
+  transition: width 350ms ease;
+}
+
+.run-progress-label {
+  white-space: nowrap;
+}
+
+@media (max-width: 820px) {
+  .discover-control {
+    flex: 1 1 150px;
+  }
+}
+
+@media (max-width: 620px) {
+  .discover-control {
+    min-width: 0;
+  }
+
+  .run-button-running {
+    min-width: 42px;
+  }
+
+  .run-progress-label {
+    display: none;
+  }
+}
+
+
+.settings-live-row {
+  cursor: default;
+}
+
+.settings-live-row:hover {
+  background: var(--surface);
+}
+
+.settings-state-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 7px;
+  margin-top: 11px;
+}
+
+.settings-state {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 8px;
+  border-radius: 999px;
+  font-size: 9px;
+  font-weight: 750;
+}
+
+.settings-state-ready {
+  background: var(--success-bg);
+  color: var(--success-text);
+}
+
+.settings-state-missing {
+  background: var(--surface-soft);
+  color: var(--text-faint);
+}
+
+.settings-value {
+  color: var(--text-soft);
+  font-size: 10px;
+}

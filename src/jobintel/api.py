@@ -30,6 +30,7 @@ from jobintel.api_application_workflow import (
 from jobintel.api_evaluation import router as evaluation_router
 from jobintel.api_outcomes import router as outcomes_router
 from jobintel.api_profile import router as profile_router
+from jobintel.api_settings import router as settings_router
 from jobintel.api_system import router as system_router
 from jobintel.api_temporal import (
     router as temporal_router,
@@ -98,6 +99,7 @@ app.include_router(evaluation_router)
 app.include_router(application_ops_router)
 app.include_router(system_router)
 app.include_router(profile_router)
+app.include_router(settings_router)
 
 
 app.include_router(temporal_router)
