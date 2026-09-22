@@ -23,6 +23,7 @@ from sqlalchemy.orm import Session
 from jobintel.api_application_assets import (
     router as application_assets_router,
 )
+from jobintel.api_application_ops import router as application_ops_router
 from jobintel.api_application_workflow import (
     router as application_workflow_router,
 )
@@ -92,6 +93,7 @@ app.include_router(application_assets_router)
 app.include_router(application_workflow_router)
 app.include_router(outcomes_router)
 app.include_router(evaluation_router)
+app.include_router(application_ops_router)
 app.include_router(profile_router)
 
 
