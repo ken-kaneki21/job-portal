@@ -73,6 +73,8 @@ def test_regression_gate_allows_small_change():
     )
 
     assert gate.passed is True
+    assert gate.evaluable is True
+    assert gate.reason is None
 
 
 def test_regression_gate_blocks_large_drop():
@@ -98,3 +100,37 @@ def test_regression_gate_blocks_large_drop():
     )
 
     assert gate.passed is False
+    assert gate.evaluable is True
+
+
+def test_regression_gate_is_not_evaluable_without_samples():
+    empty = RankingMetrics(
+        sample_count=0,
+        positive_count=0,
+        base_positive_rate=0.0,
+        precision_at_k={},
+        recall_at_k={},
+        lift_at_k={},
+        pairwise_accuracy=0.0,
+    )
+
+    baseline = VariantEvaluation(
+        variant="baseline",
+        metrics=empty,
+    )
+    candidate = VariantEvaluation(
+        variant="candidate",
+        metrics=empty,
+    )
+
+    gate = compare_variants(
+        baseline=baseline,
+        candidate=candidate,
+        primary_k=10,
+    )
+
+    assert gate.passed is None
+    assert gate.evaluable is False
+    assert gate.reason == "No completed application outcomes are available."
+    assert gate.checks == {}
+    assert gate.deltas == {}

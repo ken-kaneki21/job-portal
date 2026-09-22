@@ -48,13 +48,15 @@ class VariantEvaluation:
     def to_dict(self) -> dict:
         return {
             "variant": self.variant,
-            "metrics": (self.metrics.to_dict()),
+            "metrics": self.metrics.to_dict(),
         }
 
 
 @dataclass(frozen=True)
 class RegressionGate:
-    passed: bool
+    passed: bool | None
+    evaluable: bool
+    reason: str | None
     baseline_variant: str
     candidate_variant: str
     checks: dict[str, bool]
@@ -63,8 +65,10 @@ class RegressionGate:
     def to_dict(self) -> dict:
         return {
             "passed": self.passed,
-            "baseline_variant": (self.baseline_variant),
-            "candidate_variant": (self.candidate_variant),
+            "evaluable": self.evaluable,
+            "reason": self.reason,
+            "baseline_variant": self.baseline_variant,
+            "candidate_variant": self.candidate_variant,
             "checks": self.checks,
             "deltas": self.deltas,
         }
@@ -117,7 +121,7 @@ def build_evaluation_samples(
             EvaluationSample(
                 job_id=state.job_id,
                 outcome=outcome,
-                positive=(outcome in POSITIVE_OUTCOMES),
+                positive=outcome in POSITIVE_OUTCOMES,
                 components=ScoreComponents(
                     stored_score=float(ranking.score or 0.0),
                     deterministic_score=float(ranking.deterministic_score or 0.0),
@@ -158,15 +162,8 @@ def evaluate_variant(
 def evaluate_variants(
     samples: list[EvaluationSample],
     *,
-    variants: tuple[
-        ScoreVariant,
-        ...,
-    ] = DEFAULT_VARIANTS,
-    ks: tuple[int, ...] = (
-        5,
-        10,
-        20,
-    ),
+    variants: tuple[ScoreVariant, ...] = DEFAULT_VARIANTS,
+    ks: tuple[int, ...] = (5, 10, 20),
 ) -> list[VariantEvaluation]:
     return [
         evaluate_variant(
@@ -186,6 +183,17 @@ def compare_variants(
     max_precision_drop: float = 0.05,
     max_pairwise_drop: float = 0.03,
 ) -> RegressionGate:
+    if baseline.metrics.sample_count == 0:
+        return RegressionGate(
+            passed=None,
+            evaluable=False,
+            reason="No completed application outcomes are available.",
+            baseline_variant=baseline.variant,
+            candidate_variant=candidate.variant,
+            checks={},
+            deltas={},
+        )
+
     baseline_precision = baseline.metrics.precision_at_k.get(
         primary_k,
         0.0,
@@ -208,8 +216,10 @@ def compare_variants(
 
     return RegressionGate(
         passed=all(checks.values()),
-        baseline_variant=(baseline.variant),
-        candidate_variant=(candidate.variant),
+        evaluable=True,
+        reason=None,
+        baseline_variant=baseline.variant,
+        candidate_variant=candidate.variant,
         checks=checks,
         deltas={
             f"precision_at_{primary_k}": round(
@@ -228,11 +238,7 @@ def run_offline_evaluation(
     *,
     session,
     profile: CandidateProfile,
-    ks: tuple[int, ...] = (
-        5,
-        10,
-        20,
-    ),
+    ks: tuple[int, ...] = (5, 10, 20),
 ) -> dict:
     samples = build_evaluation_samples(
         session=session,
@@ -258,16 +264,24 @@ def run_offline_evaluation(
         if item.variant != baseline.variant
     ]
 
+    sample_count = len(samples)
+
+    if sample_count == 0:
+        warning = (
+            "No completed application outcomes are available; "
+            "ranking variants cannot be evaluated yet."
+        )
+    elif sample_count < 10:
+        warning = "Small historical outcome set; treat metrics as directional only."
+    else:
+        warning = None
+
     return {
         "profile_name": profile.name,
-        "sample_count": len(samples),
+        "sample_count": sample_count,
         "positive_outcomes": sum(1 for sample in samples if sample.positive),
         "negative_outcomes": sum(1 for sample in samples if not sample.positive),
         "variants": [item.to_dict() for item in evaluations],
         "regression_gates": [gate.to_dict() for gate in gates],
-        "warning": (
-            None
-            if len(samples) >= 10
-            else ("Small historical outcome set; treat metrics as directional only.")
-        ),
+        "warning": warning,
     }
