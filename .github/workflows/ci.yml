@@ -69,7 +69,7 @@ jobs:
 
       - name: Black
         run: |
-          black --check src tests
+          pre-commit run black --all-files
 
       - name: Mypy
         run: |
