@@ -5,8 +5,10 @@ from dataclasses import dataclass
 
 from sqlalchemy import select
 
+from jobintel.db.application_event_model import (
+    JobApplicationEventRecord,
+)
 from jobintel.db.models import (
-    JobApplicationStateRecord,
     JobRankingRecord,
     JobRecord,
 )
@@ -14,13 +16,10 @@ from jobintel.outcome_learning.features import (
     OutcomeFeatures,
     extract_outcome_features,
 )
+from jobintel.outcome_learning.history import (
+    derive_historical_outcome,
+)
 from jobintel.profile.models import CandidateProfile
-
-OUTCOME_VALUES = {
-    "interviewing": 1.0,
-    "rejected": -1.0,
-    "offer": 2.0,
-}
 
 MIN_TOTAL_OUTCOMES = 5
 MIN_FEATURE_SUPPORT = 2
@@ -66,45 +65,88 @@ class OutcomeAdjustment:
     sample_count: int
 
 
-def latest_ranking_for_job(*, session, job_id: int, profile_name: str):
+def latest_ranking_at_or_before(
+    *,
+    session,
+    job_id: int,
+    profile_name: str,
+    at,
+):
     return session.scalar(
         select(JobRankingRecord)
         .where(JobRankingRecord.job_id == job_id)
         .where(JobRankingRecord.profile_name == profile_name)
-        .order_by(JobRankingRecord.ranked_at.desc(), JobRankingRecord.id.desc())
+        .where(JobRankingRecord.ranked_at <= at)
+        .order_by(
+            JobRankingRecord.ranked_at.desc(),
+            JobRankingRecord.id.desc(),
+        )
         .limit(1)
     )
 
 
-def build_outcome_model(*, session, profile: CandidateProfile) -> OutcomeModel:
-    states = session.scalars(
-        select(JobApplicationStateRecord)
-        .where(JobApplicationStateRecord.profile_name == profile.name)
-        .where(JobApplicationStateRecord.status.in_(tuple(OUTCOME_VALUES)))
+def application_histories(
+    *,
+    session,
+    profile_name: str,
+) -> dict[int, list[JobApplicationEventRecord]]:
+    events = session.scalars(
+        select(JobApplicationEventRecord)
+        .where(JobApplicationEventRecord.profile_name == profile_name)
+        .order_by(
+            JobApplicationEventRecord.job_id.asc(),
+            JobApplicationEventRecord.created_at.asc(),
+            JobApplicationEventRecord.id.asc(),
+        )
     ).all()
+
+    histories: dict[int, list[JobApplicationEventRecord]] = defaultdict(list)
+
+    for event in events:
+        histories[event.job_id].append(event)
+
+    return histories
+
+
+def build_outcome_model(
+    *,
+    session,
+    profile: CandidateProfile,
+) -> OutcomeModel:
+    histories = application_histories(
+        session=session,
+        profile_name=profile.name,
+    )
 
     samples: list[tuple[float, OutcomeFeatures]] = []
 
-    for state in states:
-        job = session.get(JobRecord, state.job_id)
+    for job_id, events in histories.items():
+        historical_outcome = derive_historical_outcome(events)
+
+        if historical_outcome is None:
+            continue
+
+        job = session.get(
+            JobRecord,
+            job_id,
+        )
+
         if job is None:
             continue
 
-        ranking = latest_ranking_for_job(
+        ranking = latest_ranking_at_or_before(
             session=session,
-            job_id=state.job_id,
+            job_id=job_id,
             profile_name=profile.name,
+            at=historical_outcome.applied_at,
         )
-        if ranking is None:
-            continue
 
-        outcome = OUTCOME_VALUES.get(state.status)
-        if outcome is None:
+        if ranking is None:
             continue
 
         samples.append(
             (
-                float(outcome),
+                historical_outcome.value,
                 extract_outcome_features(
                     job=job,
                     ranking=ranking,
@@ -114,9 +156,14 @@ def build_outcome_model(*, session, profile: CandidateProfile) -> OutcomeModel:
         )
 
     if not samples:
-        return OutcomeModel(sample_count=0, global_mean=0.0, feature_stats={})
+        return OutcomeModel(
+            sample_count=0,
+            global_mean=0.0,
+            feature_stats={},
+        )
 
     global_mean = sum(outcome for outcome, _ in samples) / len(samples)
+
     groups: dict[tuple[str, str], list[float]] = defaultdict(list)
 
     for outcome, features in samples:
@@ -135,7 +182,13 @@ def build_outcome_model(*, session, profile: CandidateProfile) -> OutcomeModel:
             shrinkage = count / (count + 3.0)
             adjustment = (mean_outcome - global_mean) * FEATURE_SCALE * shrinkage
 
-        adjustment = max(-MAX_ADJUSTMENT, min(MAX_ADJUSTMENT, adjustment))
+        adjustment = max(
+            -MAX_ADJUSTMENT,
+            min(
+                MAX_ADJUSTMENT,
+                adjustment,
+            ),
+        )
 
         feature_stats[(feature_type, feature_value)] = FeatureStat(
             feature_type=feature_type,
@@ -154,27 +207,45 @@ def build_outcome_model(*, session, profile: CandidateProfile) -> OutcomeModel:
 
 
 def score_outcome_adjustment(
-    *, model: OutcomeModel, features: OutcomeFeatures
+    *,
+    model: OutcomeModel,
+    features: OutcomeFeatures,
 ) -> OutcomeAdjustment:
     if not model.active:
-        return OutcomeAdjustment(score=0.0, reasons=(), sample_count=model.sample_count)
+        return OutcomeAdjustment(
+            score=0.0,
+            reasons=(),
+            sample_count=model.sample_count,
+        )
 
     candidates: list[FeatureStat] = []
 
     for key in features.items():
         stat = model.feature_stats.get(key)
+
         if stat is None or stat.count < MIN_FEATURE_SUPPORT or stat.adjustment == 0.0:
             continue
+
         candidates.append(stat)
 
-    candidates.sort(key=lambda item: abs(item.adjustment), reverse=True)
+    candidates.sort(
+        key=lambda item: abs(item.adjustment),
+        reverse=True,
+    )
     selected = candidates[:4]
 
     if not selected:
-        return OutcomeAdjustment(score=0.0, reasons=(), sample_count=model.sample_count)
+        return OutcomeAdjustment(
+            score=0.0,
+            reasons=(),
+            sample_count=model.sample_count,
+        )
 
     raw = sum(item.adjustment for item in selected) / len(selected)
-    final = max(-MAX_ADJUSTMENT, min(MAX_ADJUSTMENT, raw))
+    final = max(
+        -MAX_ADJUSTMENT,
+        min(MAX_ADJUSTMENT, raw),
+    )
 
     reasons = tuple(
         (
@@ -192,14 +263,23 @@ def score_outcome_adjustment(
     )
 
 
-def top_feature_stats(model: OutcomeModel, *, limit: int = 50) -> list[FeatureStat]:
+def top_feature_stats(
+    model: OutcomeModel,
+    *,
+    limit: int = 50,
+) -> list[FeatureStat]:
     values = [
         stat
         for stat in model.feature_stats.values()
         if stat.count >= MIN_FEATURE_SUPPORT
     ]
+
     values.sort(
-        key=lambda item: (abs(item.adjustment), item.count),
+        key=lambda item: (
+            abs(item.adjustment),
+            item.count,
+        ),
         reverse=True,
     )
+
     return values[:limit]

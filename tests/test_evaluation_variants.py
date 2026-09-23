@@ -58,6 +58,7 @@ def test_regression_gate_allows_small_change():
             0.70,
         ),
     )
+
     candidate = VariantEvaluation(
         variant="candidate",
         metrics=make_metrics(
@@ -85,6 +86,7 @@ def test_regression_gate_blocks_large_drop():
             0.70,
         ),
     )
+
     candidate = VariantEvaluation(
         variant="candidate",
         metrics=make_metrics(
@@ -118,6 +120,7 @@ def test_regression_gate_is_not_evaluable_without_samples():
         variant="baseline",
         metrics=empty,
     )
+
     candidate = VariantEvaluation(
         variant="candidate",
         metrics=empty,
@@ -134,3 +137,54 @@ def test_regression_gate_is_not_evaluable_without_samples():
     assert gate.reason == "No completed application outcomes are available."
     assert gate.checks == {}
     assert gate.deltas == {}
+
+
+def test_regression_gate_uses_effective_k_for_small_samples():
+    baseline_metrics = RankingMetrics(
+        sample_count=4,
+        positive_count=2,
+        base_positive_rate=0.5,
+        precision_at_k={
+            4: 0.50,
+        },
+        recall_at_k={
+            4: 1.0,
+        },
+        lift_at_k={
+            4: 1.0,
+        },
+        pairwise_accuracy=0.75,
+    )
+
+    candidate_metrics = RankingMetrics(
+        sample_count=4,
+        positive_count=2,
+        base_positive_rate=0.5,
+        precision_at_k={
+            4: 0.50,
+        },
+        recall_at_k={
+            4: 1.0,
+        },
+        lift_at_k={
+            4: 1.0,
+        },
+        pairwise_accuracy=0.74,
+    )
+
+    gate = compare_variants(
+        baseline=VariantEvaluation(
+            variant="baseline",
+            metrics=baseline_metrics,
+        ),
+        candidate=VariantEvaluation(
+            variant="candidate",
+            metrics=candidate_metrics,
+        ),
+        primary_k=10,
+    )
+
+    assert gate.evaluable is True
+    assert gate.passed is True
+    assert "precision_at_4" in gate.checks
+    assert "precision_at_10" not in gate.checks
