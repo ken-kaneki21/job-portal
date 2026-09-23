@@ -20,3 +20,8 @@ TASK_QUEUE = os.getenv(
     "JOBINTEL_TEMPORAL_TASK_QUEUE",
     "job-intelligence-pipeline-v2",
 )
+
+DAILY_SCHEDULE_ID = os.getenv(
+    "JOBINTEL_TEMPORAL_DAILY_SCHEDULE_ID",
+    "job-intelligence-daily",
+)

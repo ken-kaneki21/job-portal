@@ -1728,3 +1728,110 @@ html {
   color: var(--text-soft);
   font-size: 10px;
 }
+/* V2.1 BATCH B: durable daily automation */
+
+.automation-schedule-panel {
+  min-width: 0;
+}
+
+.schedule-form {
+  display: grid;
+  grid-template-columns: minmax(140px, 0.55fr) minmax(190px, 1fr);
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.schedule-form label {
+  display: grid;
+  gap: 6px;
+  color: var(--text-soft);
+  font-size: 9px;
+  font-weight: 750;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.schedule-form input {
+  width: 100%;
+  min-height: 40px;
+  padding: 0 11px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface-solid);
+  color: var(--text);
+  font-size: 11px;
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+.schedule-checkbox {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  margin-top: 14px;
+  color: var(--text-soft);
+  font-size: 10px;
+  line-height: 1.5;
+  cursor: pointer;
+}
+
+.schedule-checkbox input {
+  margin-top: 2px;
+  accent-color: var(--accent);
+}
+
+.automation-warning,
+.automation-error {
+  margin-top: 12px;
+  padding: 10px 11px;
+  border-radius: 10px;
+  background: var(--warning-bg);
+  color: var(--warning-text);
+  font-size: 10px;
+  line-height: 1.5;
+}
+
+.automation-warning {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+}
+
+.automation-schedule-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-top: 10px;
+}
+
+.automation-schedule-meta span {
+  padding: 5px 7px;
+  border-radius: 999px;
+  background: var(--surface-soft);
+  color: var(--text-faint);
+  font-size: 9px;
+  font-weight: 650;
+}
+
+.automation-schedule-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+@media (max-width: 620px) {
+  .schedule-form {
+    grid-template-columns: 1fr;
+  }
+
+  .automation-schedule-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .automation-schedule-actions .primary-action,
+  .automation-schedule-actions .secondary-button {
+    width: 100%;
+  }
+}
