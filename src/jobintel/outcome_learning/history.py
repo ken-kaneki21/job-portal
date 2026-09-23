@@ -3,6 +3,13 @@ from __future__ import annotations
 from collections.abc import Iterable
 from dataclasses import dataclass
 from datetime import datetime
+from typing import Protocol
+
+
+class ApplicationEventLike(Protocol):
+    id: int
+    new_status: str
+    created_at: datetime
 
 
 @dataclass(frozen=True)
@@ -14,15 +21,17 @@ class HistoricalOutcome:
     ever_interviewed: bool
 
 
-def _event_sort_key(event) -> tuple:
+def _event_sort_key(
+    event: ApplicationEventLike,
+) -> tuple[datetime, int]:
     return (
-        getattr(event, "created_at", None),
-        getattr(event, "id", 0),
+        event.created_at,
+        event.id,
     )
 
 
 def derive_historical_outcome(
-    events: Iterable[object],
+    events: Iterable[ApplicationEventLike],
 ) -> HistoricalOutcome | None:
     ordered = sorted(
         list(events),
@@ -30,37 +39,18 @@ def derive_historical_outcome(
     )
 
     applied_event = next(
-        (
-            event
-            for event in ordered
-            if str(getattr(event, "new_status", "")).strip().lower() == "applied"
-        ),
+        (event for event in ordered if event.new_status.strip().lower() == "applied"),
         None,
     )
 
     if applied_event is None:
         return None
 
-    applied_at = getattr(
-        applied_event,
-        "created_at",
-        None,
-    )
+    applied_at = applied_event.created_at
 
-    if applied_at is None:
-        return None
+    post_application = [event for event in ordered if event.created_at >= applied_at]
 
-    post_application = [
-        event
-        for event in ordered
-        if getattr(event, "created_at", None) is not None
-        and event.created_at >= applied_at
-    ]
-
-    statuses = [
-        str(getattr(event, "new_status", "")).strip().lower()
-        for event in post_application
-    ]
+    statuses = [event.new_status.strip().lower() for event in post_application]
 
     if "offer" in statuses:
         return HistoricalOutcome(
