@@ -1,14 +1,16 @@
+
 import { Navigate, Route, Routes } from "react-router-dom";
 
 import { AppShell } from "./components/layout/AppShell";
-import { OverviewPage } from "./features/overview/OverviewPage";
-import { DiscoverPage } from "./features/discover/DiscoverPage";
-import { ApplicationsPage } from "./features/applications/ApplicationsPage";
-import { CompaniesPage } from "./features/companies/CompaniesPage";
-import { OutreachPage } from "./features/outreach/OutreachPage";
-import { ProfilePage } from "./features/profile/ProfilePage";
 import { AnalyticsPage } from "./features/analytics/AnalyticsPage";
+import { ApplicationsPage } from "./features/applications/ApplicationsPage";
 import { AutomationsPage } from "./features/automations/AutomationsPage";
+import { CompaniesPage } from "./features/companies/CompaniesPage";
+import { DiscoverPage } from "./features/discover/DiscoverPage";
+import { IntegrationsPage } from "./features/integrations/IntegrationsPage";
+import { OutreachPage } from "./features/outreach/OutreachPage";
+import { OverviewPage } from "./features/overview/OverviewPage";
+import { ProfilePage } from "./features/profile/ProfilePage";
 import { SettingsPage } from "./features/settings/SettingsPage";
 
 export default function App() {
@@ -21,6 +23,7 @@ export default function App() {
         <Route path="/applications" element={<ApplicationsPage />} />
         <Route path="/companies" element={<CompaniesPage />} />
         <Route path="/outreach" element={<OutreachPage />} />
+        <Route path="/integrations" element={<IntegrationsPage />} />
         <Route path="/profile" element={<ProfilePage />} />
         <Route path="/analytics" element={<AnalyticsPage />} />
         <Route path="/automations" element={<AutomationsPage />} />

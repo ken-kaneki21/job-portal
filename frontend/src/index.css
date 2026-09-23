@@ -1835,3 +1835,113 @@ html {
     width: 100%;
   }
 }
+
+
+/* V2.1 PRODUCT COMPLETION */
+.completion-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+.completion-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 22px;
+}
+.completion-wide { grid-column: 1 / -1; }
+.completion-panel-heading {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.completion-panel-heading h2 { margin: 3px 0 0; font-size: 18px; }
+.completion-copy { margin: 0; color: var(--text-soft); line-height: 1.65; }
+.completion-label {
+  display: grid;
+  gap: 7px;
+  color: var(--text-soft);
+  font-size: 13px;
+  font-weight: 650;
+}
+.completion-input,
+.completion-textarea,
+.completion-input-with-icon {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface-solid);
+  color: var(--text);
+}
+.completion-input { min-height: 44px; padding: 10px 12px; }
+.completion-textarea {
+  min-height: 180px;
+  resize: vertical;
+  padding: 12px;
+  font: inherit;
+}
+.completion-input-with-icon {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 12px;
+}
+.completion-input-with-icon input {
+  width: 100%;
+  min-height: 42px;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: inherit;
+}
+.completion-message,
+.completion-result {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px;
+}
+.completion-error { border-color: rgba(180, 55, 55, 0.35); }
+.completion-result {
+  display: grid;
+  gap: 10px;
+  background: var(--surface-soft);
+}
+.completion-metrics,
+.completion-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.completion-metrics span,
+.completion-tags span {
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface-solid);
+  padding: 6px 9px;
+  color: var(--text-soft);
+  font-size: 12px;
+}
+.completion-safety-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.completion-safety-grid > div {
+  display: grid;
+  gap: 6px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px;
+  background: var(--surface-soft);
+}
+.completion-safety-grid span { color: var(--text-soft); line-height: 1.55; }
+.kanban-card-empty { opacity: 0.72; }
+
+@media (max-width: 900px) {
+  .completion-grid,
+  .completion-safety-grid {
+    grid-template-columns: 1fr;
+  }
+  .completion-wide { grid-column: auto; }
+}
