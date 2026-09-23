@@ -20,6 +20,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import Session
 
+from jobintel import product_completion_api
 from jobintel.api_application_assets import (
     router as application_assets_router,
 )
@@ -1259,3 +1260,6 @@ def stats(
         "ranking_records": int(rankings or 0),
         "pipeline_runs": int(pipeline_runs or 0),
     }
+
+
+app.include_router(product_completion_api.router)
