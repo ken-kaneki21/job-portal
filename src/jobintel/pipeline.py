@@ -56,10 +56,6 @@ STEPS = [
         "jobintel.shortlist",
     ),
     (
-        "Daily email digest",
-        "jobintel.daily_digest",
-    ),
-    (
         "New high-confidence jobs",
         "jobintel.new_high_confidence",
     ),
@@ -70,6 +66,10 @@ STEPS = [
     (
         "Data quality checks",
         "jobintel.quality_checks",
+    ),
+    (
+        "Daily email digest",
+        "jobintel.daily_digest",
     ),
     (
         "Retry failed notifications",
@@ -86,6 +86,8 @@ def run_step(
     label: str,
     module: str,
     run_id: int,
+    *,
+    force_daily_digest: bool = False,
 ) -> None:
     print()
     print("=" * 100)
@@ -95,6 +97,9 @@ def run_step(
     env = os.environ.copy()
 
     env["JOBINTEL_PIPELINE_RUN_ID"] = str(run_id)
+
+    if label == "Daily email digest" and force_daily_digest:
+        env["JOBINTEL_DAILY_DIGEST_ENABLED"] = "true"
 
     result = subprocess.run(
         [

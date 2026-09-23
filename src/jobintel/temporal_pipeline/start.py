@@ -28,6 +28,7 @@ async def start_pipeline() -> str:
 
     handle = await client.start_workflow(
         JobIntelligencePipelineWorkflow.run,
+        False,
         id=workflow_id,
         task_queue=TASK_QUEUE,
     )

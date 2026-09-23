@@ -79,7 +79,10 @@ class JobIntelligencePipelineWorkflow:
         }
 
     @workflow.run
-    async def run(self) -> dict[str, object]:
+    async def run(
+        self,
+        force_daily_digest: bool,
+    ) -> dict[str, object]:
         self._total_steps = len(STEPS)
         self._completed_steps_count = 0
         self._current_step_index = 0
@@ -125,6 +128,7 @@ class JobIntelligencePipelineWorkflow:
                             run_id=run_id,
                             label=label,
                             module=module,
+                            force_daily_digest=(force_daily_digest),
                         ),
                         start_to_close_timeout=timedelta(hours=2),
                         retry_policy=RetryPolicy(

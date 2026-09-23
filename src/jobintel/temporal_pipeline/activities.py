@@ -24,6 +24,7 @@ class PipelineStepInput:
     run_id: int
     label: str
     module: str
+    force_daily_digest: bool = False
 
 
 @dataclass
@@ -144,6 +145,7 @@ def run_pipeline_step_activity(
             label=(input_data.label),
             module=(input_data.module),
             run_id=(input_data.run_id),
+            force_daily_digest=(input_data.force_daily_digest),
         )
 
         duration = time.perf_counter() - started
