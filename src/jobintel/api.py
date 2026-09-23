@@ -525,58 +525,51 @@ def get_rankings(
     bucket: str | None = None,
     pipeline_run_id: int | None = None,
     min_score: float | None = None,
-    limit: int = Query(
-        50,
-        ge=1,
-        le=500,
-    ),
+    limit: int = Query(50, ge=1, le=500),
+    offset: int = Query(0, ge=0),
     session: Session = Depends(get_db),
 ):
     if pipeline_run_id is None:
         pipeline_run_id = latest_pipeline_ranking_run_id(session)
 
-    stmt = (
-        select(
-            JobRankingRecord,
-            JobRecord,
-        )
-        .join(
-            JobRecord,
-            JobRecord.id == JobRankingRecord.job_id,
-        )
-        .where(JobRankingRecord.profile_name == profile_name)
-    )
+    filters = [JobRankingRecord.profile_name == profile_name]
 
     if pipeline_run_id is not None:
-        stmt = stmt.where(JobRankingRecord.pipeline_run_id == pipeline_run_id)
-
+        filters.append(JobRankingRecord.pipeline_run_id == pipeline_run_id)
     if bucket:
-        stmt = stmt.where(JobRankingRecord.bucket == bucket)
-
+        filters.append(JobRankingRecord.bucket == bucket)
     if min_score is not None:
-        stmt = stmt.where(JobRankingRecord.score >= min_score)
+        filters.append(JobRankingRecord.score >= min_score)
 
-    stmt = stmt.order_by(
-        JobRankingRecord.score.desc(),
-        JobRankingRecord.rank_position.asc(),
-    ).limit(limit)
+    total = session.scalar(select(func.count(JobRankingRecord.id)).where(*filters))
 
-    rows = session.execute(stmt).all()
+    rows = session.execute(
+        select(JobRankingRecord, JobRecord)
+        .join(JobRecord, JobRecord.id == JobRankingRecord.job_id)
+        .where(*filters)
+        .order_by(
+            JobRankingRecord.score.desc(),
+            JobRankingRecord.rank_position.asc(),
+            JobRankingRecord.id.asc(),
+        )
+        .offset(offset)
+        .limit(limit)
+    ).all()
 
     return {
-        "profile_name": (profile_name),
-        "pipeline_run_id": (pipeline_run_id),
-        "bucket": (bucket),
-        "count": (len(rows)),
+        "profile_name": profile_name,
+        "pipeline_run_id": pipeline_run_id,
+        "bucket": bucket,
+        "count": int(total or 0),
+        "returned_count": len(rows),
+        "offset": offset,
+        "limit": limit,
         "results": [
             {
-                "ranking": (serialize_model(ranking)),
-                "job": (compact_job(job)),
+                "ranking": serialize_model(ranking),
+                "job": compact_job(job),
             }
-            for (
-                ranking,
-                job,
-            ) in rows
+            for ranking, job in rows
         ],
     }
 

@@ -42,16 +42,23 @@ interface RankingResponse {
   pipeline_run_id: number | null;
   bucket: RankingBucket | null;
   count: number;
+  returned_count: number;
+  offset: number;
+  limit: number;
   results: RankingResult[];
 }
 
-async function fetchBucket(
+const PAGE_SIZE = 500;
+
+async function fetchBucketPage(
   bucket: RankingBucket,
+  offset: number,
 ): Promise<RankingResponse> {
   const params = new URLSearchParams({
     profile_name: "universal",
     bucket,
-    limit: "500",
+    limit: String(PAGE_SIZE),
+    offset: String(offset),
   });
 
   const response = await fetch(
@@ -65,6 +72,46 @@ async function fetchBucket(
   }
 
   return response.json() as Promise<RankingResponse>;
+}
+
+async function fetchBucket(
+  bucket: RankingBucket,
+): Promise<RankingResponse> {
+  const firstPage = await fetchBucketPage(bucket, 0);
+
+  if (
+    firstPage.returned_count >= firstPage.count ||
+    firstPage.results.length === 0
+  ) {
+    return firstPage;
+  }
+
+  const offsets: number[] = [];
+
+  for (
+    let offset = PAGE_SIZE;
+    offset < firstPage.count;
+    offset += PAGE_SIZE
+  ) {
+    offsets.push(offset);
+  }
+
+  const pages = await Promise.all(
+    offsets.map((offset) =>
+      fetchBucketPage(bucket, offset),
+    ),
+  );
+
+  const results = [
+    ...firstPage.results,
+    ...pages.flatMap((page) => page.results),
+  ];
+
+  return {
+    ...firstPage,
+    returned_count: results.length,
+    results,
+  };
 }
 
 export interface DiscoverData {
@@ -84,12 +131,6 @@ export async function fetchDiscoverJobs(): Promise<DiscoverData> {
     fetchBucket("stretch"),
   ]);
 
-  const results = [
-    ...highConfidence.results,
-    ...discovery.results,
-    ...stretch.results,
-  ];
-
   return {
     pipelineRunId:
       highConfidence.pipeline_run_id ??
@@ -97,7 +138,11 @@ export async function fetchDiscoverJobs(): Promise<DiscoverData> {
       stretch.pipeline_run_id ??
       null,
 
-    results,
+    results: [
+      ...highConfidence.results,
+      ...discovery.results,
+      ...stretch.results,
+    ],
 
     counts: {
       high_confidence: highConfidence.count,
