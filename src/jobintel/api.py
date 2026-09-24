@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from datetime import date, datetime
 from typing import Any
 
@@ -106,14 +107,22 @@ app.include_router(settings_router)
 app.include_router(temporal_router)
 
 
+DEFAULT_CORS_ORIGINS = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+]
+
+configured_cors_origins = [
+    origin.strip().rstrip("/")
+    for origin in os.getenv("JOBINTEL_CORS_ORIGINS", "").split(",")
+    if origin.strip()
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000",
-        "http://127.0.0.1:3000",
-        "http://localhost:5173",
-        "http://127.0.0.1:5173",
-    ],
+    allow_origins=DEFAULT_CORS_ORIGINS + configured_cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
