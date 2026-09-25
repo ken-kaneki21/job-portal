@@ -48,6 +48,7 @@ export async function importPortalFile(
   form.append("file", file);
 
   const response = await fetch(`${API_BASE_URL}/integrations/portal-import`, {
+    credentials: "include",
     method: "POST",
     body: form,
     headers: { Accept: "application/json" },

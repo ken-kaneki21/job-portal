@@ -63,6 +63,7 @@ async function fetchBucketPage(
 
   const response = await fetch(
     `${API_BASE_URL}/rankings?${params.toString()}`,
+    { credentials: "include" },
   );
 
   if (!response.ok) {
