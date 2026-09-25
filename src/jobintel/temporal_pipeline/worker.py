@@ -25,6 +25,7 @@ from jobintel.temporal_pipeline.config import (
 from jobintel.temporal_pipeline.observability import (
     start_worker_metrics_server,
 )
+from jobintel.temporal_pipeline.schedule import ensure_daily_schedule
 from jobintel.temporal_pipeline.workflow import (
     JobIntelligencePipelineWorkflow,
 )
@@ -48,6 +49,8 @@ async def main() -> None:
         TEMPORAL_ADDRESS,
         namespace=(TEMPORAL_NAMESPACE),
     )
+
+    await ensure_daily_schedule(client)
 
     LOGGER.info(
         "temporal_worker_connected",

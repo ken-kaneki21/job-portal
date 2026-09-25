@@ -183,7 +183,7 @@ def finalize_pipeline_run(
 
         record.success = success
 
-        record.jobs_fetched = int(jobs_fetched or 0)
+        record.jobs_fetched = max(int(record.jobs_fetched or 0), int(jobs_fetched or 0))
 
         record.active_jobs = int(active_jobs or 0)
 

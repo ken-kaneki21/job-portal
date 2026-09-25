@@ -1,3 +1,8 @@
+from __future__ import annotations
+
+import hashlib
+
+
 def build_job_text(
     job,
 ) -> str:
@@ -14,7 +19,10 @@ def build_job_text(
 
     if job.description:
         description = job.description[:12000]
-
         parts.append("Job description:\n" + description)
 
     return "\n".join(parts)
+
+
+def build_content_hash(text: str) -> str:
+    return hashlib.sha256(text.encode("utf-8")).hexdigest()

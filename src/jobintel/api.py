@@ -29,7 +29,11 @@ from jobintel.api_application_ops import router as application_ops_router
 from jobintel.api_application_workflow import (
     router as application_workflow_router,
 )
+from jobintel.api_auth import AuthMiddleware
+from jobintel.api_auth import router as auth_router
+from jobintel.api_companion import router as companion_router
 from jobintel.api_evaluation import router as evaluation_router
+from jobintel.api_ops import router as ops_router
 from jobintel.api_outcomes import router as outcomes_router
 from jobintel.api_profile import router as profile_router
 from jobintel.api_settings import router as settings_router
@@ -94,6 +98,9 @@ app = FastAPI(
 )
 
 
+app.include_router(auth_router)
+app.include_router(companion_router)
+app.include_router(ops_router)
 app.include_router(application_assets_router)
 app.include_router(application_workflow_router)
 app.include_router(outcomes_router)
@@ -119,6 +126,8 @@ configured_cors_origins = [
     for origin in os.getenv("JOBINTEL_CORS_ORIGINS", "").split(",")
     if origin.strip()
 ]
+
+app.add_middleware(AuthMiddleware)
 
 app.add_middleware(
     CORSMiddleware,

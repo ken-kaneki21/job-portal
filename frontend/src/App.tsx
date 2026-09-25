@@ -2,6 +2,7 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 
 import { AppShell } from "./components/layout/AppShell";
+import { AuthGate } from "./features/auth/AuthGate";
 import { AnalyticsPage } from "./features/analytics/AnalyticsPage";
 import { ApplicationsPage } from "./features/applications/ApplicationsPage";
 import { AutomationsPage } from "./features/automations/AutomationsPage";
@@ -16,7 +17,7 @@ import { SettingsPage } from "./features/settings/SettingsPage";
 export default function App() {
   return (
     <Routes>
-      <Route element={<AppShell />}>
+      <Route element={<AuthGate><AppShell /></AuthGate>}>
         <Route index element={<Navigate to="/overview" replace />} />
         <Route path="/overview" element={<OverviewPage />} />
         <Route path="/discover" element={<DiscoverPage />} />

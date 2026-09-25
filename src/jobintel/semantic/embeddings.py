@@ -28,6 +28,24 @@ def embed_text(
     )
 
 
+def embed_texts(
+    texts: list[str],
+    *,
+    batch_size: int = 32,
+) -> np.ndarray:
+    if not texts:
+        return np.empty((0, 384), dtype=np.float32)
+
+    model = get_model()
+    embeddings = model.encode(
+        texts,
+        batch_size=max(1, batch_size),
+        normalize_embeddings=True,
+        show_progress_bar=False,
+    )
+    return np.asarray(embeddings, dtype=np.float32)
+
+
 def cosine_similarity(
     left,
     right,

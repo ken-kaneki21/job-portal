@@ -1,126 +1,99 @@
-import hashlib
+from __future__ import annotations
+
+import os
 
 from sqlalchemy import select
 
-from jobintel.db.models import (
-    JobEmbeddingRecord,
-    JobRecord,
-)
+from jobintel.db.models import JobEmbeddingRecord, JobRecord
 from jobintel.db.session import SessionLocal
-from jobintel.semantic.embeddings import (
-    MODEL_NAME,
-    embed_text,
-)
-from jobintel.semantic.job_text import (
-    build_job_text,
-)
+from jobintel.semantic.embeddings import MODEL_NAME, embed_texts
+from jobintel.semantic.job_text import build_content_hash, build_job_text
 
-BATCH_SIZE = 100
-
-
-def build_content_hash(
-    text: str,
-) -> str:
-    return hashlib.sha256(text.encode("utf-8")).hexdigest()
-
-
-def load_existing_embedding(
-    session,
-    job_id: int,
-):
-    return session.scalar(
-        select(JobEmbeddingRecord)
-        .where(JobEmbeddingRecord.job_id == job_id)
-        .where(JobEmbeddingRecord.model_name == MODEL_NAME)
-    )
+INFERENCE_BATCH_SIZE = max(1, int(os.getenv("JOBINTEL_EMBEDDING_BATCH_SIZE", "32")))
 
 
 def main() -> None:
-    inserted = 0
-    updated = 0
-    skipped = 0
-    failed = 0
-
+    inserted = updated = skipped = failed = 0
     with SessionLocal() as session:
         jobs = session.scalars(
-            select(JobRecord)
-            .where(JobRecord.is_active.is_(True))
-            .order_by(JobRecord.id)
+            select(JobRecord).where(JobRecord.is_active.is_(True))
         ).all()
+        job_ids = [job.id for job in jobs]
+        existing_rows = (
+            session.scalars(
+                select(JobEmbeddingRecord)
+                .where(JobEmbeddingRecord.job_id.in_(job_ids))
+                .where(JobEmbeddingRecord.model_name == MODEL_NAME)
+            ).all()
+            if job_ids
+            else []
+        )
+        existing_map = {row.job_id: row for row in existing_rows}
 
-        print()
         print("=" * 100)
         print("JOB EMBEDDING BACKFILL")
         print("=" * 100)
-
         print(f"Active jobs: {len(jobs)}")
+        print(f"Inference batch size: {INFERENCE_BATCH_SIZE}")
 
-        for index, job in enumerate(
-            jobs,
-            start=1,
-        ):
+        pending = []
+        for job in jobs:
+            text = build_job_text(job)
+            content_hash = build_content_hash(text)
+            existing = existing_map.get(job.id)
+            if existing is not None and existing.content_hash == content_hash:
+                skipped += 1
+                continue
+            pending.append((job, text, content_hash, existing))
+
+        total = len(pending)
+        print(f"Embeddings required: {total}")
+        print(f"Unchanged skipped:   {skipped}")
+        processed = 0
+
+        for start in range(0, total, INFERENCE_BATCH_SIZE):
+            chunk = pending[start : start + INFERENCE_BATCH_SIZE]
             try:
-                text = build_job_text(job)
-
-                content_hash = build_content_hash(text)
-
-                existing = load_existing_embedding(
-                    session,
-                    job.id,
+                vectors = embed_texts(
+                    [item[1] for item in chunk],
+                    batch_size=INFERENCE_BATCH_SIZE,
                 )
+            except Exception as exc:
+                failed += len(chunk)
+                print(f"FAILED embedding batch {start + 1}-{start + len(chunk)}: {exc}")
+                continue
 
-                if existing is not None and existing.content_hash == content_hash:
-                    skipped += 1
-                    continue
-
-                embedding = embed_text(text)
-
-                vector_value = embedding.tolist()
-
+            for (job, _text, content_hash, existing), vector in zip(
+                chunk, vectors, strict=True
+            ):
+                vector_value = vector.tolist()
                 if existing is None:
-                    record = JobEmbeddingRecord(
-                        job_id=job.id,
-                        model_name=MODEL_NAME,
-                        embedding=vector_value,
-                        content_hash=(content_hash),
+                    session.add(
+                        JobEmbeddingRecord(
+                            job_id=job.id,
+                            model_name=MODEL_NAME,
+                            embedding=vector_value,
+                            content_hash=content_hash,
+                        )
                     )
-
-                    session.add(record)
-
                     inserted += 1
-
                 else:
                     existing.embedding = vector_value
-
                     existing.content_hash = content_hash
-
                     updated += 1
+            session.commit()
+            processed += len(chunk)
+            print(f"Processed {processed}/{total}")
 
-                if index % BATCH_SIZE == 0:
-                    session.commit()
-
-                    print(f"Processed {index}/{len(jobs)}")
-
-            except Exception as exc:
-                failed += 1
-
-                print()
-                print(f"Embedding failed for job {job.id}: {exc}")
-
-        session.commit()
-
-    print()
-    print("=" * 100)
+    print("\n" + "=" * 100)
     print("EMBEDDING BACKFILL SUMMARY")
     print("=" * 100)
-
     print(f"Inserted: {inserted}")
-
     print(f"Updated:  {updated}")
-
     print(f"Skipped:  {skipped}")
-
     print(f"Failed:   {failed}")
+    if failed:
+        raise RuntimeError(f"{failed} embeddings failed.")
 
 
 if __name__ == "__main__":

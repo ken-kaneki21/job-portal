@@ -40,6 +40,7 @@ export async function apiRequest<T>(
 ): Promise<T> {
   const response = await fetch(`${API_BASE_URL}${path}`, {
     ...options,
+      credentials: "include",
     headers: {
       Accept: "application/json",
       ...options?.headers,

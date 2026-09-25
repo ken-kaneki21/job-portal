@@ -130,3 +130,8 @@ dist/
 .TXT
 profiles/universal.json
 profiles/generated_v2.json
+
+# Product-finalization local secrets
+profile_b64.txt
+railway_api_final_variables.txt
+railway_worker_final_variables.txt
