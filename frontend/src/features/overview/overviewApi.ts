@@ -95,6 +95,7 @@ async function fetchJson<T>(
 ): Promise<T> {
   const response = await fetch(
     `${API_BASE_URL}${path}`,
+    { credentials: "include" },
   );
 
   if (!response.ok) {
