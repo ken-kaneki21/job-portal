@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import os
 from dataclasses import dataclass
 
 import httpx
@@ -8,6 +9,7 @@ import httpx
 from jobintel.db.broad_repository import (
     persist_broad_jobs,
 )
+from jobintel.db.models import PipelineRunRecord
 from jobintel.db.session import SessionLocal
 from jobintel.models.fetched_job import FetchedJob
 from jobintel.profile.models import CandidateProfile
@@ -362,6 +364,18 @@ async def main() -> None:
     print()
 
     print(f"Fetched:       {len(fetched_jobs)}")
+    run_value = os.getenv("JOBINTEL_PIPELINE_RUN_ID")
+    if run_value:
+        try:
+            with SessionLocal() as metric_session:
+                record = metric_session.get(PipelineRunRecord, int(run_value))
+                if record is not None:
+                    record.jobs_fetched = max(
+                        int(record.jobs_fetched or 0), len(fetched_jobs)
+                    )
+                    metric_session.commit()
+        except Exception as exc:
+            print(f"Warning: unable to persist broad-search run metric: {exc}")
 
     print(f"Source unique: {len(unique_jobs)}")
 
