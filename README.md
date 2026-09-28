@@ -485,3 +485,9 @@ Current production release: **v2.1.0**
 ## License
 
 Personal and portfolio use.
+
+## Embedding inference optimization
+
+JobLens supports the reference PyTorch embedding path plus ONNX Runtime FP32 and dynamically quantized INT8 CPU inference for `all-MiniLM-L6-v2`. PyTorch remains the default backend. The benchmark uses sanitized job/profile text and measures cold-start and p50/p95 latency, throughput, embedding cosine consistency, ranking overlap and score deltas across batch sizes 1, 8, 16, 32, 64 and 128. Generated ONNX models and benchmark output stay under the ignored `artifacts/` directory. Performance numbers are reported only from measured runs.
+
+On the local CPU benchmark at batch size 32, ONNX Runtime FP32 reduced median embedding latency from 52.84 ms to 33.05 ms (~37%) and increased throughput from 473 to 756 items/s (~60%) versus the PyTorch baseline. Embedding parity remained effectively exact (minimum cosine similarity 0.99999988) with 100% Top-10 and Top-20 ranking overlap. Dynamic INT8 reached 1,034 items/s but was not promoted because minimum embedding cosine fell to 0.94595 and Top-10 overlap to 90%.

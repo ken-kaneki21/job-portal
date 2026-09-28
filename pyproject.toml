@@ -42,6 +42,12 @@ automation = [
     "playwright>=1.55",
 ]
 
+onnx = [
+    "onnx==1.23.0",
+    "onnxruntime==1.30.0",
+    "psutil==7.2.2",
+]
+
 [tool.setuptools.packages.find]
 where = ["src"]
 
