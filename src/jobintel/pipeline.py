@@ -12,6 +12,7 @@ from jobintel.db.models import (
     ScanRecord,
 )
 from jobintel.db.session import SessionLocal
+from jobintel.pipeline_quality import build_pipeline_quality_snapshot
 from jobintel.profile.runtime import ACTIVE_PROFILE_NAME
 
 STEPS = [
@@ -192,6 +193,14 @@ def finalize_pipeline_run(
         record.rankings_persisted = int(rankings_persisted or 0)
 
         record.error_message = error_message
+
+        quality = build_pipeline_quality_snapshot(
+            session=session,
+            run_id=run_id,
+            started_at=record.started_at,
+        )
+        record.quality_passed = bool(quality["passed"])
+        record.quality_metrics = quality
 
         session.commit()
 

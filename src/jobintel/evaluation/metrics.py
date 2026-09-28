@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from math import log2
 
 
 @dataclass(frozen=True)
@@ -20,6 +21,8 @@ class RankingMetrics:
     recall_at_k: dict[int, float]
     lift_at_k: dict[int, float]
     pairwise_accuracy: float
+    ndcg_at_k: dict[int, float]
+    mrr: float
 
     def to_dict(self) -> dict:
         return {
@@ -30,6 +33,8 @@ class RankingMetrics:
             "recall_at_k": self.recall_at_k,
             "lift_at_k": self.lift_at_k,
             "pairwise_accuracy": self.pairwise_accuracy,
+            "ndcg_at_k": self.ndcg_at_k,
+            "mrr": self.mrr,
         }
 
 
@@ -100,6 +105,8 @@ def evaluate_ranking(
             recall_at_k={},
             lift_at_k={},
             pairwise_accuracy=0.0,
+            ndcg_at_k={},
+            mrr=0.0,
         )
 
     ranked = sorted(
@@ -118,6 +125,7 @@ def evaluate_ranking(
     precision: dict[int, float] = {}
     recall: dict[int, float] = {}
     lift: dict[int, float] = {}
+    ndcg: dict[int, float] = {}
 
     for k in normalize_ks(
         ks,
@@ -146,6 +154,20 @@ def evaluate_ranking(
             4,
         )
 
+        dcg = sum(
+            (1.0 if item.positive else 0.0) / log2(index + 2)
+            for index, item in enumerate(top)
+        )
+        ideal_positive = min(positive_count, k)
+        idcg = sum(1.0 / log2(index + 2) for index in range(ideal_positive))
+        ndcg[k] = round(dcg / idcg, 4) if idcg else 0.0
+
+    reciprocal_rank = 0.0
+    for index, item in enumerate(ranked, start=1):
+        if item.positive:
+            reciprocal_rank = 1.0 / index
+            break
+
     return RankingMetrics(
         sample_count=len(ranked),
         positive_count=positive_count,
@@ -157,4 +179,6 @@ def evaluate_ranking(
         recall_at_k=recall,
         lift_at_k=lift,
         pairwise_accuracy=pairwise_accuracy(ranked),
+        ndcg_at_k=ndcg,
+        mrr=round(reciprocal_rank, 4),
     )

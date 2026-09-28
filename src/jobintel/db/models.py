@@ -445,6 +445,10 @@ class PipelineRunRecord(Base):
 
     error_message: Mapped[str | None] = mapped_column(Text)
 
+    quality_passed: Mapped[bool | None] = mapped_column(Boolean, nullable=True)
+
+    quality_metrics: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+
 
 class NotificationRecord(Base):
     __tablename__ = "notifications"

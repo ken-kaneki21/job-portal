@@ -43,3 +43,14 @@ def test_precision_recall_lift_and_pairwise():
     assert metrics.recall_at_k[2] == 1.0
     assert metrics.lift_at_k[2] == 2.0
     assert metrics.pairwise_accuracy == 1.0
+
+
+def test_ndcg_and_mrr_reward_early_positive_results():
+    items = [
+        EvalItem(job_id=1, score=100.0, positive=False, outcome="rejected"),
+        EvalItem(job_id=2, score=90.0, positive=True, outcome="interviewing"),
+        EvalItem(job_id=3, score=80.0, positive=True, outcome="offer"),
+    ]
+    metrics = evaluate_ranking(items, ks=(3,))
+    assert metrics.mrr == 0.5
+    assert 0.0 < metrics.ndcg_at_k[3] < 1.0

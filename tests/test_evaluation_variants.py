@@ -47,6 +47,8 @@ def make_metrics(
             10: precision / 0.25,
         },
         pairwise_accuracy=pairwise,
+        ndcg_at_k={10: 1.0},
+        mrr=1.0,
     )
 
 
@@ -114,6 +116,8 @@ def test_regression_gate_is_not_evaluable_without_samples():
         recall_at_k={},
         lift_at_k={},
         pairwise_accuracy=0.0,
+        ndcg_at_k={},
+        mrr=0.0,
     )
 
     baseline = VariantEvaluation(
@@ -154,6 +158,8 @@ def test_regression_gate_uses_effective_k_for_small_samples():
             4: 1.0,
         },
         pairwise_accuracy=0.75,
+        ndcg_at_k={4: 1.0},
+        mrr=1.0,
     )
 
     candidate_metrics = RankingMetrics(
@@ -170,6 +176,8 @@ def test_regression_gate_uses_effective_k_for_small_samples():
             4: 1.0,
         },
         pairwise_accuracy=0.74,
+        ndcg_at_k={4: 1.0},
+        mrr=1.0,
     )
 
     gate = compare_variants(
