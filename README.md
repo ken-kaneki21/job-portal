@@ -1,518 +1,487 @@
 # Job Intelligence
 
-Private AI-powered job intelligence and application orchestration platform for discovering, ranking, enriching, and tracking job opportunities.
+Production-grade AI job discovery, ranking and application orchestration platform.
 
-The system combines deterministic data engineering workflows with AI-assisted enrichment and matching. It ingests jobs from multiple sources, normalizes and deduplicates them, enriches job descriptions, scores opportunities against a candidate profile, generates application assets, and orchestrates the full pipeline with Temporal.
+Job Intelligence turns fragmented job searching into a durable data and AI
+pipeline: discover opportunities → normalize and deduplicate → enrich →
+embed → rank against a candidate profile → analyze gaps → prepare application
+assets → track outcomes.
 
----
+## Product
 
-## Why this project
+<img width="1904" height="909" alt="image" src="https://github.com/user-attachments/assets/1e47f8f6-2578-4f12-9b90-f6e1f1cd75a6" />
 
-Job discovery is usually fragmented across job boards, ATS pages, recruiter posts, and company career sites.
 
-This project centralizes that workflow into a reproducible data platform with:
 
-- multi-source job ingestion
-- canonical deduplication
-- provenance and lineage
-- semantic job matching
-- deterministic eligibility filters
-- JD enrichment
-- gap analysis
-- application asset generation
-- workflow orchestration
-- observability
-- application tracking
-- CI/CD and containerized deployment
+### What it does
 
-The goal is not simply to scrape jobs, but to build a reliable decision-support system around the job search process.
+- Multi-source ATS/API job discovery
+- Canonical deduplication and provenance tracking
+- Candidate-profile-aware ranking
+- Deterministic eligibility + semantic similarity
+- Sentence Transformer embeddings with pgvector
+- JD enrichment and skill-gap analysis
+- Explainable opportunity scoring
+- Application tracking and outreach assets
+- LinkedIn/Naukri/Foundit/Indeed structured imports
+- Browser-assisted job capture
+- Review-first Workday assistance
+- Durable Temporal orchestration
+- Scheduled intelligence runs and email delivery
+- Authenticated production dashboard
 
----
+## Product walkthrough
+
+### Discover and rank opportunities
+
+<img width="1903" height="909" alt="image" src="https://github.com/user-attachments/assets/28d5afe8-ca13-4528-9e86-3627749ce8d3" />
+
+
+Each opportunity is evaluated using deterministic eligibility signals,
+semantic similarity and candidate-profile evidence. Rankings retain their
+pipeline-run provenance and expose the signals used to prioritize the job.
+
+### Profile intelligence
+
+<img width="1904" height="906" alt="image" src="https://github.com/user-attachments/assets/0d6d8497-64eb-4eab-bda4-e3c0de3a1c29" />
+
+
+The resume is transformed into a structured candidate profile containing
+role families, skills, experience and geographic preferences. The same
+profile drives discovery, ranking, gap analysis and application assistance.
+
+### Integrations and application assistance
+
+<img width="1907" height="911" alt="image" src="https://github.com/user-attachments/assets/a3d0f3d9-6831-437f-b521-022d71764416" />
+
+
+The platform supports structured portal imports and browser-assisted capture
+rather than credential scraping. Workday assistance remains review-first and
+never performs the final submission automatically.
+
+## Production snapshot
+
+Latest validated production run:
+
+- 1,215 active jobs
+- 596 profile-relevant opportunities
+- 526 discovery opportunities
+- 70 stretch opportunities
+- Durable Temporal pipeline execution
+- Scheduled email delivery verified
+- 214 automated tests passing
+- Authenticated production access
+- CI/CD quality gates passing
+
+> Counts are a point-in-time production snapshot and change as new jobs are
+> discovered and old opportunities expire.
 
 ## Architecture
 
-```mermaid
-flowchart LR
-    A[Job Sources] --> B[Ingestion Layer]
-    A1[Greenhouse] --> B
-    A2[Lever] --> B
-    A3[Ashby] --> B
-    A4[SmartRecruiters] --> B
-    A5[Adzuna] --> B
+<img width="3878" height="3986" alt="mermaid-diagram" src="https://github.com/user-attachments/assets/82f6a0f1-8e8b-4c5c-a5eb-a4784b071b13" />
 
-    B --> C[Raw Jobs]
-    C --> D[Normalization]
-    D --> E[Canonical Deduplication]
-    E --> F[(PostgreSQL + pgvector)]
 
-    F --> G[JD Enrichment]
-    G --> H[Embeddings]
-    H --> I[Ranking Engine]
-    I --> J[Gap Analysis]
-    J --> K[Application Assets]
+## How ranking works
 
-    L[Candidate Profile] --> I
-    L --> J
-    L --> K
+Candidate Profile
+        ↓
+Hard Eligibility Filters
+        ↓
+Deterministic Match Signals
+        ↓
+Semantic Embeddings / pgvector
+        ↓
+JD Gap Analysis
+        ↓
+Opportunity Classification
+        ↓
+High Confidence / Discovery / Stretch
 
-    M[Temporal] --> B
-    M --> G
-    M --> H
-    M --> I
-    M --> J
-    M --> K
+## Pipeline
 
-    F --> N[FastAPI]
-    N --> O[Job Search / Rankings / Tracking]
-
-    N --> P[Prometheus]
-    M --> P
-    P --> Q[Grafana]
-
-    R[GitHub Actions] --> S[Tests / Lint / Type Check / Docker Validation]
-```
-
----
-
-## Core Features
-
-### Multi-source job discovery
-
-Current sources include Greenhouse, Lever, Ashby, SmartRecruiters, and Adzuna. The system prefers structured ATS/API ingestion where available and maintains source provenance for every job record.
-
-### Canonical job deduplication
-
-Jobs from different sources can represent the same opening. The system creates canonical job identities and stores source mappings separately so duplicate jobs are merged without losing provenance.
-
-### Data lineage and provenance
-
-The platform stores source, external identifier, source URL, first/last seen timestamps, source update timestamp, canonical identity, raw source records, and pipeline run history.
-
-### Candidate profile matching
-
-Ranking combines deterministic rules with semantic similarity, including location checks, experience constraints, role relevance, skill matching, embeddings, profile-to-job similarity, and gap analysis.
-
-Jobs can be grouped into:
-- high confidence
-- discovery
-- stretch
-
-### Embeddings and semantic search
-
-Sentence Transformers and pgvector are used to generate and persist job embeddings for semantic matching between candidate profiles, job descriptions, skills, and role requirements.
-
-The Docker image installs CPU-only PyTorch to keep the runtime significantly smaller than a CUDA-enabled build.
-
-### Job description enrichment
-
-Job descriptions are parsed into structured information such as required skills, preferred skills, technologies, experience requirements, responsibilities, and job metadata.
-
-### Gap analysis
-
-The system compares the candidate profile against enriched job requirements to identify matched skills, missing skills, transferable skills, experience gaps, and areas to emphasize in an application.
-
-### Application assets
-
-The platform can generate job-specific outreach, recruiter messages, gap summaries, application notes, and job-specific positioning.
-
-### Application tracking
-
-Application state and history are persisted across stages such as discovered, shortlisted, applied, interviewing, rejected, offer, and archived.
-
----
-
-## Workflow Orchestration
-
-Temporal manages the end-to-end pipeline:
+Temporal orchestrates:
 
 1. source ingestion
 2. normalization
-3. persistence
-4. job lifecycle updates
-5. enrichment
-6. embedding generation
-7. ranking
+3. canonical deduplication
+4. persistence and lifecycle updates
+5. JD enrichment
+6. batched embedding generation
+7. profile-aware ranking
 8. gap analysis
 9. application asset generation
 10. notification delivery
 11. pipeline finalization
 
-Temporal provides retries, durable execution, workflow history, activity isolation, failure recovery, and task queue management.
+## Engineering decisions
 
-Primary task queue:
+### Deterministic before generative AI
+Rules are used where correctness can be expressed deterministically.
+LLMs are reserved for tasks where semantic reasoning adds value.
 
-```text
-job-intelligence-pipeline
-```
+### Provenance first
+Every job retains its source identity, timestamps, canonical mapping and
+pipeline history.
 
----
+### Durable execution
+Temporal provides retries, recovery, workflow history and activity isolation.
 
-## API
+### Privacy and application safety
+Secrets remain outside source control. Authentication protects the production
+workspace. Portal ingestion does not require credential scraping, and
+application automation remains review-first.
 
-The FastAPI service exposes endpoints for health checks, jobs, rankings, shortlist views, job state, application history, pipeline execution, Temporal workflow status, statistics, and Prometheus metrics.
+## Technology
 
-Local API:
+Backend:
+Python · FastAPI · SQLAlchemy · PostgreSQL · pgvector · Alembic
 
-```text
-http://localhost:8000
-```
+AI:
+Sentence Transformers · PyTorch · OpenAI · Groq · embeddings
 
-Interactive docs:
+Orchestration:
+Temporal
 
-```text
-http://localhost:8000/docs
-```
+Frontend:
+React · TypeScript · Vite
 
-Health check:
+Infrastructure:
+Docker · Railway · GitHub Actions
 
-```bash
-curl http://127.0.0.1:8000/health
-```
+Quality:
+Pytest · Ruff · Black · Mypy · pre-commit
 
----
+Notifications:
+Resend
 
-## Observability
+## Quality
 
-### Prometheus
+214 automated tests passing
 
-```text
-http://localhost:9090
-```
-
-Targets:
-- jobintel-api
-- jobintel-temporal-worker
-- prometheus
-
-### Grafana
-
-```text
-http://localhost:3000
-```
-
-Metrics cover API requests, latency, response status, worker availability, and Temporal pipeline finalizations.
-
----
-
-## Technology Stack
-
-### Core
-- Python 3.13
-- FastAPI
-- SQLAlchemy
-- PostgreSQL
-- pgvector
-- Alembic
-
-### Workflow orchestration
-- Temporal
-- Temporal Python SDK
-
-### AI / semantic matching
-- Sentence Transformers
-- PyTorch CPU
-- pgvector
-- OpenAI API
-- Groq API
-
-### Data ingestion
-- HTTPX
-- ATS APIs
-- Adzuna API
-
-### Observability
-- Prometheus
-- Grafana
-- structured JSON logging
-
-### Quality and CI/CD
-- Pytest
+Quality gates:
 - Ruff
 - Black
 - Mypy
+- Pytest
+- ESLint
+- TypeScript production build
 - pre-commit
 - GitHub Actions
-- Docker
-- Docker Compose
 
----
+## Running Locally
 
-## Project Structure
+### Prerequisites
 
-```text
-job-intelligence/
-|
-|-- .github/
-|   `-- workflows/
-|-- migrations/
-|-- observability/
-|   |-- grafana/
-|   `-- prometheus/
-|-- profiles/
-|-- src/
-|   `-- jobintel/
-|-- tests/
-|-- .env.example
-|-- alembic.ini
-|-- docker-compose.yml
-|-- Dockerfile
-|-- pyproject.toml
-`-- README.md
-```
+Before starting, install:
 
----
+- Python 3.11+
+- Node.js 20+
+- Docker Desktop
+- Git
 
-## Running with Docker
+The application uses PostgreSQL with `pgvector` for persistence and Temporal
+for durable workflow orchestration.
 
-### 1. Clone
+### 1. Clone the repository
 
 ```bash
-git clone https://github.com/ken-kaneki21/job-portal.git
-cd job-portal
+git clone <your-repository-url>
+cd job-intelligence
 ```
 
-### 2. Create local environment configuration
+### 2. Create the Python environment
 
 Windows:
 
-```bat
+```bash
+python -m venv .venv
+.venv\Scripts\activate
+```
+
+macOS/Linux:
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+```
+
+Install the project:
+
+```bash
+python -m pip install --upgrade pip
+pip install -e ".[dev]"
+```
+
+### 3. Configure environment variables
+
+Copy the example environment file.
+
+Windows:
+
+```bash
 copy .env.example .env
 ```
 
-Linux/macOS:
+macOS/Linux:
 
 ```bash
 cp .env.example .env
 ```
 
-Add credentials only for integrations you intend to use. Do not commit `.env`.
+Update `.env` with the services you want to enable.
 
-### 3. Start the platform
+At minimum, configure the database and Temporal connection required by your
+local environment.
+
+Optional integrations such as job-source APIs, AI providers and email
+notifications require their corresponding credentials.
+
+> Never commit `.env`, API keys, database credentials, authentication secrets,
+> browser-companion tokens or production configuration files.
+
+### 4. Start infrastructure
+
+Start the local infrastructure defined by Docker Compose:
 
 ```bash
-docker compose up -d --build
+docker compose up -d
 ```
 
-Docker Compose starts PostgreSQL + pgvector, Temporal PostgreSQL, Temporal Server, Temporal UI, the migration job, FastAPI, the Temporal worker, Prometheus, and Grafana.
-
-### 4. Verify
+Check that the containers are running:
 
 ```bash
 docker compose ps
-curl http://127.0.0.1:8000/health
-curl http://127.0.0.1:9101/metrics
 ```
 
----
+This provides the local infrastructure required by the application, including
+PostgreSQL/pgvector and Temporal where configured by the repository.
 
-## Service Ports
-
-| Service | Port |
-|---|---:|
-| FastAPI | 8000 |
-| Temporal | 7233 |
-| Temporal UI | 8080 |
-| PostgreSQL | 55432 |
-| Prometheus | 9090 |
-| Temporal worker metrics | 9101 |
-| Grafana | 3000 |
-
----
-
-## Running Locally Without Docker
-
-Windows:
-
-```bat
-python -m venv .venv
-.venv\Scripts\activate
-```
-
-Install:
-
-```bash
-pip install -e ".[dev]"
-```
-
-Start infrastructure:
-
-```bash
-docker compose up -d postgres temporal-postgres temporal temporal-ui
-```
-
-Run migrations:
+### 5. Apply database migrations
 
 ```bash
 alembic upgrade head
 ```
 
-Start API:
+### 6. Start the API
 
 ```bash
-python -m uvicorn jobintel.api:app --host 0.0.0.0 --port 8000
+uvicorn jobintel.api:app --reload
 ```
 
-Start worker in another terminal:
-
-```bash
-python -m jobintel.temporal_pipeline.worker
-```
-
----
-
-## Running the Pipeline
-
-Start a Temporal-managed pipeline run:
-
-```bash
-curl -X POST http://127.0.0.1:8000/pipeline/run-temporal
-```
-
-Check workflow status:
-
-```bash
-curl http://127.0.0.1:8000/temporal/workflows/<workflow_id>
-```
-
----
-
-## Testing
-
-```bash
-pytest -q
-```
-
-Current baseline:
+Verify the API:
 
 ```text
-134 passed
+http://127.0.0.1:8000/health
 ```
 
-Static checks:
+### 7. Start the Temporal worker
+
+Open another terminal, activate the same Python environment, and run the
+worker command configured by the project.
+
+The worker executes the durable pipeline activities used for discovery,
+normalization, enrichment, embeddings, ranking, gap analysis and
+notifications.
+
+### 8. Start the frontend
+
+Open another terminal:
 
 ```bash
-ruff check src tests
-black --check src tests
-mypy src/jobintel
+cd frontend
+npm install
+npm run dev
 ```
 
----
+The Vite development server will print the local frontend URL.
 
-## Database Migrations
-
-```bash
-alembic current
-alembic upgrade head
-alembic revision --autogenerate -m "description"
-```
-
----
-
-## CI/CD
-
-GitHub Actions validates every push with two primary jobs.
-
-### Quality and Tests
-- dependency installation
-- Ruff
-- Black
-- Mypy
-- Alembic migration validation
-- Pytest
-
-### Docker Validation
-- Docker Compose configuration validation
-- application Docker image build
-
----
-
-## Security and Privacy
-
-The project is designed as a private personal job-search platform.
-
-Practices include:
-- secrets outside source control
-- `.env` excluded from Git
-- `.env.example` contains placeholders only
-- structured data provenance
-- local/private deployment support
-- no requirement to expose the API publicly
-
-Never commit API keys, email credentials, non-development database passwords, or private profile data.
-
----
-
-## Engineering Goals
-
-The project emphasizes deterministic behavior where rules are sufficient, AI where semantic reasoning adds value, reproducibility, idempotency, explicit provenance, durable workflows, testability, observability, privacy, and modular pipelines.
-
----
-
-## Current Status
-
-Validated capabilities include:
-
-- multi-source ingestion
-- canonical deduplication
-- provenance tracking
-- lifecycle management
-- embeddings
-- job enrichment
-- ranking
-- gap analysis
-- application asset generation
-- Temporal orchestration
-- application state tracking
-- FastAPI
-- Prometheus
-- Grafana
-- Docker Compose
-- database migrations
-- GitHub Actions CI
-
-Current automated test baseline:
+If required, configure the frontend API base URL in:
 
 ```text
-134 passed
+frontend/.env.local
 ```
 
+For example:
+
+```env
+VITE_API_BASE_URL=http://127.0.0.1:8000
+```
+
+`frontend/.env.local` is local configuration and should not be committed.
+
+### 9. Run the quality gates
+
+Backend:
+
+```bash
+python -m ruff check src tests
+python -m black --check src tests
+python -m mypy src
+python -m pytest -q
+```
+
+Frontend:
+
+```bash
+cd frontend
+npm run lint
+npm run build
+cd ..
+```
+
+Full repository checks:
+
+```bash
+pre-commit run --all-files
+```
+
+The `v2.1.0` release was validated with **214 automated tests passing** in
+addition to the frontend and repository quality gates.
+
 ---
 
-## Future Enhancements
+## Security & Privacy
 
-Potential future work:
-- learning-to-rank using application outcomes
-- richer recruiter outreach workflows
-- automated company intelligence
-- news and company signals
-- additional ATS integrations
-- configurable LLM providers
-- UI/dashboard layer
-- cloud deployment
-- scheduled pipeline execution
-- expanded evaluation datasets
+Job Intelligence is designed as a private, user-controlled workspace.
+Security boundaries are intentionally part of the product architecture rather
+than being added only at the UI layer.
 
----
+### Authentication
+
+Production API routes are protected by authenticated sessions.
+
+The application uses:
+
+- signed session tokens
+- `HttpOnly` session cookies
+- secure-cookie support for production
+- configurable session expiration
+- login throttling
+- protected API routes
+- credential-aware frontend requests
+
+Public health checks and authentication entry points are kept separate from
+protected application data.
+
+Authentication credentials and session secrets are supplied through
+environment variables and are never intended to be stored in source control.
+
+### Secret Management
+
+Secrets must be provided through local environment files or the deployment
+platform's secret-management system.
+
+Examples include:
+
+- database credentials
+- API keys
+- AI-provider credentials
+- email-provider credentials
+- authentication secrets
+- browser-companion tokens
+
+The repository intentionally ignores local and production secret files such as:
+
+```text
+.env
+frontend/.env.local
+railway_api_final_variables.txt
+railway_worker_final_variables.txt
+profile_b64.txt
+```
+
+`.env.example` documents configuration names only and must contain placeholders,
+not real credentials.
+
+### Candidate Data
+
+Resume and candidate-profile information can contain personal information.
+
+Generated or user-specific profile data should therefore remain outside public
+source control. Only schemas, parsers, examples containing synthetic data and
+the application logic required to process profiles should be committed.
+
+Do not commit:
+
+- personal resumes unless intentionally published
+- generated candidate profiles
+- private contact information
+- application credentials
+- exported job-board account data containing sensitive information
+
+### Browser Companion
+
+The browser companion uses a dedicated companion token rather than the user's
+application login password.
+
+Its purpose is to assist with user-controlled capture and application
+workflows. It is not designed to collect job-board passwords.
+
+Companion tokens should be treated as secrets and supplied through private
+configuration only.
+
+### Portal Integrations
+
+LinkedIn, Naukri, Foundit and Indeed support is designed around structured
+user-provided imports and browser-assisted capture.
+
+The system does **not** require storing portal passwords or implementing
+credential-based account scraping.
+
+This preserves a clear boundary between job intelligence and account
+automation.
+
+### Application Safety
+
+Application assistance is deliberately **review-first**.
+
+The system can help with:
+
+- reusable profile answers
+- field mapping
+- resume selection/upload workflows
+- required-field detection
+- application preparation
+
+Sensitive or consequential fields remain reviewable by the user.
+
+Most importantly:
+
+> **The system does not perform the final application submission automatically.**
+
+The user reviews the browser state and makes the final submission decision.
+
+### Production Isolation
+
+Production services are configured separately from local development.
+
+Deployment credentials, database URLs, session secrets, notification keys and
+other production configuration are managed outside the Git repository.
+
+The public repository should contain application code and documentation—not a
+copy of the production environment.
+
+### Responsible Use
+
+This project is intended for personal job-search intelligence, portfolio
+demonstration and engineering experimentation.
+
+Users deploying their own instance are responsible for complying with the
+terms, access policies and automation restrictions of any external services
+they connect to.
+
+## Release
+
+Current production release: **v2.1.0**
+
+## Roadmap
+
+- Learning-to-rank from application outcomes
+- Richer outcome analytics
+- Additional ATS integrations
+- Company/news intelligence
+- Expanded ranking evaluation datasets
 
 ## License
 
-This project is currently intended for personal and portfolio use.
-
-## Production readiness
-
-Run the release gate:
-
-```bat
-python -m jobintel.release_check
-```
-
-Useful documentation:
-
-- `docs/architecture.md`
-- `docs/production_deployment.md`
-- `docs/release_checklist.md`
-- `docs/production_operations.md`
-
-The application workflow remains review-first. Workday assistance never clicks
-the final Submit button, and portal ingestion uses user-assisted imports rather
-than credential scraping.
+Personal and portfolio use.
