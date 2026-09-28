@@ -1,0 +1,29 @@
+{
+  "profile": "Data engineer building Python SQL Snowflake dbt Airflow Spark cloud and production AI systems.",
+  "jobs": [
+    "Data Engineer Python SQL Snowflake dbt Airflow AWS pipelines",
+    "Senior Data Engineer Spark PySpark Databricks Azure data modeling",
+    "Analytics Engineer SQL dbt Snowflake dimensional modeling",
+    "Machine Learning Engineer Python ONNX Runtime inference optimization",
+    "AI Engineer LLM FastAPI vector search evaluation",
+    "Backend Engineer Java Spring Boot Kafka distributed systems",
+    "Frontend Engineer React TypeScript CSS design systems",
+    "Data Analyst SQL Power BI dashboards reporting",
+    "Cloud Data Engineer AWS Glue S3 Redshift Python orchestration",
+    "Platform Engineer Kubernetes Terraform CI CD observability",
+    "Database Engineer PostgreSQL optimization replication reliability",
+    "Data Quality Engineer Python SQL validation pipeline monitoring",
+    "ETL Developer Python SQL batch ingestion warehouse transformations",
+    "Snowflake Engineer Snowpipe streams tasks security optimization",
+    "Azure Data Engineer ADF Databricks PySpark ADLS",
+    "MLOps Engineer model deployment monitoring inference",
+    "NLP Engineer transformers embeddings semantic search optimization",
+    "Business Analyst requirements Excel presentations process mapping",
+    "DevOps Engineer Linux Docker Kubernetes Terraform cloud",
+    "Product Manager roadmap discovery prioritization metrics",
+    "Security Engineer IAM vulnerability management incident response",
+    "QA Engineer test automation API testing regression",
+    "Software Engineer Python APIs PostgreSQL Docker cloud",
+    "Data Platform Engineer orchestration metadata quality warehouse systems"
+  ]
+}

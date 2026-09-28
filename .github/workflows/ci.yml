@@ -61,7 +61,7 @@ jobs:
 
       - name: Install project
         run: |
-          pip install -e ".[dev]"
+          pip install -e ".[dev,onnx]"
 
       - name: Ruff
         run: |
@@ -87,6 +87,13 @@ jobs:
       - name: Tests
         run: |
           pytest -q
+
+      - name: ONNX embedding regression
+        env:
+          JOBINTEL_RUN_ONNX_TESTS: "1"
+        run: |
+          python scripts/export_embedding_onnx.py
+          pytest -q tests/test_embedding_onnx_regression.py
 
 
   docker:
