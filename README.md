@@ -472,15 +472,13 @@ they connect to.
 
 ## Release
 
-Current production release: **v2.1.0**
+Current production release: **v3.0.0**
 
-## Roadmap
+## Product completion
 
-- Learning-to-rank from application outcomes
-- Richer outcome analytics
-- Additional ATS integrations
-- Company/news intelligence
-- Expanded ranking evaluation datasets
+JobLens is feature-complete as a personal job-intelligence platform. The final architecture closes the loop between ranked recommendations, application outcomes and measurable ranking quality, while pipeline-run quality snapshots make freshness and coverage visible. Future work is intentionally limited to bug fixes, source maintenance, dependency/security updates and improvements justified by real usage.
+
+The ranking evaluation layer reports Precision@K, Recall@K, lift, pairwise accuracy, NDCG@K and MRR from historically valid application outcomes. Outcome-derived adjustments activate only after sufficient evidence accumulates; sparse data remains neutral. Pipeline runs persist quality snapshots covering scan failures, freshness, embedding coverage and ranking coverage.
 
 ## License
 
