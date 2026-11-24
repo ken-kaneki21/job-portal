@@ -90,7 +90,16 @@ try {
         $env:JOBINTEL_AUTH_PASSWORD = [guid]::NewGuid().ToString('N')
         $env:JOBINTEL_SESSION_SECRET = [guid]::NewGuid().ToString('N') + [guid]::NewGuid().ToString('N')
         $env:JOBINTEL_COOKIE_SECURE = 'false'
-        & $Python -c 'import json, os, sys; sys.path.insert(0,"scripts"); from verify_cached_stack import PROFILE; open(os.environ["JOBINTEL_PROFILE_PATH"],"x",encoding="utf8").write(json.dumps(PROFILE))'
+        $stage = 'fixture_profile'
+        @'
+import json
+import os
+import sys
+sys.path.insert(0, "scripts")
+from verify_cached_stack import PROFILE
+with open(os.environ["JOBINTEL_PROFILE_PATH"], "x", encoding="utf8") as stream:
+    json.dump(PROFILE, stream)
+'@ | & $Python -
         if ($LASTEXITCODE -ne 0) { throw 'Fixture profile could not be written' }
         $stage = 'migrations'
         & $Python -m alembic upgrade head
