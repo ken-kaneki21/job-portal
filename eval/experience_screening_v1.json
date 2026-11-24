@@ -1,0 +1,175 @@
+{
+  "version": "experience-screening-v1",
+  "label_provenance": "Self-authored by the implementation assistant. Holdout groups were frozen before the parser change and have no independent human validation. Public excerpt is exact quoted text; all other descriptions are synthetic.",
+  "candidate_hard_max_years": 4,
+  "cases": [
+    {
+      "id": "a",
+      "split": "dev",
+      "group": "genai-explicit",
+      "title": "AI Engineer",
+      "location": "Bengaluru",
+      "description": "Experience: 2-5 years\nMinimum 5 years of experience is required.\nPreferred: 1 year of experience in RAG.",
+      "expected_years": 5,
+      "eligible": false,
+      "source_url": null
+    },
+    {
+      "id": "b",
+      "split": "dev",
+      "group": "data-preferred",
+      "title": "Data Engineer",
+      "location": "Bengaluru",
+      "description": "2 years of experience required.\nPreferred qualifications:\nAt least 6 years of experience in Databricks.",
+      "expected_years": 2,
+      "eligible": true,
+      "source_url": null
+    },
+    {
+      "id": "c",
+      "split": "dev",
+      "group": "backend-skill",
+      "title": "Python Backend Engineer",
+      "location": "Bengaluru",
+      "description": "Minimum 2 years of experience is required.\nAt least 5 years of experience in Python.",
+      "expected_years": 5,
+      "eligible": false,
+      "source_url": null
+    },
+    {
+      "id": "d",
+      "split": "dev",
+      "group": "no-date-unknown",
+      "title": "AI Engineer",
+      "location": "",
+      "description": "Experience: 2–4 years",
+      "expected_years": 2,
+      "eligible": true,
+      "source_url": null
+    },
+    {
+      "id": "e",
+      "split": "dev",
+      "group": "location-blocked",
+      "title": "Data Engineer",
+      "location": "United States",
+      "description": "Minimum 2 years of experience is required.",
+      "expected_years": 2,
+      "eligible": false,
+      "source_url": null
+    },
+    {
+      "id": "f",
+      "split": "dev",
+      "group": "leading-preferred",
+      "title": "Python Backend Engineer",
+      "location": "Bengaluru",
+      "description": "Preferred: 5 years of experience in Kubernetes.",
+      "expected_years": null,
+      "eligible": true,
+      "source_url": null
+    },
+    {
+      "id": "g",
+      "split": "holdout",
+      "group": "analytics-ineligible",
+      "title": "Data Engineer",
+      "location": "Bengaluru",
+      "description": "Experience: 1–4 years\nThe candidate should have minimum 5 years of experience in Snowflake.",
+      "expected_years": 5,
+      "eligible": false,
+      "source_url": null
+    },
+    {
+      "id": "h",
+      "split": "holdout",
+      "group": "count-optional-tail",
+      "title": "AI Engineer",
+      "location": "Bengaluru",
+      "description": "Experience: 2–5 years\n6 years of experience in model training is desirable.",
+      "expected_years": 2,
+      "eligible": true,
+      "source_url": null
+    },
+    {
+      "id": "i",
+      "split": "holdout",
+      "group": "range-conflict",
+      "title": "Python Backend Engineer",
+      "location": "Bengaluru",
+      "description": "Experience: 2-5 years\nMust have: 5-8 years of experience in backend development.",
+      "expected_years": 5,
+      "eligible": false,
+      "source_url": null
+    },
+    {
+      "id": "j",
+      "split": "holdout",
+      "group": "before-required",
+      "title": "Data Engineer",
+      "location": "Bengaluru",
+      "description": "Nice to have:\nAt least 1 year of experience in dbt.\nRequired qualifications:\nAt least 6 years of experience in data engineering.",
+      "expected_years": 6,
+      "eligible": false,
+      "source_url": null
+    },
+    {
+      "id": "k",
+      "split": "holdout",
+      "group": "explicit-title-noise",
+      "title": "AI Engineer",
+      "location": "Bengaluru",
+      "description": "Our product has served customers for 10 years.\n2 years of experience required.",
+      "expected_years": 2,
+      "eligible": true,
+      "source_url": null
+    },
+    {
+      "id": "l",
+      "split": "holdout",
+      "group": "ambiguous-location",
+      "title": "Python Backend Engineer",
+      "location": "Remote (location unspecified)",
+      "description": "No minimum is stated.",
+      "expected_years": null,
+      "eligible": true,
+      "source_url": null
+    },
+    {
+      "id": "m",
+      "split": "holdout",
+      "group": "missing-required-number",
+      "title": "Data Engineer",
+      "location": "Bengaluru",
+      "description": "Must have skills: SQL and Python.\nGood to have skills:\nDatabricks and at least 5 years of experience.",
+      "expected_years": null,
+      "eligible": true,
+      "source_url": null
+    },
+    {
+      "id": "n",
+      "split": "holdout",
+      "group": "public-accenture-snowflake",
+      "title": "Data Engineer",
+      "location": "Bengaluru",
+      "description": "Minimum 3 year(s) of experience is required\n- The candidate should have minimum 3 years of experience in Snowflake Data Warehouse.",
+      "expected_years": 3,
+      "eligible": true,
+      "source_url": "https://www.accenture.com/in-en/careers/jobdetails?id=ATCI-5807176-S2074996_en"
+    }
+  ],
+  "unmeasured_lifecycle_examples": [
+    {
+      "id": "stale",
+      "source_url": null,
+      "posted_at": "2020-01-01",
+      "desired_verification": "unknown without current source verification"
+    },
+    {
+      "id": "expired",
+      "source_url": null,
+      "source_status": "explicitly closed",
+      "desired_verification": "expired"
+    }
+  ]
+}
