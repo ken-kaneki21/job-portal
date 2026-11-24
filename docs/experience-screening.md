@@ -54,3 +54,22 @@ fixture measures the effective numeric screening floor, with no per-skill
 qualification decision or separate ranking relevance labels. Source freshness
 and closed/unknown lifecycle decisions have distinct pending evaluation cases.
 The latency numbers describe this micro-workload and are not a speed claim.
+
+## Encoder benchmark rerun
+
+A separate CPU run used the checked-in 25-text evaluation corpus, five warm
+trials per backend/batch size, Ryzen 5 5600H, PyTorch 2.14.0 and ONNX Runtime
+1.30.0. `OMP_NUM_THREADS=1` and `MKL_NUM_THREADS=1` were set for this run.
+See [raw results](evidence/encoder-benchmark-20261124.json).
+
+| Batch 32 backend | p50 ms | p95 ms | Items/s | Top-10 / Top-20 overlap |
+|---|---:|---:|---:|---:|
+| PyTorch | 143.874 | 146.312 | 173.763 | reference |
+| ONNX Runtime FP32 | 39.223 | 40.899 | 637.383 | 100% / 100% |
+| ONNX Runtime INT8 | 27.444 | 28.216 | 910.936 | 90% / 95% |
+
+Set `JOBINTEL_ONNX_MODEL_DIR` to a writable scratch directory, set the
+Hugging Face and Transformers offline flags if the model is already cached,
+and run `python scripts/benchmark_embeddings.py`. The corpus has one profile
+and 24 jobs. The batch-32 call processes 25 items in one batch. These are
+encoder timing and ranking-parity checks for a specific CPU configuration.
