@@ -1,6 +1,15 @@
 # Job Intelligence
 
-Production-grade AI job discovery, ranking and application orchestration platform.
+Job discovery, ranking and application orchestration for a candidate searching
+across independent job sources.
+
+## Verified scope
+
+- [Experience screening evaluation](docs/experience-screening.md) covers the
+  cached ranking path and its limitations.
+- The 1,215-job snapshot and 214-test v2.1 release count below are historical.
+- The ONNX comparison covers local CPU encoder embeddings and ranking parity.
+  It does not measure decoder generation or judged relevance.
 
 Job Intelligence turns fragmented job searching into a durable data and AI
 pipeline: discover opportunities → normalize and deduplicate → enrich →
@@ -59,9 +68,9 @@ The platform supports structured portal imports and browser-assisted capture
 rather than credential scraping. Workday assistance remains review-first and
 never performs the final submission automatically.
 
-## Production snapshot
+## Historical deployment snapshot
 
-Latest validated production run:
+Recorded deployment snapshot:
 
 - 1,215 active jobs
 - 596 profile-relevant opportunities

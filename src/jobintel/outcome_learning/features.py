@@ -96,7 +96,7 @@ def location_family(location: str | None) -> str:
 
 
 def experience_band(description: str | None) -> str:
-    years = detect_min_experience(normalize_text(description))
+    years = detect_min_experience(description or "")
     if years is None:
         return "unknown"
     if years <= 2:

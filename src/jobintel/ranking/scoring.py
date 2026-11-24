@@ -172,30 +172,64 @@ def contains_skill(
     )
 
 
-def detect_min_experience(
-    text: str,
-) -> int | None:
-    patterns = [
-        (r"(\d+)\s*(?:-|–|to)\s*" r"\d+\s*(?:years|yrs)"),
-        (r"minimum\s+(?:of\s+)?" r"(\d+)\s*(?:years|yrs)"),
-        (r"at\s+least\s+" r"(\d+)\s*(?:years|yrs)"),
-        (r"(\d+)\+\s*" r"(?:years|yrs)"),
-        (r"(\d+)\s*(?:years|yrs)" r"\s+of\s+experience"),
-    ]
+EXPERIENCE_YEARS = re.compile(
+    r"(?<![\d.])(?P<prefix>\b(?:minimum(?:\s+of)?|at\s+least)\s+)?"
+    r"(?P<lower>\d+)\s*(?P<band>\s*(?:[-–—]|\bto\b)\s*\d+|\+)?"
+    r"\s*(?:years?|yrs?)(?:\(s\))?\b",
+    re.IGNORECASE,
+)
+OPTIONAL_EXPERIENCE = re.compile(
+    r"\b(?:preferred|nice\s+to\s+have|good\s+to\s+have|"
+    r"desirable|a\s+plus|optional|an\s+advantage)\b",
+    re.IGNORECASE,
+)
+REQUIREMENT_LABEL = re.compile(
+    r"^(?:(?:minimum|required|mandatory|essential|preferred|desirable|optional)"
+    r"(?:\s+(?:skills|qualifications|experience|requirements))?|"
+    r"(?:must|nice|good)\s+(?:to\s+)?have(?:\s+skills)?|"
+    r"experience|qualifications|requirements)\s*:?\s*$",
+    re.IGNORECASE,
+)
 
-    values: list[int] = []
 
-    for pattern in patterns:
-        values.extend(
-            int(value)
-            for value in re.findall(
-                pattern,
-                text,
-                flags=re.IGNORECASE,
-            )
-        )
+def detect_min_experience(text: str) -> int | None:
+    """Return the strongest stated mandatory floor for initial screening.
 
-    return min(values) if values else None
+    A skill-specific minimum also bounds total applicable experience from
+    below. The profile has no per-skill tenure, so this is not proof that a
+    candidate meets every requirement. Disjunctive clauses remain unscored.
+    """
+    floors: list[int] = []
+    optional_section = False
+    for line in re.split(r"[\r\n;]+|(?<=[.!?])\s+", text):
+        line = line.strip(" \t-*•#")
+        heading, _, content = line.partition(":")
+        if REQUIREMENT_LABEL.fullmatch(heading.strip()):
+            is_optional = bool(OPTIONAL_EXPERIENCE.search(heading))
+            if not content.strip():
+                optional_section = is_optional
+                continue
+        else:
+            is_optional = optional_section
+        if is_optional or OPTIONAL_EXPERIENCE.search(line):
+            continue
+        if re.search(r"\b(?:or|either)\b", line, re.IGNORECASE):
+            continue
+        for match in EXPERIENCE_YEARS.finditer(line):
+            # Plain quantities also occur in company histories and benefits.
+            if not (
+                match.group("prefix")
+                or match.group("band")
+                or re.match(
+                    r"\s*(?:\(s\)\s*)?(?:of\s+)?experience\b",
+                    line[match.end() :],
+                    re.IGNORECASE,
+                )
+                or re.match(r"experience\s*:", line, re.IGNORECASE)
+            ):
+                continue
+            floors.append(int(match.group("lower")))
+    return max(floors, default=None)
 
 
 def check_title_eligibility(
@@ -410,15 +444,13 @@ def score_skills(
 
 
 def score_experience(
-    description: str,
+    required: int | None,
     profile: CandidateProfile,
 ) -> tuple[
     float,
     int | None,
     list[str],
 ]:
-    required = detect_min_experience(description)
-
     if required is None:
         return (
             1.0,
@@ -618,7 +650,7 @@ def rank_job(
         )
     )
 
-    detected_experience = detect_min_experience(combined_text)
+    detected_experience = detect_min_experience(job.description or "")
 
     if (
         detected_experience is not None
@@ -693,7 +725,7 @@ def rank_job(
         detected_experience,
         experience_reasons,
     ) = score_experience(
-        combined_text,
+        detected_experience,
         profile,
     )
 

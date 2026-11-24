@@ -129,7 +129,7 @@ def score_profile_evidence(
     reasons: list[str] = []
 
     experience_score, experience_reason = score_experience_fit(
-        job_text,
+        job.description or "",
         profile,
     )
     reasons.append(experience_reason)
