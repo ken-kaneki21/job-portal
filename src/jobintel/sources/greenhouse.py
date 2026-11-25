@@ -24,7 +24,9 @@ def clean_html(value: str | None) -> str | None:
         flags=re.IGNORECASE,
     )
     value = re.sub(r"<[^>]+>", " ", value)
-    return "\n".join(" ".join(line.split()) for line in value.splitlines() if line.strip())
+    return "\n".join(
+        " ".join(line.split()) for line in value.splitlines() if line.strip()
+    )
 
 
 def make_fingerprint(

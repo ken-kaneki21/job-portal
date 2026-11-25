@@ -32,7 +32,8 @@ def evaluate(fixture):
             title=case["title"],
             location=case["location"],
             description=case["description"],
-            apply_url=case["source_url"] or "https://example.invalid/jobs/" + case["id"],
+            apply_url=case["source_url"]
+            or "https://example.invalid/jobs/" + case["id"],
             first_seen_at=datetime(2026, 11, 24, tzinfo=UTC),
         )
         samples = []
@@ -40,16 +41,18 @@ def evaluate(fixture):
             start = perf_counter_ns()
             result = rank_job(job, profile)
             samples.append((perf_counter_ns() - start) / 1000)
-        rows.append({
-            "id": case["id"],
-            "split": case["split"],
-            "expected_years": case["expected_years"],
-            "actual_years": result.detected_experience,
-            "expected_eligible": case["eligible"],
-            "actual_eligible": result.eligible,
-            "rejections": result.rejection_reasons,
-            "latency_us": samples,
-        })
+        rows.append(
+            {
+                "id": case["id"],
+                "split": case["split"],
+                "expected_years": case["expected_years"],
+                "actual_years": result.detected_experience,
+                "expected_eligible": case["eligible"],
+                "actual_eligible": result.eligible,
+                "rejections": result.rejection_reasons,
+                "latency_us": samples,
+            }
+        )
     return rows
 
 
@@ -89,7 +92,9 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--out", type=Path, required=True)
     parser.add_argument("--require-correct", action="store_true")
-    parser.add_argument("--fixture", type=Path, default=Path("eval/experience_screening_v1.json"))
+    parser.add_argument(
+        "--fixture", type=Path, default=Path("eval/experience_screening_v1.json")
+    )
     args = parser.parse_args()
     fixture = json.loads(args.fixture.read_text(encoding="utf-8"))
     rows = evaluate(fixture)
@@ -107,10 +112,14 @@ def main():
         json.dump(report, output, indent=2)
         output.write("\n")
     print(json.dumps(report["metrics"], indent=2))
-    return int(args.require_correct and any(
-        row["expected_years"] != row["actual_years"]
-        or row["expected_eligible"] != row["actual_eligible"] for row in rows
-    ))
+    return int(
+        args.require_correct
+        and any(
+            row["expected_years"] != row["actual_years"]
+            or row["expected_eligible"] != row["actual_eligible"]
+            for row in rows
+        )
+    )
 
 
 if __name__ == "__main__":
