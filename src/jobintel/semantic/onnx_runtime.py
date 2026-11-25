@@ -47,7 +47,9 @@ def export_fp32(force: bool = False) -> Path:
     target.parent.mkdir(parents=True, exist_ok=True)
     sentence_model = SentenceTransformer(MODEL_NAME, device="cpu")
     transformer = sentence_model[0].auto_model
-    transformer.eval()  # type: ignore[union-attr]
+    if not isinstance(transformer, torch.nn.Module):
+        raise TypeError("The embedding encoder must be a torch.nn.Module")
+    transformer.eval()
     sample = sentence_model.tokenizer(
         ["Job intelligence ONNX export sample"],
         padding=True,

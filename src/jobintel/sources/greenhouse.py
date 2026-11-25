@@ -17,10 +17,16 @@ def clean_html(value: str | None) -> str | None:
         return None
 
     value = html.unescape(value)
+    value = re.sub(
+        r"</(?:div|p|li|h[1-6]|ul|ol|section)\s*>|<br\s*/?>",
+        "\n",
+        value,
+        flags=re.IGNORECASE,
+    )
     value = re.sub(r"<[^>]+>", " ", value)
-    value = re.sub(r"\s+", " ", value)
-
-    return value.strip()
+    return "\n".join(
+        " ".join(line.split()) for line in value.splitlines() if line.strip()
+    )
 
 
 def make_fingerprint(
@@ -34,7 +40,7 @@ def make_fingerprint(
             company.strip().lower(),
             title.strip().lower(),
             (location or "").strip().lower(),
-            (description or "").strip().lower(),
+            " ".join((description or "").lower().split()),
         ]
     )
 

@@ -1,0 +1,2137 @@
+{
+  "fixture_sha256": "295e4440cf4f925b549ecd15860c9e3c2f1ad49ebdb2382d12546fb4165fa849",
+  "encoder_snapshot": "1110a243fdf4706b3f48f1d95db1a4f5529b4d41",
+  "job_commit": "3d3c02bde297943c5607e65a4a089ddf109b00a6",
+  "torch": "2.14.0+cpu",
+  "encoder_load_ms": 351.70699999434873,
+  "rss_before_bytes": 35069952,
+  "rss_after_bytes": 558780416,
+  "aggregates": {
+    "dev": {
+      "deterministic": {
+        "ndcg_at_5": 0.95067584431972,
+        "recall_at_5": 1.0,
+        "hard_violations_at_5": 0.0,
+        "returned_at_5": 2.0,
+        "query_samples": 3,
+        "mean_observed_ms": 2.8949000018959246
+      },
+      "bm25": {
+        "ndcg_at_5": 0.9005821532556583,
+        "recall_at_5": 1.0,
+        "hard_violations_at_5": 0.0,
+        "returned_at_5": 2.0,
+        "query_samples": 3,
+        "mean_observed_ms": 3.107166674453765
+      },
+      "dense": {
+        "ndcg_at_5": 0.95067584431972,
+        "recall_at_5": 1.0,
+        "hard_violations_at_5": 0.0,
+        "returned_at_5": 2.0,
+        "query_samples": 3,
+        "mean_observed_ms": 19.272966679030407
+      },
+      "hybrid": {
+        "ndcg_at_5": 0.95067584431972,
+        "recall_at_5": 1.0,
+        "hard_violations_at_5": 0.0,
+        "returned_at_5": 2.0,
+        "query_samples": 3,
+        "mean_observed_ms": 19.506633339915425
+      }
+    },
+    "test": {
+      "deterministic": {
+        "ndcg_at_5": 0.942661377752802,
+        "recall_at_5": 1.0,
+        "hard_violations_at_5": 0.0,
+        "returned_at_5": 3.3333333333333335,
+        "query_samples": 3,
+        "mean_observed_ms": 1.2111000056999426
+      },
+      "bm25": {
+        "ndcg_at_5": 0.9325662485938212,
+        "recall_at_5": 1.0,
+        "hard_violations_at_5": 0.0,
+        "returned_at_5": 3.3333333333333335,
+        "query_samples": 3,
+        "mean_observed_ms": 1.4078333236587544
+      },
+      "dense": {
+        "ndcg_at_5": 0.9553723524373031,
+        "recall_at_5": 1.0,
+        "hard_violations_at_5": 0.0,
+        "returned_at_5": 3.3333333333333335,
+        "query_samples": 3,
+        "mean_observed_ms": 17.052799948335934
+      },
+      "hybrid": {
+        "ndcg_at_5": 0.9553723524373031,
+        "recall_at_5": 1.0,
+        "hard_violations_at_5": 0.0,
+        "returned_at_5": 3.3333333333333335,
+        "query_samples": 3,
+        "mean_observed_ms": 17.274399967088055
+      }
+    }
+  },
+  "rows": [
+    {
+      "split": "dev",
+      "query": "ai",
+      "method": "deterministic",
+      "metrics": {
+        "ndcg_at_5": 0.9467676761267002,
+        "recall_at_5": 1.0,
+        "hard_violations_at_5": 0,
+        "returned_at_5": 2
+      },
+      "raw_violations_at_5": 0,
+      "latency_ms": 3.9636000292375684,
+      "index_setup_ms_shared": 158.29529997427016,
+      "ranking": [
+        "d-llm1",
+        "d-llm2"
+      ],
+      "raw_ranking": [
+        "d-llm1",
+        "d-llm2",
+        "d-api1",
+        "d-api2",
+        "d-data1",
+        "d-data2",
+        "d-denied1",
+        "d-denied2",
+        "d-denied3"
+      ],
+      "grades": {
+        "d-llm1": 3,
+        "d-llm2": 2,
+        "d-data1": 0,
+        "d-data2": 0,
+        "d-api1": 1,
+        "d-api2": 0,
+        "d-denied1": 0,
+        "d-denied2": 0,
+        "d-denied3": 0
+      },
+      "denied": [
+        "d-denied1",
+        "d-denied2",
+        "d-denied3"
+      ],
+      "missed_relevant": [],
+      "gate_rejections": {
+        "d-data1": [
+          "Outside target role family"
+        ],
+        "d-data2": [
+          "Outside target role family"
+        ],
+        "d-api1": [
+          "Outside target role family"
+        ],
+        "d-api2": [
+          "Outside target role family"
+        ],
+        "d-denied1": [
+          "Experience above hard maximum: 8+ years"
+        ],
+        "d-denied2": [
+          "Outside target role family",
+          "Outside preferred geography: London"
+        ],
+        "d-denied3": [
+          "Excluded title: manager"
+        ]
+      }
+    },
+    {
+      "split": "dev",
+      "query": "ai",
+      "method": "bm25",
+      "metrics": {
+        "ndcg_at_5": 0.9467676761267002,
+        "recall_at_5": 1.0,
+        "hard_violations_at_5": 0,
+        "returned_at_5": 2
+      },
+      "raw_violations_at_5": 2,
+      "latency_ms": 4.333199991378933,
+      "index_setup_ms_shared": 158.29529997427016,
+      "ranking": [
+        "d-llm1",
+        "d-llm2"
+      ],
+      "raw_ranking": [
+        "d-llm1",
+        "d-denied1",
+        "d-denied2",
+        "d-data1",
+        "d-data2",
+        "d-api2",
+        "d-llm2",
+        "d-api1",
+        "d-denied3"
+      ],
+      "grades": {
+        "d-llm1": 3,
+        "d-llm2": 2,
+        "d-data1": 0,
+        "d-data2": 0,
+        "d-api1": 1,
+        "d-api2": 0,
+        "d-denied1": 0,
+        "d-denied2": 0,
+        "d-denied3": 0
+      },
+      "denied": [
+        "d-denied1",
+        "d-denied2",
+        "d-denied3"
+      ],
+      "missed_relevant": [],
+      "gate_rejections": {
+        "d-data1": [
+          "Outside target role family"
+        ],
+        "d-data2": [
+          "Outside target role family"
+        ],
+        "d-api1": [
+          "Outside target role family"
+        ],
+        "d-api2": [
+          "Outside target role family"
+        ],
+        "d-denied1": [
+          "Experience above hard maximum: 8+ years"
+        ],
+        "d-denied2": [
+          "Outside target role family",
+          "Outside preferred geography: London"
+        ],
+        "d-denied3": [
+          "Excluded title: manager"
+        ]
+      }
+    },
+    {
+      "split": "dev",
+      "query": "ai",
+      "method": "dense",
+      "metrics": {
+        "ndcg_at_5": 0.9467676761267002,
+        "recall_at_5": 1.0,
+        "hard_violations_at_5": 0,
+        "returned_at_5": 2
+      },
+      "raw_violations_at_5": 2,
+      "latency_ms": 22.629199957009405,
+      "index_setup_ms_shared": 158.29529997427016,
+      "ranking": [
+        "d-llm1",
+        "d-llm2"
+      ],
+      "raw_ranking": [
+        "d-llm1",
+        "d-denied1",
+        "d-llm2",
+        "d-denied3",
+        "d-data2",
+        "d-api2",
+        "d-data1",
+        "d-denied2",
+        "d-api1"
+      ],
+      "grades": {
+        "d-llm1": 3,
+        "d-llm2": 2,
+        "d-data1": 0,
+        "d-data2": 0,
+        "d-api1": 1,
+        "d-api2": 0,
+        "d-denied1": 0,
+        "d-denied2": 0,
+        "d-denied3": 0
+      },
+      "denied": [
+        "d-denied1",
+        "d-denied2",
+        "d-denied3"
+      ],
+      "missed_relevant": [],
+      "gate_rejections": {
+        "d-data1": [
+          "Outside target role family"
+        ],
+        "d-data2": [
+          "Outside target role family"
+        ],
+        "d-api1": [
+          "Outside target role family"
+        ],
+        "d-api2": [
+          "Outside target role family"
+        ],
+        "d-denied1": [
+          "Experience above hard maximum: 8+ years"
+        ],
+        "d-denied2": [
+          "Outside target role family",
+          "Outside preferred geography: London"
+        ],
+        "d-denied3": [
+          "Excluded title: manager"
+        ]
+      }
+    },
+    {
+      "split": "dev",
+      "query": "ai",
+      "method": "hybrid",
+      "metrics": {
+        "ndcg_at_5": 0.9467676761267002,
+        "recall_at_5": 1.0,
+        "hard_violations_at_5": 0,
+        "returned_at_5": 2
+      },
+      "raw_violations_at_5": 2,
+      "latency_ms": 23.032700002659112,
+      "index_setup_ms_shared": 158.29529997427016,
+      "ranking": [
+        "d-llm1",
+        "d-llm2"
+      ],
+      "raw_ranking": [
+        "d-llm1",
+        "d-denied1",
+        "d-llm2",
+        "d-denied3",
+        "d-data2",
+        "d-api2",
+        "d-data1",
+        "d-denied2",
+        "d-api1"
+      ],
+      "grades": {
+        "d-llm1": 3,
+        "d-llm2": 2,
+        "d-data1": 0,
+        "d-data2": 0,
+        "d-api1": 1,
+        "d-api2": 0,
+        "d-denied1": 0,
+        "d-denied2": 0,
+        "d-denied3": 0
+      },
+      "denied": [
+        "d-denied1",
+        "d-denied2",
+        "d-denied3"
+      ],
+      "missed_relevant": [],
+      "gate_rejections": {
+        "d-data1": [
+          "Outside target role family"
+        ],
+        "d-data2": [
+          "Outside target role family"
+        ],
+        "d-api1": [
+          "Outside target role family"
+        ],
+        "d-api2": [
+          "Outside target role family"
+        ],
+        "d-denied1": [
+          "Experience above hard maximum: 8+ years"
+        ],
+        "d-denied2": [
+          "Outside target role family",
+          "Outside preferred geography: London"
+        ],
+        "d-denied3": [
+          "Excluded title: manager"
+        ]
+      }
+    },
+    {
+      "split": "dev",
+      "query": "data",
+      "method": "deterministic",
+      "metrics": {
+        "ndcg_at_5": 1.0,
+        "recall_at_5": 1.0,
+        "hard_violations_at_5": 0,
+        "returned_at_5": 2
+      },
+      "raw_violations_at_5": 1,
+      "latency_ms": 2.5759999989531934,
+      "index_setup_ms_shared": 158.29529997427016,
+      "ranking": [
+        "d-data1",
+        "d-data2"
+      ],
+      "raw_ranking": [
+        "d-data1",
+        "d-data2",
+        "d-api1",
+        "d-api2",
+        "d-denied1",
+        "d-denied2",
+        "d-denied3",
+        "d-llm1",
+        "d-llm2"
+      ],
+      "grades": {
+        "d-llm1": 0,
+        "d-llm2": 0,
+        "d-data1": 3,
+        "d-data2": 2,
+        "d-api1": 0,
+        "d-api2": 0,
+        "d-denied1": 0,
+        "d-denied2": 0,
+        "d-denied3": 0
+      },
+      "denied": [
+        "d-denied1",
+        "d-denied2",
+        "d-denied3"
+      ],
+      "missed_relevant": [],
+      "gate_rejections": {
+        "d-llm1": [
+          "Outside target role family"
+        ],
+        "d-llm2": [
+          "Outside target role family"
+        ],
+        "d-api1": [
+          "Outside target role family"
+        ],
+        "d-api2": [
+          "Outside target role family"
+        ],
+        "d-denied1": [
+          "Outside target role family",
+          "Experience above hard maximum: 8+ years"
+        ],
+        "d-denied2": [
+          "Outside preferred geography: London"
+        ],
+        "d-denied3": [
+          "Excluded title: manager"
+        ]
+      }
+    },
+    {
+      "split": "dev",
+      "query": "data",
+      "method": "bm25",
+      "metrics": {
+        "ndcg_at_5": 1.0,
+        "recall_at_5": 1.0,
+        "hard_violations_at_5": 0,
+        "returned_at_5": 2
+      },
+      "raw_violations_at_5": 2,
+      "latency_ms": 2.7247000252828,
+      "index_setup_ms_shared": 158.29529997427016,
+      "ranking": [
+        "d-data1",
+        "d-data2"
+      ],
+      "raw_ranking": [
+        "d-data1",
+        "d-denied2",
+        "d-data2",
+        "d-api1",
+        "d-denied1",
+        "d-llm1",
+        "d-api2",
+        "d-llm2",
+        "d-denied3"
+      ],
+      "grades": {
+        "d-llm1": 0,
+        "d-llm2": 0,
+        "d-data1": 3,
+        "d-data2": 2,
+        "d-api1": 0,
+        "d-api2": 0,
+        "d-denied1": 0,
+        "d-denied2": 0,
+        "d-denied3": 0
+      },
+      "denied": [
+        "d-denied1",
+        "d-denied2",
+        "d-denied3"
+      ],
+      "missed_relevant": [],
+      "gate_rejections": {
+        "d-llm1": [
+          "Outside target role family"
+        ],
+        "d-llm2": [
+          "Outside target role family"
+        ],
+        "d-api1": [
+          "Outside target role family"
+        ],
+        "d-api2": [
+          "Outside target role family"
+        ],
+        "d-denied1": [
+          "Outside target role family",
+          "Experience above hard maximum: 8+ years"
+        ],
+        "d-denied2": [
+          "Outside preferred geography: London"
+        ],
+        "d-denied3": [
+          "Excluded title: manager"
+        ]
+      }
+    },
+    {
+      "split": "dev",
+      "query": "data",
+      "method": "dense",
+      "metrics": {
+        "ndcg_at_5": 1.0,
+        "recall_at_5": 1.0,
+        "hard_violations_at_5": 0,
+        "returned_at_5": 2
+      },
+      "raw_violations_at_5": 1,
+      "latency_ms": 16.83850010158494,
+      "index_setup_ms_shared": 158.29529997427016,
+      "ranking": [
+        "d-data1",
+        "d-data2"
+      ],
+      "raw_ranking": [
+        "d-data1",
+        "d-denied2",
+        "d-data2",
+        "d-api1",
+        "d-api2",
+        "d-denied3",
+        "d-llm1",
+        "d-denied1",
+        "d-llm2"
+      ],
+      "grades": {
+        "d-llm1": 0,
+        "d-llm2": 0,
+        "d-data1": 3,
+        "d-data2": 2,
+        "d-api1": 0,
+        "d-api2": 0,
+        "d-denied1": 0,
+        "d-denied2": 0,
+        "d-denied3": 0
+      },
+      "denied": [
+        "d-denied1",
+        "d-denied2",
+        "d-denied3"
+      ],
+      "missed_relevant": [],
+      "gate_rejections": {
+        "d-llm1": [
+          "Outside target role family"
+        ],
+        "d-llm2": [
+          "Outside target role family"
+        ],
+        "d-api1": [
+          "Outside target role family"
+        ],
+        "d-api2": [
+          "Outside target role family"
+        ],
+        "d-denied1": [
+          "Outside target role family",
+          "Experience above hard maximum: 8+ years"
+        ],
+        "d-denied2": [
+          "Outside preferred geography: London"
+        ],
+        "d-denied3": [
+          "Excluded title: manager"
+        ]
+      }
+    },
+    {
+      "split": "dev",
+      "query": "data",
+      "method": "hybrid",
+      "metrics": {
+        "ndcg_at_5": 1.0,
+        "recall_at_5": 1.0,
+        "hard_violations_at_5": 0,
+        "returned_at_5": 2
+      },
+      "raw_violations_at_5": 1,
+      "latency_ms": 17.00310001615435,
+      "index_setup_ms_shared": 158.29529997427016,
+      "ranking": [
+        "d-data1",
+        "d-data2"
+      ],
+      "raw_ranking": [
+        "d-data1",
+        "d-denied2",
+        "d-data2",
+        "d-api1",
+        "d-api2",
+        "d-llm1",
+        "d-denied3",
+        "d-denied1",
+        "d-llm2"
+      ],
+      "grades": {
+        "d-llm1": 0,
+        "d-llm2": 0,
+        "d-data1": 3,
+        "d-data2": 2,
+        "d-api1": 0,
+        "d-api2": 0,
+        "d-denied1": 0,
+        "d-denied2": 0,
+        "d-denied3": 0
+      },
+      "denied": [
+        "d-denied1",
+        "d-denied2",
+        "d-denied3"
+      ],
+      "missed_relevant": [],
+      "gate_rejections": {
+        "d-llm1": [
+          "Outside target role family"
+        ],
+        "d-llm2": [
+          "Outside target role family"
+        ],
+        "d-api1": [
+          "Outside target role family"
+        ],
+        "d-api2": [
+          "Outside target role family"
+        ],
+        "d-denied1": [
+          "Outside target role family",
+          "Experience above hard maximum: 8+ years"
+        ],
+        "d-denied2": [
+          "Outside preferred geography: London"
+        ],
+        "d-denied3": [
+          "Excluded title: manager"
+        ]
+      }
+    },
+    {
+      "split": "dev",
+      "query": "backend",
+      "method": "deterministic",
+      "metrics": {
+        "ndcg_at_5": 0.9052598568324597,
+        "recall_at_5": 1.0,
+        "hard_violations_at_5": 0,
+        "returned_at_5": 2
+      },
+      "raw_violations_at_5": 1,
+      "latency_ms": 2.1450999774970114,
+      "index_setup_ms_shared": 158.29529997427016,
+      "ranking": [
+        "d-api1",
+        "d-api2"
+      ],
+      "raw_ranking": [
+        "d-api1",
+        "d-api2",
+        "d-data1",
+        "d-data2",
+        "d-denied1",
+        "d-denied2",
+        "d-denied3",
+        "d-llm1",
+        "d-llm2"
+      ],
+      "grades": {
+        "d-llm1": 1,
+        "d-llm2": 0,
+        "d-data1": 1,
+        "d-data2": 0,
+        "d-api1": 3,
+        "d-api2": 2,
+        "d-denied1": 0,
+        "d-denied2": 0,
+        "d-denied3": 0
+      },
+      "denied": [
+        "d-denied1",
+        "d-denied2",
+        "d-denied3"
+      ],
+      "missed_relevant": [],
+      "gate_rejections": {
+        "d-llm1": [
+          "Outside target role family"
+        ],
+        "d-llm2": [
+          "Outside target role family"
+        ],
+        "d-data1": [
+          "Outside target role family"
+        ],
+        "d-data2": [
+          "Outside target role family"
+        ],
+        "d-denied1": [
+          "Outside target role family",
+          "Experience above hard maximum: 8+ years"
+        ],
+        "d-denied2": [
+          "Outside target role family",
+          "Outside preferred geography: London"
+        ],
+        "d-denied3": [
+          "Excluded title: manager"
+        ]
+      }
+    },
+    {
+      "split": "dev",
+      "query": "backend",
+      "method": "bm25",
+      "metrics": {
+        "ndcg_at_5": 0.7549787836402747,
+        "recall_at_5": 1.0,
+        "hard_violations_at_5": 0,
+        "returned_at_5": 2
+      },
+      "raw_violations_at_5": 3,
+      "latency_ms": 2.263600006699562,
+      "index_setup_ms_shared": 158.29529997427016,
+      "ranking": [
+        "d-api2",
+        "d-api1"
+      ],
+      "raw_ranking": [
+        "d-api2",
+        "d-api1",
+        "d-denied3",
+        "d-denied2",
+        "d-denied1",
+        "d-data1",
+        "d-data2",
+        "d-llm1",
+        "d-llm2"
+      ],
+      "grades": {
+        "d-llm1": 1,
+        "d-llm2": 0,
+        "d-data1": 1,
+        "d-data2": 0,
+        "d-api1": 3,
+        "d-api2": 2,
+        "d-denied1": 0,
+        "d-denied2": 0,
+        "d-denied3": 0
+      },
+      "denied": [
+        "d-denied1",
+        "d-denied2",
+        "d-denied3"
+      ],
+      "missed_relevant": [],
+      "gate_rejections": {
+        "d-llm1": [
+          "Outside target role family"
+        ],
+        "d-llm2": [
+          "Outside target role family"
+        ],
+        "d-data1": [
+          "Outside target role family"
+        ],
+        "d-data2": [
+          "Outside target role family"
+        ],
+        "d-denied1": [
+          "Outside target role family",
+          "Experience above hard maximum: 8+ years"
+        ],
+        "d-denied2": [
+          "Outside target role family",
+          "Outside preferred geography: London"
+        ],
+        "d-denied3": [
+          "Excluded title: manager"
+        ]
+      }
+    },
+    {
+      "split": "dev",
+      "query": "backend",
+      "method": "dense",
+      "metrics": {
+        "ndcg_at_5": 0.9052598568324597,
+        "recall_at_5": 1.0,
+        "hard_violations_at_5": 0,
+        "returned_at_5": 2
+      },
+      "raw_violations_at_5": 1,
+      "latency_ms": 18.35119997849688,
+      "index_setup_ms_shared": 158.29529997427016,
+      "ranking": [
+        "d-api1",
+        "d-api2"
+      ],
+      "raw_ranking": [
+        "d-api1",
+        "d-api2",
+        "d-denied3",
+        "d-data2",
+        "d-data1",
+        "d-denied2",
+        "d-denied1",
+        "d-llm1",
+        "d-llm2"
+      ],
+      "grades": {
+        "d-llm1": 1,
+        "d-llm2": 0,
+        "d-data1": 1,
+        "d-data2": 0,
+        "d-api1": 3,
+        "d-api2": 2,
+        "d-denied1": 0,
+        "d-denied2": 0,
+        "d-denied3": 0
+      },
+      "denied": [
+        "d-denied1",
+        "d-denied2",
+        "d-denied3"
+      ],
+      "missed_relevant": [],
+      "gate_rejections": {
+        "d-llm1": [
+          "Outside target role family"
+        ],
+        "d-llm2": [
+          "Outside target role family"
+        ],
+        "d-data1": [
+          "Outside target role family"
+        ],
+        "d-data2": [
+          "Outside target role family"
+        ],
+        "d-denied1": [
+          "Outside target role family",
+          "Experience above hard maximum: 8+ years"
+        ],
+        "d-denied2": [
+          "Outside target role family",
+          "Outside preferred geography: London"
+        ],
+        "d-denied3": [
+          "Excluded title: manager"
+        ]
+      }
+    },
+    {
+      "split": "dev",
+      "query": "backend",
+      "method": "hybrid",
+      "metrics": {
+        "ndcg_at_5": 0.9052598568324597,
+        "recall_at_5": 1.0,
+        "hard_violations_at_5": 0,
+        "returned_at_5": 2
+      },
+      "raw_violations_at_5": 1,
+      "latency_ms": 18.484100000932813,
+      "index_setup_ms_shared": 158.29529997427016,
+      "ranking": [
+        "d-api1",
+        "d-api2"
+      ],
+      "raw_ranking": [
+        "d-api1",
+        "d-api2",
+        "d-denied3",
+        "d-data2",
+        "d-data1",
+        "d-denied2",
+        "d-denied1",
+        "d-llm1",
+        "d-llm2"
+      ],
+      "grades": {
+        "d-llm1": 1,
+        "d-llm2": 0,
+        "d-data1": 1,
+        "d-data2": 0,
+        "d-api1": 3,
+        "d-api2": 2,
+        "d-denied1": 0,
+        "d-denied2": 0,
+        "d-denied3": 0
+      },
+      "denied": [
+        "d-denied1",
+        "d-denied2",
+        "d-denied3"
+      ],
+      "missed_relevant": [],
+      "gate_rejections": {
+        "d-llm1": [
+          "Outside target role family"
+        ],
+        "d-llm2": [
+          "Outside target role family"
+        ],
+        "d-data1": [
+          "Outside target role family"
+        ],
+        "d-data2": [
+          "Outside target role family"
+        ],
+        "d-denied1": [
+          "Outside target role family",
+          "Experience above hard maximum: 8+ years"
+        ],
+        "d-denied2": [
+          "Outside target role family",
+          "Outside preferred geography: London"
+        ],
+        "d-denied3": [
+          "Excluded title: manager"
+        ]
+      }
+    },
+    {
+      "split": "test",
+      "query": "ai",
+      "method": "deterministic",
+      "metrics": {
+        "ndcg_at_5": 0.933699626769048,
+        "recall_at_5": 1.0,
+        "hard_violations_at_5": 0,
+        "returned_at_5": 4
+      },
+      "raw_violations_at_5": 1,
+      "latency_ms": 1.1282999766990542,
+      "index_setup_ms_shared": 128.9258999750018,
+      "ranking": [
+        "t-cirrus",
+        "t-fable",
+        "t-orchard",
+        "t-pico"
+      ],
+      "raw_ranking": [
+        "t-cirrus",
+        "t-fable",
+        "t-orchard",
+        "t-pico",
+        "t-alloy",
+        "t-bank",
+        "t-caravan",
+        "t-fathom",
+        "t-harbour",
+        "t-oak",
+        "t-orbit",
+        "t-petal",
+        "t-quartz",
+        "t-slate",
+        "t-tide"
+      ],
+      "grades": {
+        "t-orchard": 3,
+        "t-cirrus": 3,
+        "t-pico": 1,
+        "t-quartz": 0,
+        "t-fathom": 0,
+        "t-caravan": 0,
+        "t-oak": 1,
+        "t-orbit": 0,
+        "t-slate": 0,
+        "t-alloy": 0,
+        "t-tide": 0,
+        "t-harbour": 0,
+        "t-petal": 0,
+        "t-bank": 0,
+        "t-fable": 2
+      },
+      "denied": [
+        "t-alloy",
+        "t-bank",
+        "t-harbour",
+        "t-petal",
+        "t-tide"
+      ],
+      "missed_relevant": [],
+      "gate_rejections": {
+        "t-quartz": [
+          "Outside target role family"
+        ],
+        "t-fathom": [
+          "Outside target role family"
+        ],
+        "t-caravan": [
+          "Outside target role family"
+        ],
+        "t-oak": [
+          "Outside target role family"
+        ],
+        "t-orbit": [
+          "Outside target role family"
+        ],
+        "t-slate": [
+          "Outside target role family"
+        ],
+        "t-alloy": [
+          "Experience above hard maximum: 7+ years"
+        ],
+        "t-tide": [
+          "Outside target role family",
+          "Outside preferred geography: Berlin"
+        ],
+        "t-harbour": [
+          "Excluded title: manager"
+        ],
+        "t-petal": [
+          "Outside target role family"
+        ],
+        "t-bank": [
+          "Outside target role family",
+          "Location restriction: Remote US only"
+        ]
+      }
+    },
+    {
+      "split": "test",
+      "query": "ai",
+      "method": "bm25",
+      "metrics": {
+        "ndcg_at_5": 0.9034142392921058,
+        "recall_at_5": 1.0,
+        "hard_violations_at_5": 0,
+        "returned_at_5": 4
+      },
+      "raw_violations_at_5": 1,
+      "latency_ms": 1.3867999659851193,
+      "index_setup_ms_shared": 128.9258999750018,
+      "ranking": [
+        "t-cirrus",
+        "t-fable",
+        "t-pico",
+        "t-orchard"
+      ],
+      "raw_ranking": [
+        "t-cirrus",
+        "t-alloy",
+        "t-fable",
+        "t-pico",
+        "t-orchard",
+        "t-tide",
+        "t-bank",
+        "t-slate",
+        "t-caravan",
+        "t-orbit",
+        "t-fathom",
+        "t-oak",
+        "t-quartz",
+        "t-harbour",
+        "t-petal"
+      ],
+      "grades": {
+        "t-orchard": 3,
+        "t-cirrus": 3,
+        "t-pico": 1,
+        "t-quartz": 0,
+        "t-fathom": 0,
+        "t-caravan": 0,
+        "t-oak": 1,
+        "t-orbit": 0,
+        "t-slate": 0,
+        "t-alloy": 0,
+        "t-tide": 0,
+        "t-harbour": 0,
+        "t-petal": 0,
+        "t-bank": 0,
+        "t-fable": 2
+      },
+      "denied": [
+        "t-alloy",
+        "t-bank",
+        "t-harbour",
+        "t-petal",
+        "t-tide"
+      ],
+      "missed_relevant": [],
+      "gate_rejections": {
+        "t-quartz": [
+          "Outside target role family"
+        ],
+        "t-fathom": [
+          "Outside target role family"
+        ],
+        "t-caravan": [
+          "Outside target role family"
+        ],
+        "t-oak": [
+          "Outside target role family"
+        ],
+        "t-orbit": [
+          "Outside target role family"
+        ],
+        "t-slate": [
+          "Outside target role family"
+        ],
+        "t-alloy": [
+          "Experience above hard maximum: 7+ years"
+        ],
+        "t-tide": [
+          "Outside target role family",
+          "Outside preferred geography: Berlin"
+        ],
+        "t-harbour": [
+          "Excluded title: manager"
+        ],
+        "t-petal": [
+          "Outside target role family"
+        ],
+        "t-bank": [
+          "Outside target role family",
+          "Location restriction: Remote US only"
+        ]
+      }
+    },
+    {
+      "split": "test",
+      "query": "ai",
+      "method": "dense",
+      "metrics": {
+        "ndcg_at_5": 0.9718325508225517,
+        "recall_at_5": 1.0,
+        "hard_violations_at_5": 0,
+        "returned_at_5": 4
+      },
+      "raw_violations_at_5": 1,
+      "latency_ms": 17.130499938502908,
+      "index_setup_ms_shared": 128.9258999750018,
+      "ranking": [
+        "t-cirrus",
+        "t-orchard",
+        "t-fable",
+        "t-pico"
+      ],
+      "raw_ranking": [
+        "t-cirrus",
+        "t-alloy",
+        "t-orchard",
+        "t-fable",
+        "t-orbit",
+        "t-pico",
+        "t-petal",
+        "t-bank",
+        "t-fathom",
+        "t-tide",
+        "t-caravan",
+        "t-slate",
+        "t-quartz",
+        "t-harbour",
+        "t-oak"
+      ],
+      "grades": {
+        "t-orchard": 3,
+        "t-cirrus": 3,
+        "t-pico": 1,
+        "t-quartz": 0,
+        "t-fathom": 0,
+        "t-caravan": 0,
+        "t-oak": 1,
+        "t-orbit": 0,
+        "t-slate": 0,
+        "t-alloy": 0,
+        "t-tide": 0,
+        "t-harbour": 0,
+        "t-petal": 0,
+        "t-bank": 0,
+        "t-fable": 2
+      },
+      "denied": [
+        "t-alloy",
+        "t-bank",
+        "t-harbour",
+        "t-petal",
+        "t-tide"
+      ],
+      "missed_relevant": [],
+      "gate_rejections": {
+        "t-quartz": [
+          "Outside target role family"
+        ],
+        "t-fathom": [
+          "Outside target role family"
+        ],
+        "t-caravan": [
+          "Outside target role family"
+        ],
+        "t-oak": [
+          "Outside target role family"
+        ],
+        "t-orbit": [
+          "Outside target role family"
+        ],
+        "t-slate": [
+          "Outside target role family"
+        ],
+        "t-alloy": [
+          "Experience above hard maximum: 7+ years"
+        ],
+        "t-tide": [
+          "Outside target role family",
+          "Outside preferred geography: Berlin"
+        ],
+        "t-harbour": [
+          "Excluded title: manager"
+        ],
+        "t-petal": [
+          "Outside target role family"
+        ],
+        "t-bank": [
+          "Outside target role family",
+          "Location restriction: Remote US only"
+        ]
+      }
+    },
+    {
+      "split": "test",
+      "query": "ai",
+      "method": "hybrid",
+      "metrics": {
+        "ndcg_at_5": 0.9718325508225517,
+        "recall_at_5": 1.0,
+        "hard_violations_at_5": 0,
+        "returned_at_5": 4
+      },
+      "raw_violations_at_5": 1,
+      "latency_ms": 17.40719994995743,
+      "index_setup_ms_shared": 128.9258999750018,
+      "ranking": [
+        "t-cirrus",
+        "t-orchard",
+        "t-fable",
+        "t-pico"
+      ],
+      "raw_ranking": [
+        "t-cirrus",
+        "t-alloy",
+        "t-orchard",
+        "t-fable",
+        "t-pico",
+        "t-orbit",
+        "t-petal",
+        "t-bank",
+        "t-fathom",
+        "t-tide",
+        "t-caravan",
+        "t-slate",
+        "t-quartz",
+        "t-harbour",
+        "t-oak"
+      ],
+      "grades": {
+        "t-orchard": 3,
+        "t-cirrus": 3,
+        "t-pico": 1,
+        "t-quartz": 0,
+        "t-fathom": 0,
+        "t-caravan": 0,
+        "t-oak": 1,
+        "t-orbit": 0,
+        "t-slate": 0,
+        "t-alloy": 0,
+        "t-tide": 0,
+        "t-harbour": 0,
+        "t-petal": 0,
+        "t-bank": 0,
+        "t-fable": 2
+      },
+      "denied": [
+        "t-alloy",
+        "t-bank",
+        "t-harbour",
+        "t-petal",
+        "t-tide"
+      ],
+      "missed_relevant": [],
+      "gate_rejections": {
+        "t-quartz": [
+          "Outside target role family"
+        ],
+        "t-fathom": [
+          "Outside target role family"
+        ],
+        "t-caravan": [
+          "Outside target role family"
+        ],
+        "t-oak": [
+          "Outside target role family"
+        ],
+        "t-orbit": [
+          "Outside target role family"
+        ],
+        "t-slate": [
+          "Outside target role family"
+        ],
+        "t-alloy": [
+          "Experience above hard maximum: 7+ years"
+        ],
+        "t-tide": [
+          "Outside target role family",
+          "Outside preferred geography: Berlin"
+        ],
+        "t-harbour": [
+          "Excluded title: manager"
+        ],
+        "t-petal": [
+          "Outside target role family"
+        ],
+        "t-bank": [
+          "Outside target role family",
+          "Location restriction: Remote US only"
+        ]
+      }
+    },
+    {
+      "split": "test",
+      "query": "data",
+      "method": "deterministic",
+      "metrics": {
+        "ndcg_at_5": 1.0,
+        "recall_at_5": 1.0,
+        "hard_violations_at_5": 0,
+        "returned_at_5": 3
+      },
+      "raw_violations_at_5": 2,
+      "latency_ms": 1.2186000240035355,
+      "index_setup_ms_shared": 128.9258999750018,
+      "ranking": [
+        "t-quartz",
+        "t-caravan",
+        "t-fathom"
+      ],
+      "raw_ranking": [
+        "t-quartz",
+        "t-caravan",
+        "t-fathom",
+        "t-alloy",
+        "t-bank",
+        "t-cirrus",
+        "t-fable",
+        "t-harbour",
+        "t-oak",
+        "t-orbit",
+        "t-orchard",
+        "t-petal",
+        "t-pico",
+        "t-slate",
+        "t-tide"
+      ],
+      "grades": {
+        "t-orchard": 0,
+        "t-cirrus": 0,
+        "t-pico": 0,
+        "t-quartz": 3,
+        "t-fathom": 2,
+        "t-caravan": 2,
+        "t-oak": 0,
+        "t-orbit": 0,
+        "t-slate": 0,
+        "t-alloy": 0,
+        "t-tide": 0,
+        "t-harbour": 0,
+        "t-petal": 0,
+        "t-bank": 0,
+        "t-fable": 0
+      },
+      "denied": [
+        "t-alloy",
+        "t-bank",
+        "t-harbour",
+        "t-petal",
+        "t-tide"
+      ],
+      "missed_relevant": [],
+      "gate_rejections": {
+        "t-orchard": [
+          "Outside target role family"
+        ],
+        "t-cirrus": [
+          "Outside target role family"
+        ],
+        "t-pico": [
+          "Outside target role family"
+        ],
+        "t-oak": [
+          "Outside target role family"
+        ],
+        "t-orbit": [
+          "Outside target role family"
+        ],
+        "t-slate": [
+          "Outside target role family"
+        ],
+        "t-alloy": [
+          "Outside target role family",
+          "Experience above hard maximum: 7+ years"
+        ],
+        "t-tide": [
+          "Outside preferred geography: Berlin"
+        ],
+        "t-harbour": [
+          "Excluded title: manager"
+        ],
+        "t-petal": [
+          "Outside target role family"
+        ],
+        "t-bank": [
+          "Location restriction: Remote US only"
+        ],
+        "t-fable": [
+          "Outside target role family"
+        ]
+      }
+    },
+    {
+      "split": "test",
+      "query": "data",
+      "method": "bm25",
+      "metrics": {
+        "ndcg_at_5": 1.0,
+        "recall_at_5": 1.0,
+        "hard_violations_at_5": 0,
+        "returned_at_5": 3
+      },
+      "raw_violations_at_5": 3,
+      "latency_ms": 1.3777000131085515,
+      "index_setup_ms_shared": 128.9258999750018,
+      "ranking": [
+        "t-quartz",
+        "t-caravan",
+        "t-fathom"
+      ],
+      "raw_ranking": [
+        "t-tide",
+        "t-quartz",
+        "t-caravan",
+        "t-bank",
+        "t-alloy",
+        "t-slate",
+        "t-orbit",
+        "t-fathom",
+        "t-oak",
+        "t-fable",
+        "t-cirrus",
+        "t-pico",
+        "t-orchard",
+        "t-harbour",
+        "t-petal"
+      ],
+      "grades": {
+        "t-orchard": 0,
+        "t-cirrus": 0,
+        "t-pico": 0,
+        "t-quartz": 3,
+        "t-fathom": 2,
+        "t-caravan": 2,
+        "t-oak": 0,
+        "t-orbit": 0,
+        "t-slate": 0,
+        "t-alloy": 0,
+        "t-tide": 0,
+        "t-harbour": 0,
+        "t-petal": 0,
+        "t-bank": 0,
+        "t-fable": 0
+      },
+      "denied": [
+        "t-alloy",
+        "t-bank",
+        "t-harbour",
+        "t-petal",
+        "t-tide"
+      ],
+      "missed_relevant": [],
+      "gate_rejections": {
+        "t-orchard": [
+          "Outside target role family"
+        ],
+        "t-cirrus": [
+          "Outside target role family"
+        ],
+        "t-pico": [
+          "Outside target role family"
+        ],
+        "t-oak": [
+          "Outside target role family"
+        ],
+        "t-orbit": [
+          "Outside target role family"
+        ],
+        "t-slate": [
+          "Outside target role family"
+        ],
+        "t-alloy": [
+          "Outside target role family",
+          "Experience above hard maximum: 7+ years"
+        ],
+        "t-tide": [
+          "Outside preferred geography: Berlin"
+        ],
+        "t-harbour": [
+          "Excluded title: manager"
+        ],
+        "t-petal": [
+          "Outside target role family"
+        ],
+        "t-bank": [
+          "Location restriction: Remote US only"
+        ],
+        "t-fable": [
+          "Outside target role family"
+        ]
+      }
+    },
+    {
+      "split": "test",
+      "query": "data",
+      "method": "dense",
+      "metrics": {
+        "ndcg_at_5": 1.0,
+        "recall_at_5": 1.0,
+        "hard_violations_at_5": 0,
+        "returned_at_5": 3
+      },
+      "raw_violations_at_5": 2,
+      "latency_ms": 15.792699938174337,
+      "index_setup_ms_shared": 128.9258999750018,
+      "ranking": [
+        "t-quartz",
+        "t-caravan",
+        "t-fathom"
+      ],
+      "raw_ranking": [
+        "t-quartz",
+        "t-tide",
+        "t-caravan",
+        "t-bank",
+        "t-fathom",
+        "t-slate",
+        "t-orbit",
+        "t-oak",
+        "t-fable",
+        "t-harbour",
+        "t-alloy",
+        "t-orchard",
+        "t-petal",
+        "t-pico",
+        "t-cirrus"
+      ],
+      "grades": {
+        "t-orchard": 0,
+        "t-cirrus": 0,
+        "t-pico": 0,
+        "t-quartz": 3,
+        "t-fathom": 2,
+        "t-caravan": 2,
+        "t-oak": 0,
+        "t-orbit": 0,
+        "t-slate": 0,
+        "t-alloy": 0,
+        "t-tide": 0,
+        "t-harbour": 0,
+        "t-petal": 0,
+        "t-bank": 0,
+        "t-fable": 0
+      },
+      "denied": [
+        "t-alloy",
+        "t-bank",
+        "t-harbour",
+        "t-petal",
+        "t-tide"
+      ],
+      "missed_relevant": [],
+      "gate_rejections": {
+        "t-orchard": [
+          "Outside target role family"
+        ],
+        "t-cirrus": [
+          "Outside target role family"
+        ],
+        "t-pico": [
+          "Outside target role family"
+        ],
+        "t-oak": [
+          "Outside target role family"
+        ],
+        "t-orbit": [
+          "Outside target role family"
+        ],
+        "t-slate": [
+          "Outside target role family"
+        ],
+        "t-alloy": [
+          "Outside target role family",
+          "Experience above hard maximum: 7+ years"
+        ],
+        "t-tide": [
+          "Outside preferred geography: Berlin"
+        ],
+        "t-harbour": [
+          "Excluded title: manager"
+        ],
+        "t-petal": [
+          "Outside target role family"
+        ],
+        "t-bank": [
+          "Location restriction: Remote US only"
+        ],
+        "t-fable": [
+          "Outside target role family"
+        ]
+      }
+    },
+    {
+      "split": "test",
+      "query": "data",
+      "method": "hybrid",
+      "metrics": {
+        "ndcg_at_5": 1.0,
+        "recall_at_5": 1.0,
+        "hard_violations_at_5": 0,
+        "returned_at_5": 3
+      },
+      "raw_violations_at_5": 2,
+      "latency_ms": 15.972199966199696,
+      "index_setup_ms_shared": 128.9258999750018,
+      "ranking": [
+        "t-quartz",
+        "t-caravan",
+        "t-fathom"
+      ],
+      "raw_ranking": [
+        "t-tide",
+        "t-quartz",
+        "t-caravan",
+        "t-bank",
+        "t-fathom",
+        "t-slate",
+        "t-orbit",
+        "t-oak",
+        "t-fable",
+        "t-harbour",
+        "t-alloy",
+        "t-orchard",
+        "t-petal",
+        "t-pico",
+        "t-cirrus"
+      ],
+      "grades": {
+        "t-orchard": 0,
+        "t-cirrus": 0,
+        "t-pico": 0,
+        "t-quartz": 3,
+        "t-fathom": 2,
+        "t-caravan": 2,
+        "t-oak": 0,
+        "t-orbit": 0,
+        "t-slate": 0,
+        "t-alloy": 0,
+        "t-tide": 0,
+        "t-harbour": 0,
+        "t-petal": 0,
+        "t-bank": 0,
+        "t-fable": 0
+      },
+      "denied": [
+        "t-alloy",
+        "t-bank",
+        "t-harbour",
+        "t-petal",
+        "t-tide"
+      ],
+      "missed_relevant": [],
+      "gate_rejections": {
+        "t-orchard": [
+          "Outside target role family"
+        ],
+        "t-cirrus": [
+          "Outside target role family"
+        ],
+        "t-pico": [
+          "Outside target role family"
+        ],
+        "t-oak": [
+          "Outside target role family"
+        ],
+        "t-orbit": [
+          "Outside target role family"
+        ],
+        "t-slate": [
+          "Outside target role family"
+        ],
+        "t-alloy": [
+          "Outside target role family",
+          "Experience above hard maximum: 7+ years"
+        ],
+        "t-tide": [
+          "Outside preferred geography: Berlin"
+        ],
+        "t-harbour": [
+          "Excluded title: manager"
+        ],
+        "t-petal": [
+          "Outside target role family"
+        ],
+        "t-bank": [
+          "Location restriction: Remote US only"
+        ],
+        "t-fable": [
+          "Outside target role family"
+        ]
+      }
+    },
+    {
+      "split": "test",
+      "query": "backend",
+      "method": "deterministic",
+      "metrics": {
+        "ndcg_at_5": 0.8942845064893579,
+        "recall_at_5": 1.0,
+        "hard_violations_at_5": 0,
+        "returned_at_5": 3
+      },
+      "raw_violations_at_5": 2,
+      "latency_ms": 1.2864000163972378,
+      "index_setup_ms_shared": 128.9258999750018,
+      "ranking": [
+        "t-oak",
+        "t-slate",
+        "t-orbit"
+      ],
+      "raw_ranking": [
+        "t-oak",
+        "t-slate",
+        "t-orbit",
+        "t-alloy",
+        "t-bank",
+        "t-caravan",
+        "t-cirrus",
+        "t-fable",
+        "t-fathom",
+        "t-harbour",
+        "t-orchard",
+        "t-petal",
+        "t-pico",
+        "t-quartz",
+        "t-tide"
+      ],
+      "grades": {
+        "t-orchard": 1,
+        "t-cirrus": 1,
+        "t-pico": 0,
+        "t-quartz": 1,
+        "t-fathom": 0,
+        "t-caravan": 1,
+        "t-oak": 3,
+        "t-orbit": 2,
+        "t-slate": 1,
+        "t-alloy": 0,
+        "t-tide": 0,
+        "t-harbour": 0,
+        "t-petal": 0,
+        "t-bank": 0,
+        "t-fable": 0
+      },
+      "denied": [
+        "t-alloy",
+        "t-bank",
+        "t-harbour",
+        "t-petal",
+        "t-tide"
+      ],
+      "missed_relevant": [],
+      "gate_rejections": {
+        "t-orchard": [
+          "Outside target role family"
+        ],
+        "t-cirrus": [
+          "Outside target role family"
+        ],
+        "t-pico": [
+          "Outside target role family"
+        ],
+        "t-quartz": [
+          "Outside target role family"
+        ],
+        "t-fathom": [
+          "Outside target role family"
+        ],
+        "t-caravan": [
+          "Outside target role family"
+        ],
+        "t-alloy": [
+          "Outside target role family",
+          "Experience above hard maximum: 7+ years"
+        ],
+        "t-tide": [
+          "Outside target role family",
+          "Outside preferred geography: Berlin"
+        ],
+        "t-harbour": [
+          "Excluded title: manager"
+        ],
+        "t-petal": [
+          "Outside target role family"
+        ],
+        "t-bank": [
+          "Outside target role family",
+          "Location restriction: Remote US only"
+        ],
+        "t-fable": [
+          "Outside target role family"
+        ]
+      }
+    },
+    {
+      "split": "test",
+      "query": "backend",
+      "method": "bm25",
+      "metrics": {
+        "ndcg_at_5": 0.8942845064893579,
+        "recall_at_5": 1.0,
+        "hard_violations_at_5": 0,
+        "returned_at_5": 3
+      },
+      "raw_violations_at_5": 1,
+      "latency_ms": 1.4589999918825924,
+      "index_setup_ms_shared": 128.9258999750018,
+      "ranking": [
+        "t-oak",
+        "t-slate",
+        "t-orbit"
+      ],
+      "raw_ranking": [
+        "t-oak",
+        "t-harbour",
+        "t-slate",
+        "t-orbit",
+        "t-fable",
+        "t-pico",
+        "t-tide",
+        "t-alloy",
+        "t-bank",
+        "t-caravan",
+        "t-fathom",
+        "t-cirrus",
+        "t-quartz",
+        "t-orchard",
+        "t-petal"
+      ],
+      "grades": {
+        "t-orchard": 1,
+        "t-cirrus": 1,
+        "t-pico": 0,
+        "t-quartz": 1,
+        "t-fathom": 0,
+        "t-caravan": 1,
+        "t-oak": 3,
+        "t-orbit": 2,
+        "t-slate": 1,
+        "t-alloy": 0,
+        "t-tide": 0,
+        "t-harbour": 0,
+        "t-petal": 0,
+        "t-bank": 0,
+        "t-fable": 0
+      },
+      "denied": [
+        "t-alloy",
+        "t-bank",
+        "t-harbour",
+        "t-petal",
+        "t-tide"
+      ],
+      "missed_relevant": [],
+      "gate_rejections": {
+        "t-orchard": [
+          "Outside target role family"
+        ],
+        "t-cirrus": [
+          "Outside target role family"
+        ],
+        "t-pico": [
+          "Outside target role family"
+        ],
+        "t-quartz": [
+          "Outside target role family"
+        ],
+        "t-fathom": [
+          "Outside target role family"
+        ],
+        "t-caravan": [
+          "Outside target role family"
+        ],
+        "t-alloy": [
+          "Outside target role family",
+          "Experience above hard maximum: 7+ years"
+        ],
+        "t-tide": [
+          "Outside target role family",
+          "Outside preferred geography: Berlin"
+        ],
+        "t-harbour": [
+          "Excluded title: manager"
+        ],
+        "t-petal": [
+          "Outside target role family"
+        ],
+        "t-bank": [
+          "Outside target role family",
+          "Location restriction: Remote US only"
+        ],
+        "t-fable": [
+          "Outside target role family"
+        ]
+      }
+    },
+    {
+      "split": "test",
+      "query": "backend",
+      "method": "dense",
+      "metrics": {
+        "ndcg_at_5": 0.8942845064893579,
+        "recall_at_5": 1.0,
+        "hard_violations_at_5": 0,
+        "returned_at_5": 3
+      },
+      "raw_violations_at_5": 1,
+      "latency_ms": 18.235199968330562,
+      "index_setup_ms_shared": 128.9258999750018,
+      "ranking": [
+        "t-oak",
+        "t-slate",
+        "t-orbit"
+      ],
+      "raw_ranking": [
+        "t-oak",
+        "t-harbour",
+        "t-slate",
+        "t-orbit",
+        "t-fable",
+        "t-quartz",
+        "t-fathom",
+        "t-bank",
+        "t-caravan",
+        "t-pico",
+        "t-tide",
+        "t-alloy",
+        "t-orchard",
+        "t-petal",
+        "t-cirrus"
+      ],
+      "grades": {
+        "t-orchard": 1,
+        "t-cirrus": 1,
+        "t-pico": 0,
+        "t-quartz": 1,
+        "t-fathom": 0,
+        "t-caravan": 1,
+        "t-oak": 3,
+        "t-orbit": 2,
+        "t-slate": 1,
+        "t-alloy": 0,
+        "t-tide": 0,
+        "t-harbour": 0,
+        "t-petal": 0,
+        "t-bank": 0,
+        "t-fable": 0
+      },
+      "denied": [
+        "t-alloy",
+        "t-bank",
+        "t-harbour",
+        "t-petal",
+        "t-tide"
+      ],
+      "missed_relevant": [],
+      "gate_rejections": {
+        "t-orchard": [
+          "Outside target role family"
+        ],
+        "t-cirrus": [
+          "Outside target role family"
+        ],
+        "t-pico": [
+          "Outside target role family"
+        ],
+        "t-quartz": [
+          "Outside target role family"
+        ],
+        "t-fathom": [
+          "Outside target role family"
+        ],
+        "t-caravan": [
+          "Outside target role family"
+        ],
+        "t-alloy": [
+          "Outside target role family",
+          "Experience above hard maximum: 7+ years"
+        ],
+        "t-tide": [
+          "Outside target role family",
+          "Outside preferred geography: Berlin"
+        ],
+        "t-harbour": [
+          "Excluded title: manager"
+        ],
+        "t-petal": [
+          "Outside target role family"
+        ],
+        "t-bank": [
+          "Outside target role family",
+          "Location restriction: Remote US only"
+        ],
+        "t-fable": [
+          "Outside target role family"
+        ]
+      }
+    },
+    {
+      "split": "test",
+      "query": "backend",
+      "method": "hybrid",
+      "metrics": {
+        "ndcg_at_5": 0.8942845064893579,
+        "recall_at_5": 1.0,
+        "hard_violations_at_5": 0,
+        "returned_at_5": 3
+      },
+      "raw_violations_at_5": 1,
+      "latency_ms": 18.443799985107034,
+      "index_setup_ms_shared": 128.9258999750018,
+      "ranking": [
+        "t-oak",
+        "t-slate",
+        "t-orbit"
+      ],
+      "raw_ranking": [
+        "t-oak",
+        "t-harbour",
+        "t-slate",
+        "t-orbit",
+        "t-fable",
+        "t-quartz",
+        "t-pico",
+        "t-fathom",
+        "t-bank",
+        "t-caravan",
+        "t-tide",
+        "t-alloy",
+        "t-orchard",
+        "t-petal",
+        "t-cirrus"
+      ],
+      "grades": {
+        "t-orchard": 1,
+        "t-cirrus": 1,
+        "t-pico": 0,
+        "t-quartz": 1,
+        "t-fathom": 0,
+        "t-caravan": 1,
+        "t-oak": 3,
+        "t-orbit": 2,
+        "t-slate": 1,
+        "t-alloy": 0,
+        "t-tide": 0,
+        "t-harbour": 0,
+        "t-petal": 0,
+        "t-bank": 0,
+        "t-fable": 0
+      },
+      "denied": [
+        "t-alloy",
+        "t-bank",
+        "t-harbour",
+        "t-petal",
+        "t-tide"
+      ],
+      "missed_relevant": [],
+      "gate_rejections": {
+        "t-orchard": [
+          "Outside target role family"
+        ],
+        "t-cirrus": [
+          "Outside target role family"
+        ],
+        "t-pico": [
+          "Outside target role family"
+        ],
+        "t-quartz": [
+          "Outside target role family"
+        ],
+        "t-fathom": [
+          "Outside target role family"
+        ],
+        "t-caravan": [
+          "Outside target role family"
+        ],
+        "t-alloy": [
+          "Outside target role family",
+          "Experience above hard maximum: 7+ years"
+        ],
+        "t-tide": [
+          "Outside target role family",
+          "Outside preferred geography: Berlin"
+        ],
+        "t-harbour": [
+          "Excluded title: manager"
+        ],
+        "t-petal": [
+          "Outside target role family"
+        ],
+        "t-bank": [
+          "Outside target role family",
+          "Location restriction: Remote US only"
+        ],
+        "t-fable": [
+          "Outside target role family"
+        ]
+      }
+    }
+  ],
+  "documents_by_split": {
+    "dev": 9,
+    "test": 15
+  },
+  "dev_winner": "deterministic",
+  "decision": "deterministic",
+  "decision_rule": "Preselect by development nDCG@5. On holdout require >0.02 nDCG lift and no increase in violations. Ties keep incumbent.",
+  "limits": "Authored fully judged pools. Ground-truth ineligible rows have zero gain. No unjudged items, no external relevance labels, no latency percentiles."
+}

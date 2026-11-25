@@ -1,0 +1,57 @@
+{
+  "gate": {
+    "status": "accepted",
+    "stage": "temporal_replay_and_authenticated_api",
+    "commit": "230d817c8a69da8059a5181b3ad4fea8a0e62bca",
+    "docker_version": "29.9.3",
+    "images": [
+      "pgvector/pgvector:pg17",
+      "postgres:17",
+      "temporalio/auto-setup:1.29.7"
+    ]
+  },
+  "runner_fix_commit": "3d3c02bde297943c5607e65a4a089ddf109b00a6",
+  "runner_sha256": "0c0ffb9645f9583c96a055a44de2aa69569f8283849ceac81eb9c35f479c6191",
+  "distinct_worker_processes": 2,
+  "environment": "local Docker Desktop and loopback API",
+  "input": "cached synthetic Greenhouse fixture",
+  "application_report": {
+    "checkpoint": {
+      "floors": [
+        5,
+        2
+      ],
+      "ranked_ids": [
+        2
+      ],
+      "raw_count": 2,
+      "run_id": 1,
+      "stored_jobs": [
+        "1",
+        "2"
+      ]
+    },
+    "after_replay": {
+      "floors": [
+        5,
+        2
+      ],
+      "ranked_ids": [
+        2
+      ],
+      "raw_count": 2,
+      "run_id": 1,
+      "stored_jobs": [
+        "1",
+        "2"
+      ]
+    },
+    "http": {
+      "anonymous_status": 401,
+      "ranked_ids": [
+        2
+      ],
+      "other_profile_rows": 0
+    }
+  }
+}
